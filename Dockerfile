@@ -2,6 +2,13 @@ FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
 
 RUN apt-get update
 RUN apt-get install -y ffmpeg libsm6 libxext6
+RUN apt-get install build-essential -y
+# to build doc to pdf https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
+RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y
+
+# Install zsh and oh-my-zsh
+# RUN apt-get install curl zsh
+# RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
@@ -32,20 +39,11 @@ RUN pip install sphinx-rtd-theme==1.3.0
 
 RUN pip install pylint==2.17.5
 
-# to build doc to pdf https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
-RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y
-RUN apt-get install build-essential -y
-
-# Install zsh and oh-my-zsh
-RUN apt-get install curl zsh
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
 # # autoML
-# RUN apt-get install build-essential -y
-# RUN pip install Cython==0.29.36
-# RUN pip install scipy==1.9
-# RUN pip install scikit-learn==0.24.2 --no-build-isolation
-# RUN pip install auto-sklearn==0.15.0
+RUN pip install Cython==0.29.36
+RUN pip install scipy==1.9
+RUN pip install scikit-learn==0.24.2 --no-build-isolation
+RUN pip install auto-sklearn==0.15.0
 
 RUN pip install seaborn==0.12.2
 RUN pip install lmdb==1.4.1
