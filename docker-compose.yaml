@@ -3,14 +3,14 @@ version: "3.9"
 services:
   data-quality:
     shm_size: '1024m'
-    container_name: cia-gen
+    container_name: ciagen
     build:
       context: .
       dockerfile: ${DOCKERFILE}
       args:
         - USER_ID=$USER_ID
         - GROUP_ID=$GROUP_ID
-    image: cia-gen
+    image: ciagen
     tty: true
     volumes:
       - .:/gen_data
