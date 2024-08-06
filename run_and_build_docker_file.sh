@@ -1,3 +1,4 @@
 #!/usr/bin/bash
 
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build
+
+RUNTIME=$1 USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build

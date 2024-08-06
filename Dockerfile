@@ -7,13 +7,13 @@ RUN apt-get install build-essential -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y
 
 # Install zsh and oh-my-zsh
-# RUN apt-get install curl zsh
-# RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN apt-get install -y curl zsh git
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-RUN pip install alibi-detect==0.11.2
+# RUN pip install alibi-detect==0.11.2
 RUN pip install imagecorruptions==1.1.2
 RUN pip install phx-class-registry==4.0.6
 RUN pip install statsmodels==0.14.0
