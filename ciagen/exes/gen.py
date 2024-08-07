@@ -23,7 +23,7 @@ from pathlib import Path
 
 from ciagen.utils.common import *
 
-from extractors import *
+from ciagen.extractors import *
 from generators import SDCN, PromptGenerator
 
 

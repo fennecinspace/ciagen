@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  data-quality:
+  ciagen:
     shm_size: '1024m'
     container_name: ciagen
     build:
@@ -15,13 +15,12 @@ services:
     volumes:
       - .:/gen_data
       - /data:/data
-      - /home/tellez/docker/home/user:/home/user
-      - ../vscode/data-quality:/home/user/vscode-server
+      - /home/imagedpt/tellez/docker/home/user:/home/user
+      # - ../vscode/ciagen:/home/user/.vscode-server
     user: ${USER_ID}:${GROUP_ID}
-    ports:
-      - 7799:8888
     environment:
       - DATA_DIR=/gen_data/data
       - NVIDIA_VISIBLE_DEVICES=all
     runtime: ${RUNTIME} # nvidia
     working_dir: /gen_data
+    entrypoint: tail -f /dev/null

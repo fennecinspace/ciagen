@@ -1,13 +1,12 @@
 FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
 
-RUN apt-get update
-RUN apt-get install -y ffmpeg libsm6 libxext6
-RUN apt-get install build-essential -y
+RUN apt-get update && apt -y install ffmpeg libsm6 libxext6 build-essential
+
 # to build doc to pdf https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
 RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y
 
 # Install zsh and oh-my-zsh
-RUN apt-get install -y curl zsh git
+RUN apt-get update && apt-get install -y curl zsh git
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 COPY requirements.txt requirements.txt
