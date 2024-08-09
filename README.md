@@ -116,7 +116,7 @@ You can use metrics in the same way the generation is done:
 
 It follows the same configuration of the generation part, with the same file `conf/config.yaml`.
 
-<img src="docs/images/iqa_measure.png" />
+<img src="ciage/docs/images/iqa_measure.png" />
 
 
 There is file created in `data/iqa/<cn_use>_iqa.json` with the following structure:
@@ -204,17 +204,17 @@ Here are some plots for some of the many runs and studies that we performed :
 
 ### Coco Sampling
 
-<img src="docs/images/COCO_all_samplings_2.png" />
+<img src="ciagen/docs/images/COCO_all_samplings_2.png" />
 
 ### Flickr Sampling
 
-<img src="docs/images/flickr_all_samplings.png" />
+<img src="ciagen/docs/images/flickr_all_samplings.png" />
 
 ### Loss values for COCO
 
-<img src="docs/images/COCO_loss.png" />
+<img src="ciagen/docs/images/COCO_loss.png" />
 
 ### Random Sampling - Regular Runs
 
-<img src="docs/images/random_sampling.png" />
+<img src="ciagen/docs/images/random_sampling.png" />
 
