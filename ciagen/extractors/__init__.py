@@ -11,11 +11,11 @@
 # General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
-from .false_segmentation import FalseSegmentation
-from .segmentation import Segmentation
-from .openpose import OpenPose
 from .canny import Canny
+from .false_segmentation import FalseSegmentation
 from .mediapipe import MediaPipeFace
+from .openpose import OpenPose
+from .segmentation import Segmentation
 
 AVAILABLE_EXTRACTORS = ("openpose", "canny", "mediapipe_face", "segmentation")
 
@@ -32,21 +32,24 @@ def extract_model_from_name(raw_name: str) -> str:
     elif "segmentation" in raw_name:
         return "segmentation"
     else:
-        raise Exception(f"Unkown model: {raw_name}")
+        raise ValueError(
+            f"Unkown model: {raw_name}. Please verify your configuration file."
+        )
 
 
-class Extractor:
-    def __new__(cls, control_model: str, **kwargs):
-        if control_model not in AVAILABLE_EXTRACTORS:
-            raise Exception(f"Unknown control model: {control_model}")
+def instantiate_extractor(control_model: str, **kwargs):
+    if control_model not in AVAILABLE_EXTRACTORS:
+        raise ValueError(
+            f"Unknown control model: {control_model}. Please verify your configuration file."
+        )
 
-        if "openpose" in control_model:
-            return OpenPose(**kwargs)
-        elif "canny" in control_model:
-            return Canny(**kwargs)
-        elif "mediapipe_face" in control_model:
-            return MediaPipeFace(**kwargs)
-        elif "false_segmentation" in control_model:  # for paper
-            return FalseSegmentation(**kwargs)
-        elif "segmentation" in control_model:
-            return Segmentation(**kwargs)
+    if "openpose" in control_model:
+        return OpenPose(**kwargs)
+    elif "canny" in control_model:
+        return Canny(**kwargs)
+    elif "mediapipe_face" in control_model:
+        return MediaPipeFace(**kwargs)
+    elif "false_segmentation" in control_model:  # for paper
+        return FalseSegmentation(**kwargs)
+    elif "segmentation" in control_model:
+        return Segmentation(**kwargs)

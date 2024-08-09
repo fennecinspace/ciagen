@@ -1,19 +1,24 @@
-import sys
 import os
+import sys
 
 import numpy as np
 import torch
-from torchvision.transforms import ToPILImage
 from PIL.Image import Image
+from torchvision.transforms import ToPILImage
 
+from ciagen import add_ultralytics_path
 
-sys.path.append(os.path.join(os.getcwd(), "ultralytics"))
+add_ultralytics_path()
 from ultralytics import YOLO
 
+from ciagen.extractors.abs_extractor import ExtractorABC
 
-class Segmentation:
+
+class Segmentation(ExtractorABC):
+    name = "Segmentation"
+
     def __init__(self, **kwargs):
-        self.model = YOLO("yolov8m-seg.pt")
+        self.model = YOLO(os.path.join("models", "yolov8m-seg.pt"))
 
     def extract(self, image: Image) -> Image:
         image = np.array(image)

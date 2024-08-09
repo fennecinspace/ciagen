@@ -1,18 +1,18 @@
-from typing import Tuple
-import sys
 import os
-
+import sys
+from typing import Tuple
 
 import cv2
 import numpy as np
-from PIL.Image import Image
+from PIL import Image
+from PIL.Image import Image as PILImage
+
+from ciagen.extractors.abs_extractor import ExtractorABC
 
 
-sys.path.append(os.path.join(os.getcwd(), "ultralytics"))
-from ultralytics import YOLO
+class Canny(ExtractorABC):
+    name = "Canny"
 
-
-class Canny:
     def __init__(
         self,
         auto_threshold: bool = False,
@@ -37,7 +37,7 @@ class Canny:
         high = int(min(255, img_median + 0.5 * img_std))
         return low, high
 
-    def extract(self, image: Image) -> Image:
+    def extract(self, image: PILImage) -> PILImage:
         """
         Arg: image; Image; image in pillow format
         Returns: canny_image; Image; image with edges marked
@@ -55,6 +55,3 @@ class Canny:
         image = np.concatenate([image, image, image], axis=2)
         canny_image = Image.fromarray(image)
         return canny_image
-
-    def __str__(self) -> str:
-        return "Extractor(canny)"

@@ -1,32 +1,42 @@
-#!/bin/python3
+import os
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-
-import ciagen
-from ciagen.exes import gen, iqa, iqa_paper, test, train_studies, train
-from ciagen import extractors
-from ciagen import generators
-from ciagen import qmetrics
+from ciagen.utils.common import generate_all_paths
 
 
 def help_task(cgf: DictConfig) -> None:
-    print(dir(ciagen))
+    title = f'Modulable generative data generator. Using {", ".join(architectures)}.'
+    sep = "=" * len(title)
     help_message = f"""
-Modulable generative data generator. Using {", ".join(architectures)}.
-Possible tasks:
-[{", ".join(list(allowed_tasks.keys())[1:])}]
-For basic usage do `python run.py -- task=<task>`
-For more information, please go see the README.md file."""
+| {sep}
+| {title}
+|
+| Possible tasks:
+| [{", ".join(list(allowed_tasks.keys())[1:])}]
+|
+| For basic usage do `python run.py -- task=<task>`.
+| You can also modify the `config.yaml` file.
+| For more information, please go see the README.md file.
+| {sep}
+"""
     print(help_message)
     return
+
+
+def gen(cfg: DictConfig) -> None:
+    from ciagen.exes import Generator
+
+    generator = Generator(cfg)
+    paths = generate_all_paths(cfg)
+    return generator(paths)
 
 
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
-    # "gen": gen.main,
+    "gen": gen,
     # "test": ciagen.test,
     # "train_studies": ciagen.train_studies,
     # "train": ciagen.train,
@@ -37,11 +47,14 @@ allowed_tasks = {
 }
 
 
-@hydra.main(version_base=None, config_path=".", config_name="config")
+path_to_config = os.path.join(os.getcwd(), "ciagen", "conf")
+
+
+@hydra.main(version_base=None, config_path=path_to_config, config_name="config")
 def my_app(cfg: DictConfig) -> None:
     config_as_pretty_yaml = OmegaConf.to_yaml(cfg)
 
-    print(config_as_pretty_yaml)
+    # print(config_as_pretty_yaml)
 
     task = cfg["task"]
     if task not in allowed_tasks:

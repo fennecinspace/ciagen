@@ -1,35 +1,64 @@
 # © - 2024 Université de Mons, Multitel, Université Libre de Bruxelles, Université Catholique de Louvain
 
-# CIA is free software. You can redistribute it and/or modify it 
-# under the terms of the GNU Affero General Public License 
-# as published by the Free Software Foundation, either version 3 
-# of the License, or any later version. This program is distributed 
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-# without even the implied warranty of MERCHANTABILITY or FITNESS 
-# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License 
-# for more details. You should have received a copy of the Lesser GNU 
-# General Public License along with this program.  
+# CIA is free software. You can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3
+# of the License, or any later version. This program is distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
+# for more details. You should have received a copy of the Lesser GNU
+# General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import cv2
+import glob
 import logging
+import os
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import cv2
 import matplotlib.pyplot as plt
 import mediapipe as mp
 import numpy as np
-import os
 import yaml
-import glob
-from pathlib import Path
-
-from mediapipe.framework.formats import landmark_pb2
 from mediapipe import solutions
+from mediapipe.framework.formats import landmark_pb2
+from omegaconf import DictConfig
 from PIL import Image
-from typing import Dict, List, Optional
 
-
-FORMAT = '%(asctime)s %(clientip)-16s %(user)-8s %(message)s'
+FORMAT = "%(asctime)s %(clientip)-16s %(user)-8s %(message)s"
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger()
+
+
+def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
+    real_dataset = os.path.join("data", "real", cfg["data"]["base"])
+    generated_dataset = os.path.join(
+        "data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"]
+    )
+
+    real_path_images = os.path.join(real_dataset, "images")
+    real_path_captions = os.path.join(real_dataset, "captions")
+    real_path_labels = os.path.join(real_dataset, "labels")
+
+    vocabulary_config_path = os.path.join(*cfg["prompt"]["template"])
+
+    if not os.path.exists(real_path_images):
+        raise ValueError(
+            f"One of the real dataset paths does not exist: {real_path_images}"
+        )
+
+    os.makedirs(generated_dataset, exist_ok=True)
+
+    return {
+        "real": real_dataset,
+        "generated": generated_dataset,
+        "real_images": real_path_images,
+        "real_captions": real_path_captions,
+        "real_labels": real_path_labels,
+        "vocabulary_config": vocabulary_config_path,
+    }
 
 
 def find_model_name(name: str, l: List[Dict[str, str]]) -> Optional[str]:
@@ -40,7 +69,7 @@ def find_model_name(name: str, l: List[Dict[str, str]]) -> Optional[str]:
 
 
 def read_caption(caption_path: str) -> List[str]:
-    with open(caption_path, 'r') as f:
+    with open(caption_path, "r") as f:
         lines = f.readlines()
     lines = [line.strip() for line in lines]
     return lines
@@ -55,45 +84,51 @@ def find_common_suffix(str_list: List[str]):
     return find_common_prefix(str_list_inv)
 
 
-def draw_landmarks_on_image(rgb_image, detection_result, mode:str = 'default'):
-    if mode not in ('default', 'binary'):
-        raise Exception(f"Unkown mode: {mode}")
+def draw_landmarks_on_image(rgb_image, detection_result, mode: str = "default"):
+    if mode not in ("default", "binary"):
+        raise ValueError(f"Unkown mode: {mode}")
 
     face_landmarks_list = detection_result.face_landmarks
-    if mode == 'binary':
-        rgb_image = Image.new("RGB", (rgb_image.shape[0], rgb_image.shape[1]), (0, 0, 0))
+    if mode == "binary":
+        rgb_image = Image.new(
+            "RGB", (rgb_image.shape[0], rgb_image.shape[1]), (0, 0, 0)
+        )
     annotated_image = np.copy(rgb_image)
 
     # Loop through the detected faces to visualize.
     for face_landmarks in face_landmarks_list:
         # Draw the face landmarks.
         face_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-        face_landmarks_proto.landmark.extend([
-            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z)
-            for landmark in face_landmarks
-        ])
+        face_landmarks_proto.landmark.extend(
+            [
+                landmark_pb2.NormalizedLandmark(
+                    x=landmark.x, y=landmark.y, z=landmark.z
+                )
+                for landmark in face_landmarks
+            ]
+        )
 
         solutions.drawing_utils.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp.solutions.face_mesh.FACEMESH_TESSELATION,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp.solutions.drawing_styles
-            .get_default_face_mesh_tesselation_style())
+            connection_drawing_spec=mp.solutions.drawing_styles.get_default_face_mesh_tesselation_style(),
+        )
         solutions.drawing_utils.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp.solutions.face_mesh.FACEMESH_CONTOURS,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp.solutions.drawing_styles
-            .get_default_face_mesh_contours_style())
+            connection_drawing_spec=mp.solutions.drawing_styles.get_default_face_mesh_contours_style(),
+        )
         solutions.drawing_utils.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp.solutions.face_mesh.FACEMESH_IRISES,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp.solutions.drawing_styles
-            .get_default_face_mesh_iris_connections_style())
+            connection_drawing_spec=mp.solutions.drawing_styles.get_default_face_mesh_iris_connections_style(),
+        )
 
     return annotated_image
 
@@ -109,17 +144,21 @@ def plot_face_blendshapes_bar_graph(face_blendshapes):
     face_blendshapes_ranks = range(len(face_blendshapes_names))
 
     _, ax = plt.subplots(figsize=(12, 12))
-    bar = ax.barh(face_blendshapes_ranks, face_blendshapes_scores,
-                  label=[str(x) for x in face_blendshapes_ranks])
+    bar = ax.barh(
+        face_blendshapes_ranks,
+        face_blendshapes_scores,
+        label=[str(x) for x in face_blendshapes_ranks],
+    )
     ax.set_yticks(face_blendshapes_ranks, face_blendshapes_names)
     ax.invert_yaxis()
 
     # Label each bar with values
     for score, patch in zip(face_blendshapes_scores, bar.patches):
-        plt.text(patch.get_x() + patch.get_width(),
-                  patch.get_y(), f"{score:.4f}", va="top")
+        plt.text(
+            patch.get_x() + patch.get_width(), patch.get_y(), f"{score:.4f}", va="top"
+        )
 
-    ax.set_xlabel('Score')
+    ax.set_xlabel("Score")
     ax.set_title("Face Blendshapes")
     plt.tight_layout()
     plt.show()
@@ -129,7 +168,7 @@ def normalizer(image: Image) -> Image:
     """Normalize an image pixel values between [0 - 255]"""
 
     img = np.array(image)
-    return cv2.normalize(img,  img, 0, 255, cv2.NORM_MINMAX)
+    return cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
 
 
 def contains_only_one_substring(input_string, substring_list):
@@ -140,6 +179,7 @@ def contains_only_one_substring(input_string, substring_list):
             count += 1
 
     return count == 1
+
 
 def contains_word(string, words):
     for word in words:
@@ -188,16 +228,14 @@ def bbox_min_max_to_center_dims(x_min, x_max, y_min, y_max, image_width, image_h
 
 
 def create_files_list(image_files, txt_file_path):
-    with open(txt_file_path, 'w') as f:
-        f.write('\n'.join(image_files))
+    with open(txt_file_path, "w") as f:
+        f.write("\n".join(image_files))
 
 
-def list_images(images_path: Path, formats: List[str], limit:int = None):
+def list_images(images_path: Path, formats: List[str], limit: int = None):
     images = []
     for format in formats:
-        images += [
-            *glob.glob(str(images_path.absolute()) + f'/*.{format}')
-        ]
+        images += [*glob.glob(str(images_path.absolute()) + f"/*.{format}")]
     return images[:limit]
 
 
@@ -213,11 +251,11 @@ def create_yaml_file(save_path: Path, train: Path, val: Path, test: Path):
     """
 
     yaml_file = {
-        'train': str(train.absolute()),
-        'val': str(val.absolute()),
-        'test': str(test.absolute()),
-        'names': {0: 'person'}
+        "train": str(train.absolute()),
+        "val": str(val.absolute()),
+        "test": str(test.absolute()),
+        "names": {0: "person"},
     }
 
-    with open(save_path, 'w') as file:
+    with open(save_path, "w") as file:
         yaml.dump(yaml_file, file)

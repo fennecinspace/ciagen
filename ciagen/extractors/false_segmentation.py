@@ -1,19 +1,21 @@
 import os
-import sys
 
 import numpy as np
-from PIL.Image import Image
 import torch
+from PIL.Image import Image
 
 from ciagen import add_ultralytics_path
+from ciagen.extractors.abs_extractor import ExtractorABC
 
 add_ultralytics_path()
 from ultralytics import YOLO
 
 
-class FalseSegmentation:
+class FalseSegmentation(ExtractorABC):
+    name = "FalseSegmentation"
+
     def __init__(self, **kwargs):
-        self.model = YOLO("yolov8m-seg.pt")
+        self.model = YOLO(os.path.join("models", "yolov8m-seg.pt"))
 
     def extract(self, image: Image) -> Image:
         image = np.array(image)

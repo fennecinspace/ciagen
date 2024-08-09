@@ -1,16 +1,13 @@
-import sys
-import os
-
 import numpy as np
 from controlnet_aux import OpenposeDetector
 from PIL.Image import Image
 
-
-sys.path.append(os.path.join(os.getcwd(), "ultralytics"))
-from ultralytics import YOLO
+from ciagen.extractors.abs_extractor import ExtractorABC
 
 
-class OpenPose:
+class OpenPose(ExtractorABC):
+    name = "OpenPose"
+
     def __init__(self, model: str = "lllyasviel/ControlNet", **kwargs):
         self.model = OpenposeDetector.from_pretrained(model)
 
@@ -18,6 +15,3 @@ class OpenPose:
         image = np.array(image)
         pose = self.model(image)
         return pose
-
-    def __str__(self) -> str:
-        return "Extractor(openpose)"

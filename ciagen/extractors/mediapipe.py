@@ -1,14 +1,12 @@
-import sys
-import os
-
-from PIL.Image import Image
 from controlnet_aux.processor import Processor
+from PIL.Image import Image
 
-sys.path.append(os.path.join(os.getcwd(), "ultralytics"))
-from ultralytics import YOLO
+from ciagen.extractors.abs_extractor import ExtractorABC
 
 
-class MediaPipeFace:
+class MediaPipeFace(ExtractorABC):
+    name = "MediaPipeFace"
+
     def __init__(self, **kwargs):
         pass
 
@@ -20,6 +18,3 @@ class MediaPipeFace:
         processed_image = processor(image, to_pil=True)
 
         return processed_image
-
-    def __str__(self) -> str:
-        return "Extractor(mediapipe_face)"
