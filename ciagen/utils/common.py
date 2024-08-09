@@ -33,6 +33,7 @@ logger = logging.getLogger()
 
 
 def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
+    real_root = os.path.join("data", "real")
     real_dataset = os.path.join("data", "real", cfg["data"]["base"])
     generated_dataset = os.path.join(
         "data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"]
@@ -52,6 +53,7 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
     os.makedirs(generated_dataset, exist_ok=True)
 
     return {
+        "root": real_root,
         "real": real_dataset,
         "generated": generated_dataset,
         "real_images": real_path_images,
