@@ -26,3 +26,5 @@ USER user
 RUN pip install ninja
 RUN pip install -U xformers --index-url https://download.pytorch.org/whl/cu121
 RUN pip install -r requirements.txt
+
+
