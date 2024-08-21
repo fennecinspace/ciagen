@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/gen_data
       - /data:/data
-      - /home/imagedpt/tellez/docker/home/user:/home/user
+      - ${HOME}/docker/home/user:/home/user
       # - ../vscode/ciagen:/home/user/.vscode-server
     user: ${USER_ID}:${GROUP_ID}
     environment:
