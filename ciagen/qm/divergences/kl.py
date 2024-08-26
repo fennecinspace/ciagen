@@ -4,7 +4,7 @@ import numpy as np
 
 from abc import abstractmethod, ABC
 
-from qmeasures import TL
+from ciagen.qm import TL
 
 
 class DistributionScore(ABC):

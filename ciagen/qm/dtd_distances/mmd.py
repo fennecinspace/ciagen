@@ -6,7 +6,7 @@ https://en.wikipedia.org/wiki/Kernel_embedding_of_distributions
 from typing import Callable
 import numpy as np
 
-from qmeasures import TL, to_numpy
+from ciagen.qm import TL, to_numpy
 
 
 def mmd_unbiased_estimator(

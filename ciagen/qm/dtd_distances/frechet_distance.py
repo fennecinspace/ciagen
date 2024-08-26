@@ -14,7 +14,7 @@ import numpy as np
 
 from scipy.linalg import sqrtm as matrix_sqrt
 
-from qmeasures import TL
+from ciagen.qm import TL
 
 
 def frechet_distance_gaussian_version(umean: TL, ucov: TL, vmean: TL, vcov: TL):
