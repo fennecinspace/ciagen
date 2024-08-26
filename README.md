@@ -9,6 +9,39 @@ Below this line everything should be taken with a grain of salt. Because of the 
 - coco
 - flickr30k
 
+### Data structuring
+
+Please respect this structure when writing code : 
+
+This project contains the following directory structure:
+
+```
+└─ data/ 
+    ├─ real/ 
+    │   └─ dataset-name/ (e.g., coco)
+    │       ├─ images/
+    │       ├─ labels/
+    │       └─ captions/
+    ├─ generated/ 
+    │   └─ dataset-name/ (e.g., coco)
+    │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
+    └─ mixed/ 
+        └─ dataset-name/ (e.g., coco)
+            └─ train_nb/ (e.g., 250)
+                └─ [controlnet-model-name]-[augmentation_percent]/ (e.g., controlnet_segmentation-0.1)
+                    ├─ data.txt
+                    ├─ train.txt
+                    ├─ test.txt
+                    └─ val.txt
+```
+
+`train, val, test .txt` files contain a list of the images to use, here's an example : 
+
+```
+/path/to/data/real/coco/images/000000368475.jpg
+/path/to/data/real/coco/images/000000368488.jpg
+```
+
 ## Rest of the README.md
 
 This is a data generation framework that uses [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) with [ControlNet](https://huggingface.co/blog/train-your-controlnet), to do Data Augmentation for:

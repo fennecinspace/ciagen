@@ -18,10 +18,9 @@ import json
 
 from omegaconf import DictConfig, open_dict
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
-from common import logger, create_yaml_file, list_images, create_files_list
-
+from ciagen.utils.common import create_yaml_file, list_images, create_files_list
 
 def create_mixte_dataset(base_path: str,
                          real_images_dir: str,
@@ -129,39 +128,38 @@ def sort_based_on_score(image_paths: List[str], scores: List[float], direction: 
     return sorted_image_paths, sorted_scores
 
 
+class CreateMixedYoloDataset:
+    def __init__(self, cfg: DictConfig) -> None:
+        self.cfg = cfg
+
+    # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
+    def __call__(self, paths: Dict[str, str | Path]) -> None:
+        GEN_DATA_PATH = Path(paths['generated'])
+        REAL_DATA_PATH = Path(paths['real'])
+        mixed_yamls_folder_path = Path(paths['mixed_yamls_folder_path'])
+        base_path = Path(paths['root'])
+
+        print(GEN_DATA_PATH)
+
+        # Add Sampling Path
+        IQA_PATH = Path(base_path) / 'iqa'
+        file_json_iqa = IQA_PATH / f"{self.cfg['model']['cn_use']}_iqa.json"
+        with open_dict(self.cfg):
+            self.cfg['ml']['sampling']['score_file'] = file_json_iqa
 
 
-@hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
-def main(cfg : DictConfig) -> None:
-    data = cfg['data']
-    base_path = Path(data['base'])
-    GEN_DATA_PATH =  Path(base_path) / data['generated'] / cfg['model']['cn_use']
-    REAL_DATA_PATH = Path(base_path) / data['real']
-    
-    # Add Sampling Path
-    IQA_PATH = Path(base_path) / 'iqa'
-    file_json_iqa = IQA_PATH / f"{cfg['model']['cn_use']}_iqa.json"
-    with open_dict(cfg):
-        cfg['ml']['sampling']['score_file'] = file_json_iqa
+        data_yaml_path = create_mixte_dataset(
+            base_path, 
+            REAL_DATA_PATH, 
+            GEN_DATA_PATH, 
+            mixed_yamls_folder_path, 
+            self.cfg['ml']['augmentation_percent'],
+            self.cfg['ml']['train_nb'],
+            self.cfg['ml']['val_nb'],
+            self.cfg['ml']['test_nb'],
+            self.cfg['ml']['sampling'],
+        )
 
-    if cfg['ml']['augmentation_percent'] == 0:  
-        fold = REAL_DATA_PATH
-    else:
-        fold = cfg['model']['cn_use'] + str(cfg['ml']['augmentation_percent']) 
-        fold = REAL_DATA_PATH / fold
+        print(f"Training yaml files created in : {mixed_yamls_folder_path}")
 
-    data_yaml_path = create_mixte_dataset(
-        base_path, 
-        REAL_DATA_PATH, 
-        GEN_DATA_PATH, 
-        fold, 
-        cfg['ml']['augmentation_percent'],
-        cfg['ml']['train_nb'],
-        cfg['ml']['val_nb'],
-        cfg['ml']['test_nb'],
-        cfg['ml']['sampling'],
-    )
-
-
-if __name__ == '__main__':
-    main()
+        return data_yaml_path

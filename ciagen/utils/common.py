@@ -39,6 +39,10 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
         "data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"]
     )
 
+    mixed_yamls_folder_path = os.path.join(
+        "data", "mixed", cfg["data"]["base"], str(cfg["ml"]["train_nb"]), cfg["model"]["cn_use"] + '-' + str(cfg['ml']['augmentation_percent'])
+    )
+
     real_path_images = os.path.join(real_dataset, "images")
     real_path_captions = os.path.join(real_dataset, "captions")
     real_path_labels = os.path.join(real_dataset, "labels")
@@ -56,6 +60,7 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
         "root": real_root,
         "real": real_dataset,
         "generated": generated_dataset,
+        "mixed_yamls_folder_path": mixed_yamls_folder_path,
         "real_images": real_path_images,
         "real_captions": real_path_captions,
         "real_labels": real_path_labels,
