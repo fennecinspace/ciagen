@@ -1,5 +1,26 @@
 # CIA: Controllable Image Augmentation Framework based on Stable Diffusion Synthesis
 
+## For us
+
+### docker installation (if needed):
+
+- [install docker](https://docs.docker.com/engine/install/)
+- [install docker compose plugin](https://docs.docker.com/compose/install/) **do not install the docker-desktop environment**
+- if you want to use a gpu with docker you need to install the [docker runtime for nvidia](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+
+after that what I do is
+- install [vscode](https://code.visualstudio.com/)
+- install the [dev containers plugin](https://code.visualstudio.com/docs/devcontainers/containers)
+
+run the docker script:
+```bash
+./run_and_build_docker_file.sh nvidia
+```
+
+put the `nvidia` argument at the end so the script build the container with the nvidia runtime.
+
+Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
+
 
 ## UNDER Heavy development
 Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
