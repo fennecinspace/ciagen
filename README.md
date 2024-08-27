@@ -12,19 +12,34 @@ Below this line everything should be taken with a grain of salt. Because of the 
 ### Data structuring
 
 Please respect this structure when writing code : 
-
+images_dir
 This project contains the following directory structure:
 
 ```
 └─ data/ 
     ├─ real/ 
     │   └─ dataset-name/ (e.g., coco)
-    │       ├─ images/
-    │       │   └─ image001.png
-    │       ├─ labels/
-    │       │   └─ image001.txt
-    │       └─ captions/
-    │           └─ image001.txt
+    │       ├─ train/
+    │       │   ├─ images/
+    │       │   │   └─ image001.png
+    │       │   ├─ labels/
+    │       │   │   └─ image001.txt
+    │       │   └─ captions/
+    │       │       └─ image001.txt
+    │       ├─ val/
+    │       │   ├─ images/
+    │       │   │   └─ image005.png
+    │       │   ├─ labels/
+    │       │   │   └─ image005.txt
+    │       │   └─ captions/
+    │       │       └─ image005.txt
+    │       └─ test/
+    │           ├─ images/
+    │           │   └─ image006.png
+    │           ├─ labels/
+    │           │   └─ image006.txt
+    │           └─ captions/
+    │               └─ image006.txt
     ├─ generated/ 
     │   └─ dataset-name/ (e.g., coco)
     │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)

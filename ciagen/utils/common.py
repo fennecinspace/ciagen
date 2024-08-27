@@ -43,16 +43,44 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
         "data", "mixed", cfg["data"]["base"], str(cfg["ml"]["train_nb"]), cfg["model"]["cn_use"] + '-' + str(cfg['ml']['augmentation_percent'])
     )
 
-    real_path_images = os.path.join(real_dataset, "images")
-    real_path_captions = os.path.join(real_dataset, "captions")
-    real_path_labels = os.path.join(real_dataset, "labels")
+    # all data paths
+    train_path = os.path.join(real_dataset, "train")
+    test_path = os.path.join(real_dataset, "test")
+    val_path = os.path.join(real_dataset, "val")
+
+    # train 
+    real_train_images_path = os.path.join(train_path, "images")
+    real_train_labels_path = os.path.join(train_path, "labels")
+    real_train_captions_path = os.path.join(train_path, "captions")
+
+    # test 
+    real_test_images_path = os.path.join(test_path, "images")
+    real_test_labels_path = os.path.join(test_path, "labels")
+    real_test_captions_path = os.path.join(test_path, "captions")
+
+    # val 
+    real_val_images_path = os.path.join(val_path, "images")
+    real_val_labels_path = os.path.join(val_path, "labels")
+    real_val_captions_path = os.path.join(val_path, "captions")
 
     vocabulary_config_path = os.path.join(*cfg["prompt"]["template"])
 
-    if not os.path.exists(real_path_images):
-        raise ValueError(
-            f"One of the real dataset paths does not exist: {real_path_images}"
-        )
+    if cfg['task'] not in ["coco", "flickr30k"]:
+
+        if not os.path.exists(real_train_images_path):
+            raise ValueError(
+                f"One of the real dataset paths does not exist: {real_train_images_path}"
+            )
+        
+        if not os.path.exists(real_test_images_path):
+            raise ValueError(
+                f"One of the real dataset paths does not exist: {real_test_images_path}"
+            )
+        
+        if not os.path.exists(real_val_images_path):
+            raise ValueError(
+                f"One of the real dataset paths does not exist: {real_val_images_path}"
+            )
 
     os.makedirs(generated_dataset, exist_ok=True)
 
@@ -61,9 +89,19 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
         "real": real_dataset,
         "generated": generated_dataset,
         "mixed_yamls_folder_path": mixed_yamls_folder_path,
-        "real_images": real_path_images,
-        "real_captions": real_path_captions,
-        "real_labels": real_path_labels,
+        
+        "real_images": real_train_images_path,
+        "real_captions": real_train_captions_path,
+        "real_labels": real_train_labels_path,
+
+        "test_images": real_test_images_path,
+        "test_captions": real_test_captions_path,
+        "test_labels": real_test_labels_path,
+
+        "val_images": real_val_images_path,
+        "val_captions": real_val_captions_path,
+        "val_labels": real_val_labels_path,
+
         "vocabulary_config": vocabulary_config_path,
     }
 

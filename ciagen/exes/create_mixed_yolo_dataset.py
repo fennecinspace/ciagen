@@ -22,90 +22,6 @@ from typing import List, Tuple, Dict
 
 from ciagen.utils.common import create_yaml_file, list_images, create_files_list
 
-def create_mixte_dataset(base_path: str,
-                         real_images_dir: str,
-                         synth_images_dir: str,
-                         txt_dir: str,
-                         per_synth_data: float,
-                         train_nb:int,
-                         val_nb:int,
-                         test_nb:int,
-                         sample: dict,
-                         formats: List[str] = ['jpg', 'png', 'jpeg'],
-                         seed:int = 42):
-    """
-    Construct the txt file containing a percentage of real and synthetic data
-
-    :param str real_images_dir: path to the folder containing real images
-    :param str synth_images_dir: path to the folder containing synthetic images
-    :param str txt_dir: path used to create the txt file
-    :param float per_synth_data: percentage of synthetic data compared to real (ranges in [0, 1])
-
-    :return: None
-    :rtype: NoneType
-    """
-
-    if sample['enable']:
-        txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
-
-    if not os.path.isdir(txt_dir): 
-        os.makedirs(txt_dir)
-    
-    train_txt_path = txt_dir / 'train.txt'
-    val_txt_path = txt_dir / 'val.txt'
-    test_txt_path = txt_dir / 'test.txt'
-    data_yaml_path = txt_dir / 'data.yaml'
-
-    real_images_path = real_images_dir / 'images'
-    val_images_path = Path(base_path) / 'val' / 'images'
-    test_images_path = Path(base_path) / 'test' / 'images'
-    
-    real_images = list_images(real_images_path, formats, train_nb)
-    val_images = list_images(val_images_path, formats, val_nb)
-    test_images = list_images(test_images_path, formats, test_nb)
-
-    if sample['enable']:
-        with open(sample['score_file'], 'r') as f:
-            score_data = json.load(f)
-
-        # set sort direction of synthetic images to work with best or worst
-        if sample['sample'] == 'best':
-            order = score_data['best'][sample['metric']]
-        else:
-            if score_data['best'][sample['metric']] == 'smaller':
-                order = 'bigger'
-            else:
-                order = 'smaller'
-
-        synth_images, scores = sort_based_on_score(
-            score_data['image_paths'], 
-            score_data[sample['metric']],
-            order
-        )
-        synth_images = [str((Path(base_path).parent / img).absolute()) for img, score in zip(synth_images, scores)]
-        # for i in range(synth_images.__len__()):
-        #     print(synth_images[i], scores[i])
-    else:
-        synth_images = list_images(synth_images_dir, formats)
-        # shuffle images
-        random.Random(seed).shuffle(synth_images)
-    
-    # shuffle images
-    random.Random(seed).shuffle(real_images)
-
-    # nb_real_images = int(len(real_images) * (1 - per_synth_data))
-    nb_synth_images = int(len(real_images) * per_synth_data)
-    synth_images = synth_images[:nb_synth_images]
-
-    train_images = real_images + synth_images
-
-    create_files_list(train_images, train_txt_path)
-    create_files_list(val_images, val_txt_path)
-    create_files_list(test_images, test_txt_path)
-
-    create_yaml_file(data_yaml_path, train_txt_path, val_txt_path, test_txt_path)
-
-    return data_yaml_path
 
 def sort_based_on_score(image_paths: List[str], scores: List[float], direction: str = 'smaller') -> Tuple[List[str], List[int]]:
     """
@@ -134,32 +50,88 @@ class CreateMixedYoloDataset:
 
     # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
     def __call__(self, paths: Dict[str, str | Path]) -> None:
-        GEN_DATA_PATH = Path(paths['generated'])
-        REAL_DATA_PATH = Path(paths['real'])
-        mixed_yamls_folder_path = Path(paths['mixed_yamls_folder_path'])
-        base_path = Path(paths['root'])
 
-        print(GEN_DATA_PATH)
+        """
+        Construct the txt file containing real and synthetic data
+        """
 
-        # Add Sampling Path
-        IQA_PATH = Path(base_path) / 'iqa'
-        file_json_iqa = IQA_PATH / f"{self.cfg['model']['cn_use']}_iqa.json"
-        with open_dict(self.cfg):
-            self.cfg['ml']['sampling']['score_file'] = file_json_iqa
+        augmentation_percent = self.cfg['ml']['augmentation_percent']
+        train_nb = self.cfg['ml']['train_nb']
+        val_nb = self.cfg['ml']['val_nb']
+        test_nb = self.cfg['ml']['test_nb']
+        sample = self.cfg['ml']['sampling']
+        seed = 42
+        formats = self.cfg['data']['image_formats']
+
+        # if sample['enable']:
+        #     txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
+
+        if not os.path.isdir(paths['mixed_yamls_folder_path']): 
+            os.makedirs(paths['mixed_yamls_folder_path'])
+        
+        train_txt_path = Path(paths['mixed_yamls_folder_path']) / 'train.txt'
+        val_txt_path = Path(paths['mixed_yamls_folder_path']) / 'val.txt'
+        test_txt_path = Path(paths['mixed_yamls_folder_path']) / 'test.txt'
+        data_yaml_path = Path(paths['mixed_yamls_folder_path']) / 'data.yaml'
+
+        real_images_path = Path(paths['real_images'])
+        val_images_path = Path(paths['val_images'])
+        test_images_path = Path(Path(paths['test_images']))
+        
+        real_images = list_images(real_images_path, formats, train_nb)
+        val_images = list_images(val_images_path, formats, val_nb)
+        test_images = list_images(test_images_path, formats, test_nb)
+
+        synth_images_dir = Path(paths['generated'])
 
 
-        data_yaml_path = create_mixte_dataset(
-            base_path, 
-            REAL_DATA_PATH, 
-            GEN_DATA_PATH, 
-            mixed_yamls_folder_path, 
-            self.cfg['ml']['augmentation_percent'],
-            self.cfg['ml']['train_nb'],
-            self.cfg['ml']['val_nb'],
-            self.cfg['ml']['test_nb'],
-            self.cfg['ml']['sampling'],
-        )
+        # if sample['enable']:
+        #     with open(sample['score_file'], 'r') as f:
+        #         score_data = json.load(f)
 
-        print(f"Training yaml files created in : {mixed_yamls_folder_path}")
+        #     # set sort direction of synthetic images to work with best or worst
+        #     if sample['sample'] == 'best':
+        #         order = score_data['best'][sample['metric']]
+        #     else:
+        #         if score_data['best'][sample['metric']] == 'smaller':
+        #             order = 'bigger'
+        #         else:
+        #             order = 'smaller'
+
+        #     synth_images, scores = sort_based_on_score(
+        #         score_data['image_paths'], 
+        #         score_data[sample['metric']],
+        #         order
+        #     )
+
+        #     synth_images = [str((Path(base_path).parent / img).absolute()) for img, score in zip(synth_images, scores)]
+
+        # else:train_txt_path
+
+        synth_images = list_images(synth_images_dir, formats)
+        print(synth_images)
+        # shuffle images
+        random.Random(seed).shuffle(synth_images)
+    
+        # shuffle images
+        random.Random(seed).shuffle(real_images)
+
+        # nb_real_images = int(len(real_images) * (1 - augmentation_percent))
+        nb_synth_images = int(len(real_images) * augmentation_percent)
+        synth_images = synth_images[:nb_synth_images]
+
+        train_images = real_images + synth_images
+
+        create_files_list(train_images, train_txt_path)
+        create_files_list(val_images, val_txt_path)
+        create_files_list(test_images, test_txt_path)
+
+        create_yaml_file(data_yaml_path, train_txt_path, val_txt_path, test_txt_path)
+
+        print(f"Training yaml files created in : {paths['mixed_yamls_folder_path']}")
+        print(f"Using {train_nb} Real Images from : ", real_images_path)
+        print(f"Using Synthetic Images from : ", synth_images_dir)
+        print(f"Using {val_nb} Validation Images from : ", val_images_path)
+        print(f"Using {test_nb} Test Images from : ", test_images_path)
 
         return data_yaml_path
