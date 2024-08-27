@@ -16,8 +16,8 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "demo"
-    image_formats: ["jpeg", "jpg"]
+    base: "coco"
+    image_formats: ["png", "jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...

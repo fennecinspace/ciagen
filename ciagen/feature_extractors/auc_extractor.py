@@ -7,29 +7,40 @@ from pathlib import Path
 import torchvision.transforms.functional
 from tqdm import tqdm
 from omegaconf import DictConfig
-from feat import Detector
 import numpy as np
 import pandas as pd
 
 
 import sys
 
-sys.path.append("/gen_data/ciagen")
 sys.path.append("/gen_data")
-
 
 from ciagen.utils.common import logger
 
+# from ciagen import add_pyfeat_path
 
+# add_pyfeat_path()
+# import feat
+
+# print(feat.__path__)
+# print(type(feat))
+# print(dir(feat))
+# from feat import Detector
+
+
+import importlib
+
+feat_module = importlib.import_module("feat", "/gen_data/pyfeat/feat")
+
+print(feat_module.__path__)
+print(dir(feat_module))
 # Initialize the AU detector globally to reuse it
-detector = Detector()
+detector = feat_module.Detector()
 
 
-def compute_au(
+def extract_au(
     samples,
     face_detection_threshold=0.5,
-    face_identity_threshold=0.8,
-    frame_counter=0,
     **kwargs,
 ):
     # TODO: maybe make this work with a dataloader that is better at handling batchs
@@ -39,53 +50,22 @@ def compute_au(
     from tensor or arrays directly.
     We are simply reusing their inner code here
     """
-    batch_output = []
     face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
     landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
     au_model_kwargs = kwargs.pop("au_model_kwargs", dict())
-    emotion_model_kwargs = kwargs.pop("emotion_model_kwargs", dict())
-    facepose_model_kwargs = kwargs.pop("facepose_model_kwargs", dict())
-    identity_model_kwargs = kwargs.pop("identity_model_kwargs", dict())
 
-    for sample_index, sample in enumerate(tqdm(samples)):
-        (
-            faces,
-            landmarks,
-            poses,
-            aus,
-            emotions,
-            identities,
-        ) = detector._run_detection_waterfall(
-            sample,
-            face_detection_threshold,
-            face_model_kwargs,
-            landmark_model_kwargs,
-            facepose_model_kwargs,
-            emotion_model_kwargs,
-            au_model_kwargs,
-            identity_model_kwargs,
+    aus_all = []
+    for sample in tqdm(samples):
+        faces = detector.detect_faces(
+            sample, face_detection_threshold, **face_model_kwargs
         )
-
-        print(aus)
-        return
-
-        output = detector._create_fex(
-            faces,
-            landmarks,
-            poses,
-            aus,
-            emotions,
-            identities,
-            [""],
-            frame_counter,
+        landmarks = detector.detect_landmarks(
+            sample, detected_faces=faces, **landmark_model_kwargs
         )
-        batch_output.append(output)
-        frame_counter += 1 * 1
+        aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
+        aus_all.append(aus)
 
-    batch_output = pd.concat(batch_output)
-    batch_output.reset_index(drop=True, inplace=True)
-    batch_output.compute_identities(threshold=face_identity_threshold, inplace=True)
-    return batch_output
+    return aus_all
 
 
 # Function to extract AU differences between real and generated images
@@ -181,12 +161,12 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    image_test = "/gen_data/data/real/demo/yoga1.jpeg"
+    image_test = "/gen_data/data/real/demo/trump.jpeg"
     from PIL import Image
     import torch
     import torchvision
 
     image = Image.open(image_test)
     image = torchvision.transforms.functional.pil_to_tensor(image)
-    a = compute_au(image)
+    a = extract_au([image])
     print(a)
