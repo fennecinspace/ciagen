@@ -14,7 +14,7 @@ import scipy
 
 from scipy.linalg import sqrtm as matrix_sqrt
 
-from qmeasures import TL
+from ciagen.qm import TL
 
 
 def wasserstein_distance_multi_dimensional(u: TL, v: TL, as_expectance=True):

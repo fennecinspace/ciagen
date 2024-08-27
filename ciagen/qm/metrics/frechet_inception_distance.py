@@ -5,9 +5,9 @@ import torch
 import numpy as np
 from PIL import Image
 
-from qmeasures import id_transform
-from qmeasures.distances import frechet_distance_gaussian_version
-from qmeasures.distances.wasserstein_distance import (
+from ciagen.qm import id_transform
+from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
+from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
 )
 

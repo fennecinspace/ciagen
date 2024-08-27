@@ -1,6 +1,6 @@
 import numpy as np
 
-from qmeasures import TL, to_numpy
+from ciagen.qm import TL, to_numpy
 
 
 def mahalanobis_distance(

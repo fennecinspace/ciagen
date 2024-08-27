@@ -10,8 +10,8 @@ import torch.utils
 import numpy as np
 from PIL import Image
 
-from qmeasures import VirtualDataloader, id_transform, TL
-from qmeasures.divergences import kl_divergence
+from ciagen.qm import VirtualDataloader, id_transform, TL
+from ciagen.qm.divergences import kl_divergence
 
 from .inception import InceptionSoftmax, inception_transform
 

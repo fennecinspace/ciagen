@@ -1,7 +1,7 @@
 from typing import Callable
 import numpy as np
 
-from qmeasures import TL, to_numpy
+from ciagen.qm import TL, to_numpy
 
 
 def simple_dot_kernel(x: TL, y: TL, to_float: bool = False) -> TL | float:
