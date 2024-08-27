@@ -1,23 +1,22 @@
 # © - 2024 Université de Mons, Multitel, Université Libre de Bruxelles, Université Catholique de Louvain
 
-# CIA is free software. You can redistribute it and/or modify it 
-# under the terms of the GNU Affero General Public License 
-# as published by the Free Software Foundation, either version 3 
-# of the License, or any later version. This program is distributed 
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-# without even the implied warranty of MERCHANTABILITY or FITNESS 
-# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License 
-# for more details. You should have received a copy of the Lesser GNU 
-# General Public License along with this program.  
+# CIA is free software. You can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3
+# of the License, or any later version. This program is distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
+# for more details. You should have received a copy of the Lesser GNU
+# General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
+
+task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "data"
-    real: "real" # Will contain images/, labels/, and captions/ (captions are optional)
-    generated: "generated"
-    datasets: "datasets"
+    base: "demo"
     image_formats: ["jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
@@ -27,7 +26,6 @@ ml:
     val_nb: 300
     test_nb: 300
     train_nb: 250
-    
     augmentation_percent: 0.1 # controls all aug percents parameters everywhere
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
     epochs: 300
@@ -36,7 +34,6 @@ ml:
         enable: false
         metric: brisque # brisque (smaller is better), dbcnn (bigger is better), ilniqe (smaller is better)
         sample: best # to take smaller or bigger values is decided depending the metric
-    
     wandb: # SET wabdb parameters for run tracking and model logging
         entity: your-wandb-username
         project: sdcn-project
@@ -62,8 +59,8 @@ prompt:
     base: ["Sandra Oh", "Kim Kardashian", "rihanna ", "taylor swift"]
     quality: "showing emotion, great realistic face, best quality, extremely detailed,"
     modifier: "Happy man smiling"
-    
-    # Best negative prompts were chosen for better image quality generation 
+
+    # Best negative prompts were chosen for better image quality generation
     negative:
         [
             "monochrome, lowres, bad anatomy, worst quality, low quality, cartoon, unrealistic, bad proportion,",
@@ -74,11 +71,15 @@ prompt:
             "extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs,",
             "extra arms, extra legs, fused fingers, too many fingers, long neck, no cars, no people, illustration, painting,",
             "drawing, art, sketch, anime, deformation, distorsion",
-        ] 
+        ]
     negative_simple: "monochrome, lowres, bad anatomy, worst quality, low quality, cartoon, unrealistic, bad proportion, disfigured, mutation, deformed mouth, deformed eyes, unnatural teeth, unnatural eyes, unnatural mouth, unnatural face, unnatural face expression, not human"
 
 model:
-    use_captions: 1 # use captions that come with the dataset
+    sd_steps:
+        - fast: 5
+        - medium: 10
+        - slow: 20
+    use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
     sd: runwayml/stable-diffusion-v1-5 # stable diffusion version
     cn_use: controlnet_segmentation # control net to use from the list
@@ -89,8 +90,8 @@ model:
         # - _canny
         # - _openpose
         # - _mediapipe_face
-        # 
-        # All models listed below can be found on hugging face 
+        #
+        # All models listed below can be found on hugging face
 
         - controlled_false_segmentation: lllyasviel/sd-controlnet-seg # bad extractor, just for paper tests
 
@@ -109,7 +110,7 @@ model:
         # MediaPipeFace
         - crucible_mediapipe_face: CrucibleAI/ControlNetMediaPipeFace
 
-    cn_extra_settings: 
+    cn_extra_settings:
         # In case your control net class takes in other parameters use this section to define them
         crucible_mediapipe_face:
             subfolder: diffusion_sd15
@@ -124,8 +125,8 @@ iqa:
     # read more on : https://github.com/chaofengc/IQA-PyTorch/blob/main/docs/ModelCard.md
 
 # ACTIVE LEARNING SAMPLING
-active: 
+active:
     enable: False
-    rounds: 5 # rounds of AL 
+    rounds: 5 # rounds of AL
     sel: 125 # number of samples added each round
     sampling: confidence # confidence, coreset, baseline (for ablation study)

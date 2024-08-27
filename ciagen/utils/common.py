@@ -24,11 +24,43 @@ import numpy as np
 import yaml
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
+from omegaconf import DictConfig
 from PIL import Image
 
 FORMAT = "%(asctime)s %(clientip)-16s %(user)-8s %(message)s"
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger()
+
+
+def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
+    real_root = os.path.join("data", "real")
+    real_dataset = os.path.join("data", "real", cfg["data"]["base"])
+    generated_dataset = os.path.join(
+        "data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"]
+    )
+
+    real_path_images = os.path.join(real_dataset, "images")
+    real_path_captions = os.path.join(real_dataset, "captions")
+    real_path_labels = os.path.join(real_dataset, "labels")
+
+    vocabulary_config_path = os.path.join(*cfg["prompt"]["template"])
+
+    if not os.path.exists(real_path_images):
+        raise ValueError(
+            f"One of the real dataset paths does not exist: {real_path_images}"
+        )
+
+    os.makedirs(generated_dataset, exist_ok=True)
+
+    return {
+        "root": real_root,
+        "real": real_dataset,
+        "generated": generated_dataset,
+        "real_images": real_path_images,
+        "real_captions": real_path_captions,
+        "real_labels": real_path_labels,
+        "vocabulary_config": vocabulary_config_path,
+    }
 
 
 def find_model_name(name: str, l: List[Dict[str, str]]) -> Optional[str]:

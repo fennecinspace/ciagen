@@ -1,17 +1,64 @@
 # CIA: Controllable Image Augmentation Framework based on Stable Diffusion Synthesis
 
-This is a data generation framework that uses [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) with [ControlNet](https://huggingface.co/blog/train-your-controlnet), to do Data Augmentation for Object Detection using [YOLOv8](https://github.com/ultralytics/ultralytics)
+## For us
+
+### docker installation (if needed):
+
+- [install docker](https://docs.docker.com/engine/install/)
+- [install docker compose plugin](https://docs.docker.com/compose/install/) **do not install the docker-desktop environment**
+- if you want to use a gpu with docker you need to install the [docker runtime for nvidia](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+
+after that what I do is
+- install [vscode](https://code.visualstudio.com/)
+- install the [dev containers plugin](https://code.visualstudio.com/docs/devcontainers/containers)
+
+run the docker script:
+```bash
+./run_and_build_docker_file.sh nvidia
+```
+
+put the `nvidia` argument at the end so the script build the container with the nvidia runtime.
+
+Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
+
+
+## UNDER Heavy development
+Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
+
+### What works:
+- gen
+- coco
+- flickr30k
+
+## Rest of the README.md
+
+This is a data generation framework that uses [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) with [ControlNet](https://huggingface.co/blog/train-your-controlnet), to do Data Augmentation for:
+- Object Detection using [YOLOv8](https://github.com/ultralytics/ultralytics)
+- FER (facial emotion recognition) **to come**
 
 Models can be trained using a mix of real and generated data. They can also be logged and evaluated.
 
-<img src="docs/images/general_pipeline.png" />
+<img src="ciagen/docs/images/general_pipeline.png" />
 
 
 ## Installation
 
-We recommend using a virtual environment. Install requirements :
+We recommend using either a virtual enviroment or a docker container.
 
+### Docker
+You need [docker compose](https://docs.docker.com/compose/) to run it. Simply do
+```bash
+./run_and_builder_docker_file.sh
 ```
+and connect it in the command line with
+```bash
+docker exec -it ciagen zsh
+```
+or using your favorite editor.
+
+### Virtual enviroment
+Use `conda`, `virtualenv` or another. Do not forget to run
+```bash
 pip install -r requirements.txt
 ```
 
@@ -19,14 +66,14 @@ pip install -r requirements.txt
 
 - [COCO](https://cocodataset.org/#home) PEOPLE dataset :
 
-```
-./run.sh coco
+```bash
+python run.py task=coco
 ```
 
 - [Flickr30K Entities](https://bryanplummer.com/Flickr30kEntities/) PEOPLE dataset :
 
-```
-./run.sh flickr30k
+```bash
+python run.py task=flickr30k
 ```
 
 
@@ -37,7 +84,7 @@ Data will be downloaded and put in the respective files for images, labels and c
 To generate some images, you can use
 
 ```bash
-./run.sh gen
+python run.py task=gen
 ```
 
 See the `conf/config.yaml` file for all details and configuration options.
@@ -45,21 +92,21 @@ See the `conf/config.yaml` file for all details and configuration options.
 You can also configure directly on the command line :
 
 ```bash
-./run.sh gen model.cn_use=openpose prompt.base="Arnold" prompt.modifier="dancing"
+python run.py task=gen model.cn_use=openpose prompt.base="Arnold" prompt.modifier="dancing"
 ```
 
 If you use the `controlnet_segmentation` ControlNet, You will find your images in `data/generated/controlnet_segmentation` along with the base image and the feature extracted.
 
-The configuration options work for all scripts available in the framework. For example, you can have different initial data sizes by controlling sample numbers : 
+The configuration options work for all scripts available in the framework. For example, you can have different initial data sizes by controlling sample numbers :
 
 ```bash
-./run.sh coco ml.train_nb=500
+python run.py task=coco ml.train_nb=500
 ```
 
 You can also launch multiple runs. Here's an example of a multi-run with 3 different generators :
 
-```
-./run.sh gen model.cn_use=frankjoshua_openpose,fusing_openpose,lllyasviel_openpose
+```bash
+python run.py task=gen model.cn_use=frankjoshua_openpose,fusing_openpose,lllyasviel_openpose
 ```
 
 List of available models can be found in `conf/config.yaml`. We have 4 available extractors at the moment (Segmentation, OpenPose, Canny, MediaPipeFace), If you add another control-net model, make sure you add one of the following strings to its name to set the extractor to use :
@@ -89,7 +136,7 @@ You can use metrics in the same way the generation is done:
 
 It follows the same configuration of the generation part, with the same file `conf/config.yaml`.
 
-<img src="docs/images/iqa_measure.png" />
+<img src="ciage/docs/images/iqa_measure.png" />
 
 
 There is file created in `data/iqa/<cn_use>_iqa.json` with the following structure:
@@ -155,7 +202,7 @@ You can both create and launch at the same time to be able to execute multiple t
 ./run.sh create_n_train.py -m ml.augmentation_percent=0.1 ml.sampling.enable=True ml.sampling.metric=dbcnn,brisque ml.sampling.sample=best ml.epochs=15
 ```
 
-## Download and test models 
+## Download and test models
 
 The download folder can be set in the config file. You'll have folders inside for each wandb project. each project folder contains :
 
@@ -166,7 +213,7 @@ The download folder can be set in the config file. You'll have folders inside fo
 ```
 ./run.sh download.py ml.wandb.project=your-project ml.wandb.download.download=true ml.wandb.download.list_all=true
 
-./run.sh test.py 
+./run.sh test.py
 ```
 
 **Note** Other scripts exist to execute different studies, like the usage of Active learning, which is still excremental, you can check the `src` folder for those scripts (This code is still not fully integrated into the framework, some path or configuration modifications might be necessary for correct execution).
@@ -177,17 +224,17 @@ Here are some plots for some of the many runs and studies that we performed :
 
 ### Coco Sampling
 
-<img src="docs/images/COCO_all_samplings_2.png" />
+<img src="ciagen/docs/images/COCO_all_samplings_2.png" />
 
 ### Flickr Sampling
 
-<img src="docs/images/flickr_all_samplings.png" />
+<img src="ciagen/docs/images/flickr_all_samplings.png" />
 
 ### Loss values for COCO
 
-<img src="docs/images/COCO_loss.png" />
+<img src="ciagen/docs/images/COCO_loss.png" />
 
 ### Random Sampling - Regular Runs
 
-<img src="docs/images/random_sampling.png" />
+<img src="ciagen/docs/images/random_sampling.png" />
 
