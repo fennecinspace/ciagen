@@ -51,6 +51,21 @@ def flickr30k_task(cfg: DictConfig) -> None:
 
     return flickr_downloader(paths)
 
+
+def prepare_data_task(cfg: DictConfig) -> None:
+    from ciagen.exes import Flickr30kDataset, COCODataset
+
+    if cfg['data']['base'] == 'coco':
+        downloader = COCODataset(cfg)
+    elif cfg['data']['base'] == 'flickr30k':
+        downloader = Flickr30kDataset(cfg)
+    else:
+        downloader: lambda paths: print(f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco" or "flickr30k" in the config file')
+    
+    paths = generate_all_paths(cfg)
+    return downloader(paths)
+
+
 def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
     from ciagen.exes import CreateMixedYoloDataset
 
@@ -66,8 +81,9 @@ allowed_tasks = {
     # "test": ciagen.test,
     # "train_studies": ciagen.train_studies,
     # "train": ciagen.train,
-    "coco": coco_task,
-    "flickr30k": flickr30k_task,
+    # "coco": coco_task,
+    # "flickr30k": flickr30k_task,
+    "prepare_data": prepare_data_task,
     'create_mixed_yolo_dataset': create_mixed_yolo_dataset_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,

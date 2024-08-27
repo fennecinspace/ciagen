@@ -65,6 +65,13 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
 
     vocabulary_config_path = os.path.join(*cfg["prompt"]["template"])
 
+    for d in (
+        real_train_images_path, real_train_labels_path, real_train_captions_path,
+        real_test_images_path, real_test_labels_path, real_test_captions_path,
+        real_val_images_path, real_val_labels_path, real_val_captions_path
+    ):
+        os.makedirs(d, exist_ok=True)
+
     if cfg['task'] not in ["coco", "flickr30k"]:
 
         if not os.path.exists(real_train_images_path):
