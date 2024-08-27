@@ -157,21 +157,35 @@ class COCODataset:
                 file.write("\n".join(captions))
 
         # Prepare the data for training and validation
-        real_path_coco_images = os.path.join(real_path_coco, "images")
-        real_path_coco_labels = os.path.join(real_path_coco, "labels")
-        real_path_coco_captions = os.path.join(real_path_coco, "captions")
+        real_path_coco_images = os.path.join(real_path_coco, "train", "images")
+        real_path_coco_labels = os.path.join(real_path_coco, "train", "labels")
+        real_path_coco_captions = os.path.join(real_path_coco, "train", "captions")
+        
+        test_path_coco_images = os.path.join(real_path_coco, "test", "images")
+        test_path_coco_labels = os.path.join(real_path_coco, "test", "labels")
+        test_path_coco_captions = os.path.join(real_path_coco, "test", "captions")
 
-        os.makedirs(real_path_coco_images, exist_ok=True)
-        os.makedirs(real_path_coco_captions, exist_ok=True)
-        os.makedirs(real_path_coco_labels, exist_ok=True)
+        val_path_coco_images = os.path.join(real_path_coco, "val", "images")
+        val_path_coco_labels = os.path.join(real_path_coco, "val", "labels")
+        val_path_coco_captions = os.path.join(real_path_coco, "val", "captions")
+
+        for d in (
+            real_path_coco_images, real_path_coco_labels, real_path_coco_captions,
+            test_path_coco_images, test_path_coco_labels, test_path_coco_captions,
+            val_path_coco_images, val_path_coco_labels, val_path_coco_captions
+        ):
+            os.makedirs(d, exist_ok=True)
 
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        logger.info(f"Moving images to {str(real_path_coco_images)}")
-        logger.info(f"Moving captions to {str(real_path_coco_labels)}")
-        logger.info(f"Moving boxes to {str(real_path_coco_captions)}")
+        # logger.info(f"Moving images to {str(real_path_coco_images)}")
+        # logger.info(f"Moving captions to {str(real_path_coco_labels)}")
+        # logger.info(f"Moving boxes to {str(real_path_coco_captions)}")
+        logger.info(f"Moving ALL (no test/val) to {str(real_path_coco_images)}")
+        logger.info(f"Moving TEST to {str(test_path_coco_images)}")
+        logger.info(f"Moving VAL to {str(val_path_coco_images)}")
         logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         # move all files
@@ -207,33 +221,33 @@ class COCODataset:
                 if counter < val_nb:
                     images_dir = Path(
                         str(real_path_coco_images).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
                         )
                     )
                     labels_dir = Path(
                         str(real_path_coco_labels).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
                         )
                     )
                     test_dir = Path(
                         str(real_path_coco_captions).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
                         )
                     )
                 elif counter < val_nb + test_nb:
                     images_dir = Path(
                         str(real_path_coco_images).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
                         )
                     )
                     labels_dir = Path(
                         str(real_path_coco_labels).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
                         )
                     )
                     test_dir = Path(
                         str(real_path_coco_captions).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
+                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
                         )
                     )
                 else:
