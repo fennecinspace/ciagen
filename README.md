@@ -20,11 +20,16 @@ This project contains the following directory structure:
     ├─ real/ 
     │   └─ dataset-name/ (e.g., coco)
     │       ├─ images/
+    │       │   └─ image001.png
     │       ├─ labels/
+    │       │   └─ image001.txt
     │       └─ captions/
+    │           └─ image001.txt
     ├─ generated/ 
     │   └─ dataset-name/ (e.g., coco)
     │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
+    │           ├─ image001_1.png
+    │           └─ image001_2.png
     └─ mixed/ 
         └─ dataset-name/ (e.g., coco)
             └─ train_nb/ (e.g., 250)
