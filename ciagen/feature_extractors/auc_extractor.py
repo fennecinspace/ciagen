@@ -4,6 +4,7 @@ import json
 import hydra
 
 from pathlib import Path
+import torchvision.transforms.functional
 from tqdm import tqdm
 from omegaconf import DictConfig
 from feat import Detector
@@ -64,6 +65,9 @@ def compute_au(
             au_model_kwargs,
             identity_model_kwargs,
         )
+
+        print(aus)
+        return
 
         output = detector._create_fex(
             faces,
@@ -177,9 +181,12 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    image_test = "/gen_data/data/real/yoga1.jpeg"
+    image_test = "/gen_data/data/real/demo/yoga1.jpeg"
     from PIL import Image
+    import torch
+    import torchvision
 
-    image = Image(open(image_test))
-
-    print(type(image))
+    image = Image.open(image_test)
+    image = torchvision.transforms.functional.pil_to_tensor(image)
+    a = compute_au(image)
+    print(a)
