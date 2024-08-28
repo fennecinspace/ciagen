@@ -507,26 +507,20 @@ class Flickr30kDataset:
     # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
     def __call__(self, paths: Dict[str, str | Path]) -> None:
 
-        real_path = Path(paths["root"])
-        real_path_flickr = real_path / "flickr"
+        real_path = paths["root"]
+        real_path_flickr = os.path.join(real_path, "flickr30k")
 
-        real_path.mkdir(parents=True, exist_ok=True)
-        real_path_flickr.mkdir(parents=True, exist_ok=True)
+        os.makedirs(real_path_flickr, exist_ok=True)
 
         # Download if necessary
         images_path, annotations_path, sentences_path, caps_path, labels_path = (
             download_flickr(real_path_flickr)
         )
 
-        print(images_path)
-        print(annotations_path)
-        print(sentences_path)
-        print(caps_path)
-        print(labels_path)
-
         all_images = list(images_path.glob("*.jpg"))
 
         logger.info(f"Extracting captions and boxes info from Initial Dataset")
+        
         for img_path in tqdm(all_images, unit="img"):
             img_path = str(img_path.absolute())
             name = img_path.split(os.sep)[-1].split(".jpg")[0]
@@ -558,38 +552,44 @@ class Flickr30kDataset:
                 with open(caption_file, "w") as caption_file:
                     caption_file.write("\n".join(captions))
 
-        # Prepare the data for training and validation
-        real_path_flickr_images = real_path_flickr / "images"
-        real_path_flickr_labels = real_path_flickr / "labels"
-        real_path_flickr_captions = real_path_flickr / "captions"
-
-        real_path_flickr_images.mkdir(parents=True, exist_ok=True)
-        real_path_flickr_labels.mkdir(parents=True, exist_ok=True)
-        real_path_flickr_captions.mkdir(parents=True, exist_ok=True)
 
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        logger.info(f"Moving images to {str(real_path_flickr_images)}")
-        logger.info(f"Moving captions to {str(real_path_flickr_labels)}")
-        logger.info(f"Moving boxes to {str(real_path_flickr_captions)}")
+        real_train_images_path = paths['real_images']
+        real_test_images_path = paths['test_images']
+        real_val_images_path = paths['val_images']
+        
+        real_train_labels_path = paths['real_labels']
+        real_test_labels_path = paths['test_labels']
+        real_val_labels_path = paths['val_labels']
+
+        real_train_captions_path = paths['real_captions']
+        real_test_captions_path = paths['test_captions']
+        real_val_captions_path = paths['val_captions']
+
+        logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
+        logger.info(f"Moving TEST to {str(real_test_images_path)}")
+        logger.info(f"Moving VAL to {str(real_val_images_path)}")
         logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
+
         # move all files
-        flickr_images = [
+        all_images = [
             label.replace(".txt", ".jpg") for label in os.listdir(labels_path)
         ]
+        
         length = (
             val_nb + test_nb + train_nb
-            if (val_nb + test_nb + train_nb) < len(flickr_images)
-            else flickr_images
+            if (val_nb + test_nb + train_nb) < len(all_images)
+            else all_images
         )
-        flickr_images = flickr_images[:length]
+        
+        all_images = all_images[:length]
 
         counter = 0
-        print(val_nb + test_nb + train_nb, len(flickr_images))
-        for file_name in tqdm(flickr_images, unit="img"):
+        for file_name in tqdm(all_images, unit="img"):
             if counter > val_nb + test_nb + train_nb:
                 break
 
@@ -606,50 +606,21 @@ class Flickr30kDataset:
                 and os.path.isfile(label)
                 and os.path.isfile(caption)
             ):
-
                 if counter < val_nb:
-                    images_dir = Path(
-                        str(real_path_flickr_images).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
-                    labels_dir = Path(
-                        str(real_path_flickr_labels).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
-                    captions_dir = Path(
-                        str(real_path_flickr_captions).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
+                    images_dir = real_val_images_path
+                    labels_dir = real_val_labels_path
+                    captions_dir = real_val_captions_path
                 elif counter < val_nb + test_nb:
-                    images_dir = Path(
-                        str(real_path_flickr_images).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
-                    labels_dir = Path(
-                        str(real_path_flickr_labels).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
-                    captions_dir = Path(
-                        str(real_path_flickr_captions).replace(
-                            f"{os.sep}real{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
+                    images_dir = real_test_images_path
+                    labels_dir = real_test_labels_path
+                    captions_dir = real_test_captions_path
                 else:
-                    images_dir = real_path_flickr_images
-                    labels_dir = real_path_flickr_labels
-                    captions_dir = real_path_flickr_captions
+                    images_dir = real_train_images_path
+                    labels_dir = real_train_labels_path
+                    captions_dir = real_train_captions_path
 
-                images_dir.mkdir(parents=True, exist_ok=True)
-                labels_dir.mkdir(parents=True, exist_ok=True)
-                captions_dir.mkdir(parents=True, exist_ok=True)
-
-                shutil.copy(image, images_dir / img_file)
-                shutil.copy(label, labels_dir / txt_file)
-                shutil.copy(caption, captions_dir / txt_file)
+                shutil.copy(image, os.path.join(images_dir, img_file))
+                shutil.copy(label, os.path.join(labels_dir, txt_file))
+                shutil.copy(caption, os.path.join(captions_dir, txt_file))
 
                 counter += 1

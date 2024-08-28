@@ -120,13 +120,13 @@ pip install -r requirements.txt
 - [COCO](https://cocodataset.org/#home) PEOPLE dataset :
 
 ```bash
-python run.py task=coco
+python run.py task=prepare_data data.base=coco
 ```
 
 - [Flickr30K Entities](https://bryanplummer.com/Flickr30kEntities/) PEOPLE dataset :
 
 ```bash
-python run.py task=flickr30k
+python run.py task=prepare_data data.base=flickr30k
 ```
 
 
@@ -153,7 +153,7 @@ If you use the `controlnet_segmentation` ControlNet, You will find your images i
 The configuration options work for all scripts available in the framework. For example, you can have different initial data sizes by controlling sample numbers :
 
 ```bash
-python run.py task=coco ml.train_nb=500
+python run.py task=prepare_data ml.train_nb=500
 ```
 
 You can also launch multiple runs. Here's an example of a multi-run with 3 different generators :

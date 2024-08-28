@@ -104,13 +104,13 @@ class COCODataset:
     # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
     def __call__(self, paths: Dict[str, str | Path]) -> None:
         real_path = paths["root"]
-        real_path_coco = os.path.join(real_path, "coco")
+        real_path_dataset = os.path.join(real_path, "coco")
 
-        os.makedirs(real_path_coco, exist_ok=True)
+        os.makedirs(real_path_dataset, exist_ok=True)
 
         # Download if necessary
         image_path, annotations_path, bbx_path, caps_path = download_coco(
-            real_path_coco
+            real_path_dataset
         )
 
         coco_version = "train2017"
@@ -156,49 +156,41 @@ class COCODataset:
                 captions = [caps["caption"] for caps in caps_anns]
                 file.write("\n".join(captions))
 
-        # Prepare the data for training and validation
-        real_path_coco_images = os.path.join(real_path_coco, "train", "images")
-        real_path_coco_labels = os.path.join(real_path_coco, "train", "labels")
-        real_path_coco_captions = os.path.join(real_path_coco, "train", "captions")
-        
-        test_path_coco_images = os.path.join(real_path_coco, "test", "images")
-        test_path_coco_labels = os.path.join(real_path_coco, "test", "labels")
-        test_path_coco_captions = os.path.join(real_path_coco, "test", "captions")
-
-        val_path_coco_images = os.path.join(real_path_coco, "val", "images")
-        val_path_coco_labels = os.path.join(real_path_coco, "val", "labels")
-        val_path_coco_captions = os.path.join(real_path_coco, "val", "captions")
-
-        for d in (
-            real_path_coco_images, real_path_coco_labels, real_path_coco_captions,
-            test_path_coco_images, test_path_coco_labels, test_path_coco_captions,
-            val_path_coco_images, val_path_coco_labels, val_path_coco_captions
-        ):
-            os.makedirs(d, exist_ok=True)
 
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        # logger.info(f"Moving images to {str(real_path_coco_images)}")
-        # logger.info(f"Moving captions to {str(real_path_coco_labels)}")
-        # logger.info(f"Moving boxes to {str(real_path_coco_captions)}")
-        logger.info(f"Moving ALL (no test/val) to {str(real_path_coco_images)}")
-        logger.info(f"Moving TEST to {str(test_path_coco_images)}")
-        logger.info(f"Moving VAL to {str(val_path_coco_images)}")
+        real_train_images_path = paths['real_images']
+        real_test_images_path = paths['test_images']
+        real_val_images_path = paths['val_images']
+        
+        real_train_labels_path = paths['real_labels']
+        real_test_labels_path = paths['test_labels']
+        real_val_labels_path = paths['val_labels']
+
+        real_train_captions_path = paths['real_captions']
+        real_test_captions_path = paths['test_captions']
+        real_val_captions_path = paths['val_captions']
+
+        logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
+        logger.info(f"Moving TEST to {str(real_test_images_path)}")
+        logger.info(f"Moving VAL to {str(real_val_images_path)}")
         logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         # move all files
-        coco_images = os.listdir(image_path)
+        all_images = os.listdir(image_path)
+        
         length = (
             val_nb + test_nb + train_nb
-            if (val_nb + test_nb + train_nb) < len(coco_images)
-            else coco_images
+            if (val_nb + test_nb + train_nb) < len(all_images)
+            else all_images
         )
-        coco_images = coco_images[:length]
+        
+        all_images = all_images[:length]
 
         counter = 0
-        for file_name in tqdm(coco_images, unit="img"):
+        for file_name in tqdm(all_images, unit="img"):
 
             if counter > val_nb + test_nb + train_nb:
                 break
@@ -211,7 +203,6 @@ class COCODataset:
             label = bbx_path / txt_file
             caption = caps_path / txt_file
 
-            # print(image, label, caption)
 
             if (
                 os.path.isfile(image)
@@ -219,48 +210,21 @@ class COCODataset:
                 and os.path.isfile(caption)
             ):
                 if counter < val_nb:
-                    images_dir = Path(
-                        str(real_path_coco_images).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
-                    labels_dir = Path(
-                        str(real_path_coco_labels).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
-                    test_dir = Path(
-                        str(real_path_coco_captions).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}val{os.sep}"
-                        )
-                    )
+                    images_dir = real_val_images_path
+                    labels_dir = real_val_labels_path
+                    captions_dir = real_val_captions_path
                 elif counter < val_nb + test_nb:
-                    images_dir = Path(
-                        str(real_path_coco_images).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
-                    labels_dir = Path(
-                        str(real_path_coco_labels).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
-                    test_dir = Path(
-                        str(real_path_coco_captions).replace(
-                            f"{os.sep}train{os.sep}", f"{os.sep}test{os.sep}"
-                        )
-                    )
+                    images_dir = real_test_images_path
+                    labels_dir = real_test_labels_path
+                    captions_dir = real_test_captions_path
                 else:
-                    images_dir = real_path_coco_images
-                    labels_dir = real_path_coco_labels
-                    test_dir = real_path_coco_captions
+                    images_dir = real_train_images_path
+                    labels_dir = real_train_labels_path
+                    captions_dir = real_train_captions_path
 
-                os.makedirs(images_dir, exist_ok=True)
-                os.makedirs(labels_dir, exist_ok=True)
-                os.makedirs(test_dir, exist_ok=True)
 
                 shutil.copy(image, os.path.join(images_dir, img_file))
                 shutil.copy(label, os.path.join(labels_dir, txt_file))
-                shutil.copy(caption, os.path.join(test_dir, txt_file))
+                shutil.copy(caption, os.path.join(captions_dir, txt_file))
 
                 counter += 1
