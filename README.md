@@ -25,6 +25,8 @@ Then using vscode and the dev container plugin connect to the container and code
 ## UNDER Heavy development
 Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
 
+METRICS should work in this way distance_name(real, synth, feature)
+
 ### What works:
 - gen
 - coco
@@ -291,4 +293,3 @@ Here are some plots for some of the many runs and studies that we performed :
 ### Random Sampling - Regular Runs
 
 <img src="ciagen/docs/images/random_sampling.png" />
-
