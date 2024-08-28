@@ -4,52 +4,28 @@ import json
 import hydra
 
 from pathlib import Path
-import torchvision.transforms.functional
 from tqdm import tqdm
 from omegaconf import DictConfig
 import numpy as np
-import pandas as pd
-
-
-import sys
-
-sys.path.append("/gen_data")
+import torch
+from typing import List
 
 from ciagen.utils.common import logger
 
-# from ciagen import add_pyfeat_path
+from feat import Detector
 
-# add_pyfeat_path()
-# import feat
-
-# print(feat.__path__)
-# print(type(feat))
-# print(dir(feat))
-# from feat import Detector
-
-
-import importlib
-
-feat_module = importlib.import_module("feat", "/gen_data/pyfeat/feat")
-
-print(feat_module.__path__)
-print(dir(feat_module))
-# Initialize the AU detector globally to reuse it
-detector = feat_module.Detector()
+detector = Detector()
 
 
 def extract_au(
-    samples,
+    samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
     face_detection_threshold=0.5,
     **kwargs,
-):
-    # TODO: maybe make this work with a dataloader that is better at handling batchs
-    #       of data
-    """
-    The py-feat detector does not expose a API to extract the Action Unit
-    from tensor or arrays directly.
-    We are simply reusing their inner code here
-    """
+) -> List[np.ndarray]:
+    # The py-feat detector does not expose a API to extract the Action Unit
+    # from tensor or arrays directly.
+    # We are simply reusing their inner code here.
+
     face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
     landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
     au_model_kwargs = kwargs.pop("au_model_kwargs", dict())
@@ -63,7 +39,7 @@ def extract_au(
             sample, detected_faces=faces, **landmark_model_kwargs
         )
         aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
-        aus_all.append(aus)
+        aus_all.extend(aus)
 
     return aus_all
 
@@ -93,7 +69,9 @@ def is_generated_image(image_path: str, image_formats: list) -> bool:
 def measure_au_differences(image_pairs: list) -> list:
     differences = []
     for real_image, generated_image in tqdm(image_pairs, unit="image"):
-        difference_vector = extract_au_difference(real_image, generated_image)
+        difference_vector = extract_au_difference_from_paths(
+            real_image, generated_image
+        )
         differences.append(
             difference_vector.tolist()
         )  # Convert to list for JSON serialization
@@ -160,13 +138,14 @@ def main(cfg: DictConfig) -> None:
         json.dump(dict_of_au_differences, outfile, indent=4)
 
 
-if __name__ == "__main__":
+def test_au_extractor():
     image_test = "/gen_data/data/real/demo/trump.jpeg"
     from PIL import Image
-    import torch
     import torchvision
 
     image = Image.open(image_test)
+    print(f"{image_test} loaded")
     image = torchvision.transforms.functional.pil_to_tensor(image)
+    print("image converted to tensor")
     a = extract_au([image])
     print(a)

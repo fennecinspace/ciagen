@@ -3,7 +3,7 @@ import sys
 
 PACKAGE_NAME = "ciagen"
 ULTRALYTICS_PATH = os.path.join(os.path.join(os.getcwd(), PACKAGE_NAME), "ultralytics")
-PYFEAT_PATH = os.path.join(os.path.join(os.getcwd(), PACKAGE_NAME), "pyfeat")
+PYFEAT_PATH = os.path.join(os.path.join(os.getcwd(), PACKAGE_NAME), "py-feat")
 
 
 REAL_DATAPATH = os.path.join(os.getcwd(), "data", "real")
@@ -38,6 +38,6 @@ def create_data_folder() -> bool:
 # Initialize datafolders
 create_data_folder()
 
-
-def hello():
-    print("Hello, World!")
+# Add external libraries's paths
+add_pyfeat_path()
+add_ultralytics_path()

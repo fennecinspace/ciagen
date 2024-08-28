@@ -51,6 +51,7 @@ def flickr30k_task(cfg: DictConfig) -> None:
 
     return flickr_downloader(paths)
 
+
 def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
     from ciagen.exes import CreateMixedYoloDataset
 
@@ -58,6 +59,7 @@ def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
     paths = generate_all_paths(cfg)
 
     return mixed_yolo_dataset_creator(paths)
+
 
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
@@ -68,7 +70,7 @@ allowed_tasks = {
     # "train": ciagen.train,
     "coco": coco_task,
     "flickr30k": flickr30k_task,
-    'create_mixed_yolo_dataset': create_mixed_yolo_dataset_task,
+    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
@@ -92,4 +94,8 @@ def my_app(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    my_app()
+    # my_app()
+
+    from ciagen.feature_extractors.auc_extractor import test_au_extractor
+
+    test_au_extractor()
