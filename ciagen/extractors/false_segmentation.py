@@ -5,9 +5,7 @@ import torch
 from PIL.Image import Image
 
 from ciagen import add_ultralytics_path
-from ciagen.extractors.abs_extractor import ExtractorABC
 
-add_ultralytics_path()
 from ultralytics import YOLO
 
 
