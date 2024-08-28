@@ -1,14 +1,10 @@
 import os
-import sys
 
 import numpy as np
 import torch
 from PIL.Image import Image
 from torchvision.transforms import ToPILImage
 
-from ciagen import add_ultralytics_path
-
-add_ultralytics_path()
 from ultralytics import YOLO
 
 from ciagen.extractors.abs_extractor import ExtractorABC
