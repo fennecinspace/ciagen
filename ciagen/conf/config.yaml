@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "coco" # "coco" or "flickr30k"
+    base: "fer_gen_2_1" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
