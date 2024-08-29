@@ -28,6 +28,8 @@ To downloaad the dataset related to Face Emotion Recognition (FER) you will need
 ## UNDER Heavy development
 Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
 
+METRICS should work in this way distance_name(real, synth, feature)
+
 ### What works:
 - gen
 - coco
