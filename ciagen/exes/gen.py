@@ -137,9 +137,9 @@ class Generator:
         logger.info(f"Real dataset size: {real_dataset_size}")
 
         # dumps to file:
+        metadata_dict = {"gen_config": self.cfg}
         with open(os.path.join(generated_path, "metadata.yaml"), "w") as f:
-            OmegaConf.save(self.cfg, f)
-
+            OmegaConf.save(metadata_dict, f)
 
         for idx in range(real_dataset_size):
             image_path = real_path_images[idx]
