@@ -21,6 +21,9 @@ put the `nvidia` argument at the end so the script build the container with the 
 
 Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
 
+## Kaggle API
+
+To downloaad the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project. 
 
 ## UNDER Heavy development
 Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
@@ -34,13 +37,13 @@ METRICS should work in this way distance_name(real, synth, feature)
 
 ### Data structuring
 
-Please respect this structure when writing code : 
+Please respect this structure when writing code :
 images_dir
 This project contains the following directory structure:
 
 ```
-└─ data/ 
-    ├─ real/ 
+└─ data/
+    ├─ real/
     │   └─ dataset-name/ (e.g., coco)
     │       ├─ train/
     │       │   ├─ images/
@@ -63,12 +66,12 @@ This project contains the following directory structure:
     │           │   └─ image006.txt
     │           └─ captions/
     │               └─ image006.txt
-    ├─ generated/ 
+    ├─ generated/
     │   └─ dataset-name/ (e.g., coco)
     │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
     │           ├─ image001_1.png
     │           └─ image001_2.png
-    └─ mixed/ 
+    └─ mixed/
         └─ dataset-name/ (e.g., coco)
             └─ train_nb/ (e.g., 250)
                 └─ [controlnet-model-name]-[augmentation_percent]/ (e.g., controlnet_segmentation-0.1)
@@ -78,7 +81,7 @@ This project contains the following directory structure:
                     └─ val.txt
 ```
 
-`train, val, test .txt` files contain a list of the images to use, here's an example : 
+`train, val, test .txt` files contain a list of the images to use, here's an example :
 
 ```
 /path/to/data/real/coco/images/000000368475.jpg
