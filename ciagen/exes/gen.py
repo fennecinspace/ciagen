@@ -19,7 +19,7 @@ from typing import Dict
 
 import torch
 from diffusers.utils import load_image
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from ciagen.extractors import extract_model_from_name, instantiate_extractor
 from ciagen.generators import SDCN, NaivePromptGenerator
@@ -135,6 +135,11 @@ class Generator:
 
         logger.info(f"Results will be saved to {generated_path}")
         logger.info(f"Real dataset size: {real_dataset_size}")
+
+        # dumps to file:
+        metadata_dict = {"gen_config": self.cfg}
+        with open(os.path.join(generated_path, "metadata.yaml"), "w") as f:
+            OmegaConf.save(metadata_dict, f)
 
         for idx in range(real_dataset_size):
             image_path = real_path_images[idx]
