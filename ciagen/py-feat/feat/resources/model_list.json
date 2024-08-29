@@ -1,0 +1,154 @@
+{
+    "au_detectors": {
+        "svm": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/svm_60_July2023.pkl"
+            ]
+        },
+        "xgb": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU1_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU2_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU4_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU5_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU6_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU7_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU9_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU10_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU11_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU12_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU14_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU15_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU17_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU20_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU23_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU24_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU25_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU26_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU28_XGB.ubj",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/July4_AU43_XGB.ubj"
+            ]
+        },
+        "hog-pca": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Upperpca_June30.pkl",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Upperscalar_June30.pkl",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Lowerpca_June30.pkl",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Lowerscalar_June30.pkl",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Fullpca_June30.pkl",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/all_data_Fullscalar_June30.pkl"
+            ]
+        }
+    },
+    "emotion_detectors": {
+        "resmasknet": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/ResMaskNet_Z_resmasking_dropout1_rot30.pth",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/ResMaskNet_fer2013_config.json"
+            ]
+        },
+        "svm": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/July4_emo_SVM.pkl"
+            ]
+        },
+        "emo_scalar": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/emo_data_Fullpca_Jun30.pkl"
+            ]
+        },
+        "emo_pca": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/emo_data_Fullscalar_Jun30.pkl"
+            ]
+        }
+    },
+    "face_detectors": {
+        "retinaface": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/mobilenet0.25_Final.pth"
+            ]
+        },
+        "mtcnn": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/onet.pt",
+                "https://github.com/cosanlab/feat/releases/download/v0.1/pnet.pt",
+                "https://github.com/cosanlab/feat/releases/download/v0.1/rnet.pt"
+            ]
+        },
+        "faceboxes": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/FaceBoxesProd.pth"
+            ]
+        },
+        "img2pose": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/img2pose_v1.pth",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_mean_v1.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_stddev_v1.npy"
+            ]
+        },
+        "img2pose-c": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/img2pose_v1_ft_300w_lp.pth",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_mean_v1.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_stddev_v1.npy"
+            ]
+        }
+    },
+    "landmark_detectors": {
+        "lbfmodel": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/lbfmodel.yaml"
+            ]
+        },
+        "mobilefacenet": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/mobilefacenet_model_best.pth.tar"
+            ]
+        },
+        "mobilenet": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/mobilenet_224_model_best_gdconv_external.pth.tar"
+            ]
+        },
+        "pfld": {
+            "urls": [
+                "https://github.com/cosanlab/feat/releases/download/v0.1/pfld_model_best.pth.tar"
+            ]
+        }
+    },
+    "facepose_detectors": {
+        "img2pose": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/reference_3d_68_points_trans.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/img2pose_v1.pth",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_mean_v1.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_stddev_v1.npy"
+            ]
+        },
+        "img2pose-c": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/reference_3d_68_points_trans.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/img2pose_v1_ft_300w_lp.pth",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_mean_v1.npy",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/WIDER_train_pose_stddev_v1.npy"
+            ]
+        }
+    },
+    "identity_detectors": {
+        "facenet": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/facenet_20180402_114759_vggface2.pth"
+            ]
+        }
+    },
+    "viz_models": {
+        "pyfeat_aus_to_landmarks": {
+            "urls": [
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/pyfeat_aus_to_landmarks.joblib",
+                "https://github.com/cosanlab/py-feat/releases/download/v0.1/pyfeat_aus_to_landmarks.h5"
+            ]
+        }
+    }
+}

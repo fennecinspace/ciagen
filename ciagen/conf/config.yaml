@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "fer_gen_2_1" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
+    base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
@@ -26,7 +26,6 @@ ml:
     val_nb: 300
     test_nb: 300
     train_nb: 250
-
     augmentation_percent: 0.1 # controls all aug percents parameters everywhere
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
     epochs: 300
@@ -35,7 +34,6 @@ ml:
         enable: false
         metric: brisque # brisque (smaller is better), dbcnn (bigger is better), ilniqe (smaller is better)
         sample: best # to take smaller or bigger values is decided depending the metric
-
     wandb: # SET wabdb parameters for run tracking and model logging
         entity: your-wandb-username
         project: sdcn-project
