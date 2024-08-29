@@ -117,13 +117,6 @@ model:
     seed: 34567 # random seed for SDCN generation
     device: cuda # cpu or cuda ?
 
-# IQA METRICS SAMPLING :  Calculate all IQA metrics listed for all generated datasets
-iqa:
-    device: cuda # cpu or cuda ?
-    metrics: [brisque, dbcnn, nima, ilniqe] # metrics to calculate scores
-    # available metrics : brisque, clipiqa+, dbcnn, ilniqe, niqe, nima, cnniqa, nrqm, pi, ilniqe, niqe
-    # read more on : https://github.com/chaofengc/IQA-PyTorch/blob/main/docs/ModelCard.md
-
 # ACTIVE LEARNING SAMPLING
 active:
     enable: False

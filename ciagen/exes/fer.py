@@ -78,6 +78,7 @@ def download_fer(
 
     path_to_data_zip = data_path / data_zip_name
 
+    # TODO: fill the windows args here
     subprocess.run(
         [
             "kaggle",
@@ -121,14 +122,14 @@ class FERDataset:
             dataset_name = "face-dataset-gen2-1"
 
         # Download if necessary
-        images_path, annotations_path, sentences_path, caps_path, labels_path = (
+        images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
             download_fer(real_path_fer, dataset_name)
         )
 
         if "gen" in dataset_name:
-            split_file = f"{real_path_fer}/combined_generated.csv"
+            split_file = os.path.join(real_path_fer, "combined_generated.csv")
         else:
-            split_file = f"{real_path_fer}/combined_real.csv"
+            split_file = os.path.join(real_path_fer, "combined_real.csv")
 
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
@@ -151,20 +152,28 @@ class FERDataset:
                     break
 
                 line = line.replace("\n", "")
-                [file_name, emotion, gender, ethnicity, set] = line.split(",")
 
-                if set == "test" and current_sizes["val"] < max_sizes["val"]:
-                    set = "val"
+                try:
+                    [file_name, emotion, gender, ethnicity, set_type] = line.split(",")
+                except Exception as e:
+                    raise ValueError(
+                        f"Error with line (too long or too short) {line_nbr}: {e}"
+                    )
 
-                if current_sizes[set] < max_sizes[set]:
-                    file_list[set] += [file_name]
+                if set_type == "test" and current_sizes["val"] < max_sizes["val"]:
+                    set_type = "val"
+
+                if current_sizes[set_type] < max_sizes[set_type]:
+                    file_list[set_type] += [file_name]
                     caption = f"{ETHNICITY_MAPPING[ethnicity]} {gender} person with {EMOTION_MAPPING[emotion]} expression"
-                    caption_list[set] += [(file_name.replace(".jpg", ".txt"), caption)]
+                    caption_list[set_type] += [
+                        (file_name.replace(".jpg", ".txt"), caption)
+                    ]
 
                     label = emotion
-                    label_list[set] += [(file_name.replace(".jpg", ".txt"), label)]
+                    label_list[set_type] += [(file_name.replace(".jpg", ".txt"), label)]
 
-                    current_sizes[set] += 1
+                    current_sizes[set_type] += 1
 
         images_path = {
             "train": paths["real_images"],
@@ -182,30 +191,36 @@ class FERDataset:
             "test": paths["test_captions"],
         }
 
-        for set in ["train", "val", "test"]:
-            image_set_path = images_path[set]
-            label_set_path = labels_path[set]
-            caption_set_path = captions_path[set]
+        for set_type in ["train", "val", "test"]:
+            image_set_path = images_path[set_type]
+            label_set_path = labels_path[set_type]
+            caption_set_path = captions_path[set_type]
 
-            for img in file_list[set]:
+            for img in file_list[set_type]:
                 if self.cfg["data"]["base"] == "fer_real":
-                    orig_img_path = Path(f"{real_path_fer}/Real/Real/{img}")
+                    orig_img_path = Path(
+                        os.path.join(real_path_fer, "Real", "Real", img)
+                    )
                 elif self.cfg["data"]["base"] == "fer_gen_1_5":
                     orig_img_path = Path(
-                        f"{real_path_fer}/Generated_1.5/Generated_1.5/{img}"
+                        os.path.join(
+                            real_path_fer, "Generated_1.5", "Generated_1.5", img
+                        )
                     )
                 else:
                     orig_img_path = Path(
-                        f"{real_path_fer}/Generated_2.1/Generated_2.1/{img}"
+                        os.path.join(
+                            real_path_fer, "Generated_2.1", "Generated_2.1", img
+                        )
                     )
 
                 shutil.copy(orig_img_path, os.path.join(image_set_path, img))
 
-            for lab_file, lab in label_list[set]:
+            for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
                     f.write(lab)
 
-            for cap_file, cap in caption_list[set]:
+            for cap_file, cap in caption_list[set_type]:
                 with open(os.path.join(caption_set_path, cap_file), "w+") as f:
                     f.write(cap)
 
