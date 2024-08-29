@@ -52,16 +52,29 @@ def flickr30k_task(cfg: DictConfig) -> None:
     return flickr_downloader(paths)
 
 
-def prepare_data_task(cfg: DictConfig) -> None:
-    from ciagen.exes import Flickr30kDataset, COCODataset
+def fer_task(cfg: DictConfig) -> None:
+    from ciagen.exes import FERDataset
 
-    if cfg['data']['base'] == 'coco':
+    fer_downloader = FERDataset(cfg)
+    paths = generate_all_paths(cfg)
+
+    return fer_downloader(paths)
+
+
+def prepare_data_task(cfg: DictConfig) -> None:
+    from ciagen.exes import Flickr30kDataset, COCODataset, FERDataset
+
+    if cfg["data"]["base"] == "coco":
         downloader = COCODataset(cfg)
-    elif cfg['data']['base'] == 'flickr30k':
+    elif cfg["data"]["base"] == "flickr30k":
         downloader = Flickr30kDataset(cfg)
+    elif cfg["data"]["base"] in ["fer_real", "fer_gen_1_5", "fer_gen_2_1"]:
+        downloader = FERDataset(cfg)
     else:
-        downloader: lambda paths: print(f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco" or "flickr30k" in the config file')
-    
+        downloader: lambda paths: print(
+            f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco", "flickr30k", "fer" in the config file'
+        )
+
     paths = generate_all_paths(cfg)
     return downloader(paths)
 
@@ -74,6 +87,7 @@ def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
 
     return mixed_yolo_dataset_creator(paths)
 
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
@@ -84,7 +98,7 @@ allowed_tasks = {
     # "coco": coco_task,
     # "flickr30k": flickr30k_task,
     "prepare_data": prepare_data_task,
-    'create_mixed_yolo_dataset': create_mixed_yolo_dataset_task,
+    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
