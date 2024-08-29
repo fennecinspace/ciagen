@@ -68,18 +68,13 @@ def prepare_data_task(cfg: DictConfig) -> None:
         downloader = COCODataset(cfg)
     elif cfg["data"]["base"] == "flickr30k":
         downloader = Flickr30kDataset(cfg)
-    elif cfg['data']['base'] in ['fer_real', 'fer_gen_1_5', 'fer_gen_2_1']:
+    elif cfg["data"]["base"] in ["fer_real", "fer_gen_1_5", "fer_gen_2_1"]:
         downloader = FERDataset(cfg)
     else:
-<<<<<<< HEAD
-        downloader: lambda paths: print(f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco", "flickr30k", "fer" in the config file')
-    
-=======
         downloader: lambda paths: print(
-            f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco" or "flickr30k" in the config file'
+            f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco", "flickr30k", "fer" in the config file'
         )
 
->>>>>>> reorganizing
     paths = generate_all_paths(cfg)
     return downloader(paths)
 

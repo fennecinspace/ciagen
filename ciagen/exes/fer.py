@@ -14,50 +14,47 @@
 import hydra
 import os
 import shutil
-
 import zipfile
 
 from omegaconf import DictConfig
 from pathlib import Path
-from tqdm import tqdm
 
 from typing import Dict, AnyStr
 
 import os
 import subprocess
 
-from ciagen.utils.common import (
-    bbox_min_max_to_center_dims,
-    calculate_iou,
-    contains_word,
-    logger,
-)
+from ciagen.utils.common import logger
 
 
-EMOTION_MAPPING = {'Anger': 'an angry',
-                       'Happiness': 'a happy',
-                       'Neutral': 'a neutral',
-                       'Sadness': 'a sad',
-                       'Fear': 'a fearful',
-                       'Disgust': 'a disgusted',
-                       'Surprise': 'a surprised',
-                       'Contempt': 'a contemptuous'}
+EMOTION_MAPPING = {
+    "Anger": "an angry",
+    "Happiness": "a happy",
+    "Neutral": "a neutral",
+    "Sadness": "a sad",
+    "Fear": "a fearful",
+    "Disgust": "a disgusted",
+    "Surprise": "a surprised",
+    "Contempt": "a contemptuous",
+}
 
-ETHNICITY_MAPPING = {'White': 'a white',
-                    'Black': 'a black',
-                    'East Asian': 'an east asian',
-                    'Latino_Hispanic': 'a latin hispanic',
-                    'Southeast Asian': 'a southeast asian'}
+ETHNICITY_MAPPING = {
+    "White": "a white",
+    "Black": "a black",
+    "East Asian": "an east asian",
+    "Latino_Hispanic": "a latin hispanic",
+    "Southeast Asian": "a southeast asian",
+}
 
 
 def download_fer(
-    data_path: Path,
-    dataset_name: AnyStr, #TODO change this to Str
+    data_path: Path | str,
+    dataset_name: AnyStr,  # TODO change this to Str
     captions_path: str = "Captions",
     sentences_path: str = "Sentences",
     images_path: str = "Images",
     annotations_path: str = "Annotations",
-    labels_path: str = "Labels"
+    labels_path: str = "Labels",
 ):
 
     data_zip_name: str = f"{dataset_name}.zip"
@@ -72,14 +69,29 @@ def download_fer(
     dirs = data_path, image_path, annotations_path, caps_path, sentences_path
     logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
     for d in dirs:
-        d.mkdir(parents=True, exist_ok=True)
+        try:
+            d.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            raise OSError(
+                f"Could not create data folders ({d} throws an error). E: {e}"
+            )
 
     path_to_data_zip = data_path / data_zip_name
 
-    subprocess.run(["kaggle", "datasets", "download", "-d", f"jeremiebogaert/{dataset_name}", "-p", f"{data_path}"])
+    subprocess.run(
+        [
+            "kaggle",
+            "datasets",
+            "download",
+            "-d",
+            f"jeremiebogaert/{dataset_name}",
+            "-p",
+            f"{data_path}",
+        ]
+    )
 
     # TODO add a way to not extract the zip file every time
-    with zipfile.ZipFile(path_to_data_zip, 'r') as zip_ref:
+    with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
         zip_ref.extractall(data_path)
 
     return image_path, annotations_path, sentences_path, caps_path, labels_path
@@ -97,6 +109,10 @@ class FERDataset:
 
         os.makedirs(real_path_fer, exist_ok=True)
 
+        possible_fer = self.cfg["data"]["base"]
+        if possible_fer not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
+            raise ValueError(f"Unknown FER dataset base: {possible_fer}")
+
         if self.cfg["data"]["base"] == "fer_real":
             dataset_name = "face-dataset-real"
         elif self.cfg["data"]["base"] == "fer_gen_1_5":
@@ -109,85 +125,102 @@ class FERDataset:
             download_fer(real_path_fer, dataset_name)
         )
 
-        if 'gen' in dataset_name:
-            split_file = f'{real_path_fer}/combined_generated.csv'
+        if "gen" in dataset_name:
+            split_file = f"{real_path_fer}/combined_generated.csv"
         else:
-            split_file = f'{real_path_fer}/combined_real.csv'
+            split_file = f"{real_path_fer}/combined_real.csv"
 
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        max_sizes = {'train': train_nb, 'val': val_nb, 'test': test_nb}
-        current_sizes = {'train': 0, 'val': 0, 'test': 0}
+        max_sizes = {"train": train_nb, "val": val_nb, "test": test_nb}
+        current_sizes = {"train": 0, "val": 0, "test": 0}
 
-        caption_list = {'train': [], 'val': [], 'test': []}
-        label_list = {'train': [], 'val': [], 'test': []}
-        file_list = {'train': [], 'val': [], 'test': []}
+        caption_list = {"train": [], "val": [], "test": []}
+        label_list = {"train": [], "val": [], "test": []}
+        file_list = {"train": [], "val": [], "test": []}
 
-        with open(split_file, 'r') as f:
+        with open(split_file, "r") as f:
             for line_nbr, line in enumerate(f):
                 if line_nbr == 0:
                     continue
-                if all([current_sizes[i] == max_sizes[i] for i in current_sizes.keys()]):
+                if all(
+                    [current_sizes[i] == max_sizes[i] for i in current_sizes.keys()]
+                ):
                     break
 
-                line = line.replace("\n", '')
-                [file_name, emotion, gender, ethnicity, set] = line.split(',')
+                line = line.replace("\n", "")
+                [file_name, emotion, gender, ethnicity, set] = line.split(",")
 
-                if set == 'test' and current_sizes['val'] < max_sizes['val']:
-                    set = 'val'
+                if set == "test" and current_sizes["val"] < max_sizes["val"]:
+                    set = "val"
 
                 if current_sizes[set] < max_sizes[set]:
                     file_list[set] += [file_name]
                     caption = f"{ETHNICITY_MAPPING[ethnicity]} {gender} person with {EMOTION_MAPPING[emotion]} expression"
-                    caption_list[set] += [(file_name.replace('.jpg', '.txt'), caption)]
+                    caption_list[set] += [(file_name.replace(".jpg", ".txt"), caption)]
 
                     label = emotion
-                    label_list[set] += [(file_name.replace('.jpg', '.txt'), label)]
+                    label_list[set] += [(file_name.replace(".jpg", ".txt"), label)]
 
                     current_sizes[set] += 1
 
-        images_path = {'train': paths['real_images'], 'val': paths['val_images'], 'test': paths['test_images']}
-        labels_path = {'train': paths['real_labels'], 'val': paths['val_labels'], 'test': paths['test_labels']}
-        captions_path = {'train': paths['real_captions'], 'val': paths['val_captions'], 'test': paths['test_captions']}
+        images_path = {
+            "train": paths["real_images"],
+            "val": paths["val_images"],
+            "test": paths["test_images"],
+        }
+        labels_path = {
+            "train": paths["real_labels"],
+            "val": paths["val_labels"],
+            "test": paths["test_labels"],
+        }
+        captions_path = {
+            "train": paths["real_captions"],
+            "val": paths["val_captions"],
+            "test": paths["test_captions"],
+        }
 
-        for set in ['train', 'val', 'test']:
+        for set in ["train", "val", "test"]:
             image_set_path = images_path[set]
             label_set_path = labels_path[set]
             caption_set_path = captions_path[set]
 
             for img in file_list[set]:
-                if self.cfg["data"]["base"] == 'fer_real':
+                if self.cfg["data"]["base"] == "fer_real":
                     orig_img_path = Path(f"{real_path_fer}/Real/Real/{img}")
-                elif self.cfg["data"]["base"] == 'fer_gen_1_5':
-                    orig_img_path = Path(f"{real_path_fer}/Generated_1.5/Generated_1.5/{img}")
+                elif self.cfg["data"]["base"] == "fer_gen_1_5":
+                    orig_img_path = Path(
+                        f"{real_path_fer}/Generated_1.5/Generated_1.5/{img}"
+                    )
                 else:
-                    orig_img_path = Path(f"{real_path_fer}/Generated_2.1/Generated_2.1/{img}")
+                    orig_img_path = Path(
+                        f"{real_path_fer}/Generated_2.1/Generated_2.1/{img}"
+                    )
 
                 shutil.copy(orig_img_path, os.path.join(image_set_path, img))
 
             for lab_file, lab in label_list[set]:
-                with open(os.path.join(label_set_path, lab_file), 'w+') as f:
+                with open(os.path.join(label_set_path, lab_file), "w+") as f:
                     f.write(lab)
 
             for cap_file, cap in caption_list[set]:
-                with open(os.path.join(caption_set_path, cap_file), 'w+') as f:
+                with open(os.path.join(caption_set_path, cap_file), "w+") as f:
                     f.write(cap)
 
 
 @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     # Get all paths
-    data = cfg['data']
-    base_path = Path(data['base'])
-    RAW_DATA_PATH = Path(base_path) / data['real']
+    data = cfg["data"]
+    base_path = Path(data["base"])
+    RAW_DATA_PATH = Path(base_path) / data["real"]
 
     RAW_DATA_PATH.mkdir(parents=True, exist_ok=True)
-    FACE_DATA_PATH = RAW_DATA_PATH/'fer'
+    FACE_DATA_PATH = RAW_DATA_PATH / "fer"
     FACE_DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
     main()
-
