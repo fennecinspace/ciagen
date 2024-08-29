@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "demo" # "coco" or "flickr30k"
+    base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
@@ -116,13 +116,6 @@ model:
             subfolder: diffusion_sd15
     seed: 34567 # random seed for SDCN generation
     device: cuda # cpu or cuda ?
-
-# IQA METRICS SAMPLING :  Calculate all IQA metrics listed for all generated datasets
-iqa:
-    device: cuda # cpu or cuda ?
-    metrics: [brisque, dbcnn, nima, ilniqe] # metrics to calculate scores
-    # available metrics : brisque, clipiqa+, dbcnn, ilniqe, niqe, nima, cnniqa, nrqm, pi, ilniqe, niqe
-    # read more on : https://github.com/chaofengc/IQA-PyTorch/blob/main/docs/ModelCard.md
 
 # ACTIVE LEARNING SAMPLING
 active:
