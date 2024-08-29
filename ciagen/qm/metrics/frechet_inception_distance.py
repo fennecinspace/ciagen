@@ -10,9 +10,7 @@ from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
 from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
 )
-
-from .inception import InceptionSoftmax, inception_transform
-
+from ciagen.feature_extractors.inception import InceptionSoftmax, inception_transform
 
 class FID:
     """

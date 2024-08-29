@@ -10,10 +10,9 @@ import torch.utils
 import numpy as np
 from PIL import Image
 
+from ciagen.feature_extractors.inception import InceptionSoftmax, inception_transform
 from ciagen.qm import VirtualDataloader, id_transform, TL
 from ciagen.qm.divergences import kl_divergence
-
-from .inception import InceptionSoftmax, inception_transform
 
 
 class IS:
