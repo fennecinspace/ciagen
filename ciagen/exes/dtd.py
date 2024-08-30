@@ -16,7 +16,7 @@ import os
 import random
 from pathlib import Path
 from typing import Dict
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 import torch
 
@@ -29,6 +29,9 @@ torch.backends.cudnn.benchmark = False
 class DTD:
     def __init__(self, cfg: DictConfig):
         self.cfg = cfg
+        self.available_metrics = {
+            'fid': FID,
+        }
 
     def __call__(self, paths: Dict[str, str | Path]) -> None:
         data = self.cfg["data"]
@@ -37,6 +40,8 @@ class DTD:
         real_path = paths["real"]
         generated_path = paths["generated"]
         real_path_images = paths["real_images"]
+
+        meta_data_file = Path(generated_path) / 'metadata.yaml'
 
         # Loading real images
         real_images = load_images_from_directory(
@@ -56,13 +61,35 @@ class DTD:
 
         logger.info(f"Using {real_dataset_size} Real images from: {real_path_images}")
         logger.info(f"Using {synthetic_dataset_size} Synthetic images from: {generated_path}")
+        logger.info(f'Will save to {meta_data_file}')
 
+        for metric in self.cfg['metrics']['dtd']:
+            if metric not in self.available_metrics:
+                logger.exception(f'There is no {metric} metric available, metrics are {list(self.available_metrics.keys())}')
+                continue
 
-        FIDCalculator = FID()
+            metric_calculator = self.available_metrics[metric]()
 
-        score = FIDCalculator.instant_score(
-            real_samples = real_images,
-            synthetic_samples = synthetic_images,
-        )
+            score = metric_calculator.instant_score(
+                real_samples = real_images,
+                synthetic_samples = synthetic_images,
+            )
 
-        logger.info(f"FID is {score}")
+            logger.info(f"FID is {score}")
+
+            metadata = OmegaConf.load(meta_data_file)
+
+            if 'results' not in metadata:
+                metadata['results'] = {}
+
+            if 'metrics' not in metadata['results']:
+                metadata['results'] = {'metrics': {}}
+
+            if 'dtd' not in metadata['results']['metrics']:
+                metadata['results']['metrics'] = {'dtd': {}}
+
+            if metric not in metadata['results']['metrics']['dtd']:
+                metadata['results']['metrics']['dtd'] = { metric: score }
+
+            with open(meta_data_file, "w") as f:
+                OmegaConf.save(metadata, f)

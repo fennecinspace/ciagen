@@ -123,3 +123,7 @@ active:
     rounds: 5 # rounds of AL
     sel: 125 # number of samples added each round
     sampling: confidence # confidence, coreset, baseline (for ablation study)
+
+metrics:
+    dtd:
+        - fid
