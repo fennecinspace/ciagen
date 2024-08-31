@@ -7,7 +7,7 @@ from torchvision.transforms import ToPILImage
 
 from ultralytics import YOLO
 
-from ciagen.extractors.abs_extractor import ExtractorABC
+from ciagen.extractors.abc_extractor import ExtractorABC
 
 
 class Segmentation(ExtractorABC):
