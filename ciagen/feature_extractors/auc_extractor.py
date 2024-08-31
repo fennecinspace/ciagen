@@ -26,7 +26,7 @@ class AUExtractor(FeatureExtractor):
         self,
         samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
         **kwargs,
-    ) -> List[SampleT]:
+    ) -> List[SampleT] | SampleT:
 
         # The py-feat detector does not expose a API to extract the Action Unit
         # from tensor or arrays directly.
@@ -154,5 +154,8 @@ def test_au_extractor():
     print(f"{image_test} loaded")
     image = torchvision.transforms.functional.pil_to_tensor(image)
     print("image converted to tensor")
-    a = extract_au([image])
+
+    au_extractor = AUExtractor()
+
+    a = au_extractor.extract([image])
     print(a)
