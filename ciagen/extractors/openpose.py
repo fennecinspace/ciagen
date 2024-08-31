@@ -2,7 +2,7 @@ import numpy as np
 from controlnet_aux import OpenposeDetector
 from PIL.Image import Image
 
-from ciagen.extractors.abs_extractor import ExtractorABC
+from ciagen.extractors.abc_extractor import ExtractorABC
 
 
 class OpenPose(ExtractorABC):
