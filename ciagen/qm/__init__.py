@@ -39,3 +39,6 @@ class VirtualDataloader:
 
     def as_tensor(self):
         return torch.stack([self.dataset[i] for i in self.index])
+
+    def as_list(self): # quick fix for reading data issues caused by tensor transforms between FID and IS
+        return self.dataset

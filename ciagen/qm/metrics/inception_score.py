@@ -113,27 +113,28 @@ class IS:
 
     def run_score(
         self,
-        samples: torch.Tensor | Image.Image,
+        synthetic_samples: torch.Tensor | Image.Image,
         already_transformed: bool = False,
         as_float: bool = True,
         times: int = 10,
         sampling_size: float = 0.5,
         info: bool = False,
+        **kwargs,
     ):
         """
         Following the original paper (https://arxiv.org/pdf/1606.03498), it is recommended
         to run the experience 10 times with 5000 samples as batch.
         """
 
-        sampling_size = int(len(samples) * sampling_size)
+        sampling_size = int(len(synthetic_samples) * sampling_size)
         accum = 0
 
         for i in tqdm(range(times)):
-            index = np.random.choice(len(samples), sampling_size, replace=False)
-            virtual_samples = VirtualDataloader(dataset=samples, index=index)
+            index = np.random.choice(len(synthetic_samples), sampling_size, replace=False)
+            virtual_samples = VirtualDataloader(dataset=synthetic_samples, index=index)
 
             accum += self.instant_score(
-                samples=virtual_samples.as_tensor(),
+                samples=virtual_samples.as_list(),
                 as_float=as_float,
                 already_transformed=already_transformed,
             )

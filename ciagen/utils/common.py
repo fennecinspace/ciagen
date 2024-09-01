@@ -326,21 +326,27 @@ def load_images_from_directory(directory: Union[str, Path], formats: List[str] =
     images = []
 
     if to_tensors:
-        transform = transforms.Compose([
-            transforms.ToTensor()  # Converts the image to a PyTorch tensor (scales pixel values to [0, 1])
-        ])
-    else:
-        transform = lambda image: image
+        inception_transform = transforms.Compose(
+            [
+                transforms.Resize(299),
+                transforms.CenterCrop(299),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
 
     for image_path in images_paths:
         try:
             image = load_image(image_path)
 
             if to_tensors:
-                image = transform(image)
+                image = inception_transform(image).unsqueeze(0)
 
             images.append(image)
         except Exception as e:
             print(f"Error loading image {image_path}: {e}")
+
+    if to_tensors:
+        return torch.stack(images)
 
     return images

@@ -21,6 +21,7 @@ from omegaconf import DictConfig, OmegaConf
 import torch
 
 from ciagen.qm.metrics.frechet_inception_distance import FID
+from ciagen.qm.metrics.inception_score import IS
 from ciagen.utils.common import logger, load_images_from_directory
 
 # Do not let torch decide on best algorithm (we know better!)
@@ -31,6 +32,7 @@ class DTD:
         self.cfg = cfg
         self.available_metrics = {
             'fid': FID,
+            'inception_score': IS,
         }
 
     def __call__(self, paths: Dict[str, str | Path]) -> None:
@@ -47,7 +49,6 @@ class DTD:
         real_images = load_images_from_directory(
             directory = real_path_images,
             formats = data["image_formats"],
-            # to_tensors = True
         )
         real_dataset_size = len(real_path_images)
 
@@ -55,7 +56,6 @@ class DTD:
         synthetic_images = load_images_from_directory(
             directory = generated_path,
             formats = data["image_formats"],
-            # to_tensors = True
         )
         synthetic_dataset_size = len(real_path_images)
 
@@ -70,12 +70,12 @@ class DTD:
 
             metric_calculator = self.available_metrics[metric]()
 
-            score = metric_calculator.instant_score(
+            score = metric_calculator.run_score(
                 real_samples = real_images,
                 synthetic_samples = synthetic_images,
             )
 
-            logger.info(f"FID is {score}")
+            logger.info(f"{metric} is {score}")
 
             metadata = OmegaConf.load(meta_data_file)
 
