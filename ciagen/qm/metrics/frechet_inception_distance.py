@@ -10,9 +10,7 @@ from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
 from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
 )
-
-from .inception import InceptionSoftmax, inception_transform
-
+from ciagen.feature_extractors.inception import InceptionSoftmax, inception_transform
 
 class FID:
     """
@@ -136,3 +134,24 @@ class FID:
         res = distribution_distance(real_samples, synthetic_samples)
 
         return float(res)
+
+    def run_score(
+        self,
+        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
+        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
+        feature_extractor: None | Callable[[Any], torch.Tensor] = None,
+        distribution_distance: (
+            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
+        ) = None,
+        transform: None | Callable[[Any], torch.Tensor] = None,
+        already_transformed: bool = False,
+        **kwargs,
+    ):
+        return self.instant_score(
+            real_samples = real_samples,
+            synthetic_samples = synthetic_samples,
+            feature_extractor = feature_extractor,
+            distribution_distance = distribution_distance,
+            transform = transform,
+            already_transformed = already_transformed
+        )
