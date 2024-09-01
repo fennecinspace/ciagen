@@ -81,7 +81,7 @@ model:
         - slow: 20
     use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
-    sd: runwayml/stable-diffusion-v1-5 # stable diffusion version
+    sd: fennecinspace/sd-v15 # stable diffusion version
     cn_use: controlnet_segmentation # control net to use from the list
     cn:
         # YOU should list all the control nets that you would like to use here
@@ -123,3 +123,8 @@ active:
     rounds: 5 # rounds of AL
     sel: 125 # number of samples added each round
     sampling: confidence # confidence, coreset, baseline (for ablation study)
+
+metrics:
+    dtd:
+        - fid
+        - inception_score
