@@ -40,7 +40,8 @@ def img2label_paths(img_paths): # ask about removal of / in the paths
         elif f'{os.sep}val{os.sep}' in image:
             base_path = image.split(f'{os.sep}val{os.sep}')[0]
         elif f'{os.sep}generated{os.sep}' in image:
-            base_path = image.split(f'{os.sep}generated{os.sep}')[0]
+            pre_generated_path, post_generated_path  = image.split(f'{os.sep}generated{os.sep}')
+            base_path = Path(pre_generated_path) / 'real' / post_generated_path.split(os.sep)[0]
 
         label_name = image.split(f'{os.sep}')[-1].split('.')[0].split('_')[0] + '.txt'
 

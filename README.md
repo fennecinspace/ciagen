@@ -23,7 +23,7 @@ Then using vscode and the dev container plugin connect to the container and code
 
 ## Kaggle API
 
-To downloaad the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project. 
+To download the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project.
 
 ## UNDER Heavy development
 Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
@@ -86,6 +86,15 @@ This project contains the following directory structure:
 ```
 /path/to/data/real/coco/images/000000368475.jpg
 /path/to/data/real/coco/images/000000368488.jpg
+```
+
+### Quick new commands :
+```
+python run.py task=prepare_data data.base=coco
+python run.py task=gen data.base=coco
+python run.py task=create_mixed_yolo_dataset data.base=coco
+wandb login
+python run.py task=yolo_trainer data.base=coco
 ```
 
 ## Rest of the README.md

@@ -22,7 +22,7 @@ class YOLOTrainer:
         mixed_yaml_path = paths["mixed_yamls_folder_path"]
         data_yaml_path = Path(mixed_yaml_path) / "data.yaml"
 
-        logger.info(f"Using dataset in: {data_yaml_path}")
+        logger.info(f"Using dataset in: {data_yaml_path.resolve()}")
 
         model = YOLO("yolov8n.yaml")
         cn_use = self.cfg['model']['cn_use']
@@ -31,7 +31,7 @@ class YOLOTrainer:
         sampling_code_name = (self.cfg['ml']['sampling']['metric'] + '_' + self.cfg['ml']['sampling']['sample'])
 
         model.train(
-            data = str(data_yaml_path.absolute()),
+            data = data_yaml_path.resolve(),
             epochs = self.cfg['ml']['epochs'],
             entity = self.cfg['ml']['wandb']['entity'],
             project = self.cfg['ml']['wandb']['project'],
