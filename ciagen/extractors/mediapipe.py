@@ -1,7 +1,7 @@
 from controlnet_aux.processor import Processor
 from PIL.Image import Image
 
-from ciagen.extractors.abs_extractor import ExtractorABC
+from ciagen.extractors.abc_extractor import ExtractorABC
 
 
 class MediaPipeFace(ExtractorABC):

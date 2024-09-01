@@ -11,37 +11,44 @@ import torch
 from typing import List
 
 from ciagen.utils.common import logger
+from ciagen.feature_extractors.abc_feature_extractor import (
+    FeatureExtractor,
+    SampleT,
+)
 
 from feat import Detector
 
 detector = Detector()
 
 
-def extract_au(
-    samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
-    face_detection_threshold=0.5,
-    **kwargs,
-) -> List[np.ndarray]:
-    # The py-feat detector does not expose a API to extract the Action Unit
-    # from tensor or arrays directly.
-    # We are simply reusing their inner code here.
+class AUExtractor(FeatureExtractor):
+    def extract(
+        self,
+        samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
+        **kwargs,
+    ) -> List[SampleT] | SampleT:
 
-    face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
-    landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
-    au_model_kwargs = kwargs.pop("au_model_kwargs", dict())
+        # The py-feat detector does not expose a API to extract the Action Unit
+        # from tensor or arrays directly.
+        # We are simply reusing their inner code here.
 
-    aus_all = []
-    for sample in tqdm(samples):
-        faces = detector.detect_faces(
-            sample, face_detection_threshold, **face_model_kwargs
-        )
-        landmarks = detector.detect_landmarks(
-            sample, detected_faces=faces, **landmark_model_kwargs
-        )
-        aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
-        aus_all.extend(aus)
+        face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
+        landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
+        au_model_kwargs = kwargs.pop("au_model_kwargs", dict())
+        face_detection_threshold = kwargs.pop("face_detection_threshold", 0.5)
 
-    return aus_all
+        aus_all = []
+        for sample in tqdm(samples):
+            faces = detector.detect_faces(
+                sample, face_detection_threshold, **face_model_kwargs
+            )
+            landmarks = detector.detect_landmarks(
+                sample, detected_faces=faces, **landmark_model_kwargs
+            )
+            aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
+            aus_all.extend(aus)
+
+        return aus_all
 
 
 # Function to extract AU differences between real and generated images
@@ -147,5 +154,8 @@ def test_au_extractor():
     print(f"{image_test} loaded")
     image = torchvision.transforms.functional.pil_to_tensor(image)
     print("image converted to tensor")
-    a = extract_au([image])
+
+    au_extractor = AUExtractor()
+
+    a = au_extractor.extract([image])
     print(a)

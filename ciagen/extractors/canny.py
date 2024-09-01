@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from PIL.Image import Image as PILImage
 
-from ciagen.extractors.abs_extractor import ExtractorABC
+from ciagen.extractors.abc_extractor import ExtractorABC
 
 
 class Canny(ExtractorABC):
