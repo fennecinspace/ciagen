@@ -35,8 +35,8 @@ ml:
         metric: brisque # brisque (smaller is better), dbcnn (bigger is better), ilniqe (smaller is better)
         sample: best # to take smaller or bigger values is decided depending the metric
     wandb: # SET wabdb parameters for run tracking and model logging
-        entity: your-wandb-username
-        project: sdcn-project
+        entity: cia-lisbon
+        project: cia-lisbon-fer
         download:
             list_all: false
             list_finished: true

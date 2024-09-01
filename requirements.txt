@@ -3,6 +3,8 @@ omegaconf==2.3.0
 hydra-core==1.3.2
 
 # AI & DATA
+wandb==0.17.8
+
 numpy==1.26.4
 pillow~=9.5.0
 

@@ -88,6 +88,15 @@ def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
     return mixed_yolo_dataset_creator(paths)
 
 
+def yolo_trainer_task(cfg: DictConfig) -> None:
+    from ciagen.exes import YOLOTrainer
+
+    yolo_trainer = YOLOTrainer(cfg)
+    paths = generate_all_paths(cfg)
+
+    return yolo_trainer(paths)
+
+
 def dtd_task(cfg: DictConfig) -> None:
     from ciagen.exes import DTD
 
@@ -108,6 +117,7 @@ allowed_tasks = {
     # "flickr30k": flickr30k_task,
     "prepare_data": prepare_data_task,
     "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
+    "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
