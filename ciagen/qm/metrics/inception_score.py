@@ -10,7 +10,10 @@ import torch.utils
 import numpy as np
 from PIL import Image
 
-from ciagen.feature_extractors.inception import InceptionSoftmax, inception_transform
+from ciagen.feature_extractors.inception_extractor import (
+    InceptionSoftmax,
+    inception_transform,
+)
 from ciagen.qm import VirtualDataloader, id_transform, TL
 from ciagen.qm.divergences import kl_divergence
 
@@ -130,7 +133,9 @@ class IS:
         accum = 0
 
         for i in tqdm(range(times)):
-            index = np.random.choice(len(synthetic_samples), sampling_size, replace=False)
+            index = np.random.choice(
+                len(synthetic_samples), sampling_size, replace=False
+            )
             virtual_samples = VirtualDataloader(dataset=synthetic_samples, index=index)
 
             accum += self.instant_score(
