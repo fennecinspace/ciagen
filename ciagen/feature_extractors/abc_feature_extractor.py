@@ -18,3 +18,12 @@ class FeatureExtractor(ABC):
         self, samples: List[SampleT] | SampleT, **kwargs
     ) -> List[SampleT] | SampleT:
         return self.extract(samples, **kwargs)
+
+    def transform_from_image(self, image: Image.Image) -> SampleT:
+        raise NotImplementedError
+
+    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
+        raise NotImplementedError
+
+    def transform_from_array(self, array: np.ndarray) -> SampleT:
+        raise NotImplementedError

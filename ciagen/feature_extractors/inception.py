@@ -5,10 +5,25 @@ from PIL import Image
 from torchvision.models import inception_v3
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 
+from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 IncSample = (
     torch.Tensor | Image.Image | torch.utils.data.DataLoader | torch.utils.data.Dataset
 )
+
+
+class RawInception(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = inception_v3(pretrained=True)
+
+    def forward(self, x):
+        return self.model(x)
+
+
+class InceptionFeatureExtractor(FeatureExtractor):
+    def __init__(self):
+        self.inc = RawInception()
 
 
 class InceptionSoftmax(torch.nn.Module):
