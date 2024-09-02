@@ -21,9 +21,9 @@ import torch
 from diffusers.utils import load_image
 from omegaconf import DictConfig, OmegaConf
 
-from ciagen.extractors import extract_model_from_name, instantiate_extractor
+from ciagen.extractors import instantiate_extractor
 from ciagen.generators import SDCN, NaivePromptGenerator
-from ciagen.utils.common import find_model_name, logger, read_caption
+from ciagen.utils.common import get_model_config, logger, read_caption
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
@@ -77,8 +77,25 @@ class Generator:
 
         # Specify the model and feature extractor. Be aware that ideally both extractor and
         # generator should be using the same feature.
+
+        ## !!! MUST ADD CHECKS FOR MODEL NAMES AND CONFIG CORRECTNESS HERE !!!
+
         model_data = self.cfg["model"]
-        sd_model = model_data["sd"]
+        model_to_use = model_data['cn_use']
+        model_to_use_conf = [model_to_use]
+
+        model_to_use_conf = get_model_config(model_to_use, model_data['cn'])
+
+        logger.info(f'Using the following config : {model_to_use_conf}')
+
+        sd_model = model_to_use_conf['sd']
+        cn_model = model_to_use_conf['cn']
+        extractor_name = model_to_use_conf['extractor']
+
+        if "cn_extra_settings" in model_to_use_conf:
+            cn_extra_settings = model_to_use_conf["cn_extra_settings"]
+        else:
+            cn_extra_settings = {}
 
         use_captions = bool(model_data["use_captions"])
         # use_labels = bool(model_data['use_labels'])
@@ -111,25 +128,20 @@ class Generator:
         # else:
         #     real_labels_path = []
 
-        cn_model = find_model_name(model_data["cn_use"], model_data["cn"])
-        cn_model = (
-            cn_model
-            if cn_model is not None
-            else "fusing/stable-diffusion-v1-5-controlnet-openpose"
-        )
+        # cn_model = find_model_name(model_data["cn_use"], model_data["cn"])
+        # cn_model = (
+        #     cn_model
+        #     if cn_model is not None
+        #     else "fusing/stable-diffusion-v1-5-controlnet-openpose"
+        # )
 
         seed = model_data["seed"]
         device = model_data["device"]
 
-        if model_data["cn_use"] in model_data["cn_extra_settings"]:
-            cn_extra_settings = model_data["cn_extra_settings"][model_data["cn_use"]]
-        else:
-            cn_extra_settings = {}
-
         generator = SDCN(
             sd_model, cn_model, seed, device=device, cn_extra_settings=cn_extra_settings
         )
-        extractor = instantiate_extractor(extract_model_from_name(model_data["cn_use"]))
+        extractor = instantiate_extractor(extractor_name)
         logger.info(f"Using extractor: {extractor}")
         logger.info(f"Using generator: {generator}")
 

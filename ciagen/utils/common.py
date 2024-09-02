@@ -116,7 +116,7 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
     }
 
 
-def find_model_name(name: str, l: List[Dict[str, str]]) -> Optional[str]:
+def get_model_config(name: str, l: List[Dict]) -> Optional[str]:
     for small_dict in l:
         if name in small_dict:
             return small_dict[name]
