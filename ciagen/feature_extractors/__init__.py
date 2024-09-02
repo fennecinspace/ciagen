@@ -1,10 +1,11 @@
 from .auc_extractor import AUExtractor, test_au_extractor
 from .vit_extractor import VitExtractor, test_vit_extractor
-
+from .inception_extractor import InceptionFeatureExtractor, test_inception_extractor
 
 AVAILABLE_FEATURE_EXTRACTORS = (
     "au_extractor",
     "vit_extractor",
+    "inception_extractor",
 )
 
 
@@ -18,3 +19,5 @@ def instance_feature_extractor(feature_extractor_name: str, **kwargs):
         return AUExtractor(**kwargs)
     elif feature_extractor_name == "vit_extractor":
         return VitExtractor(**kwargs)
+    elif feature_extractor_name == "inception_extractor":
+        return InceptionFeatureExtractor(**kwargs)

@@ -1,9 +1,11 @@
+#ciagen.qm.ptd_distances
+
 import numpy as np
 
 from ciagen.qm import TL, to_numpy
 
 
-def mahalanobis_distance(
+def mahalanobis_distance_calc(
     x: TL,
     mean: TL,
     cov: TL | None = None,
