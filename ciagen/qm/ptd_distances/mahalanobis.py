@@ -1,4 +1,4 @@
-#ciagen.qm.ptd_distances
+# ciagen.qm.ptd_distances
 
 import numpy as np
 
@@ -24,10 +24,12 @@ def mahalanobis_distance_calc(
         # routine is more robust to overflow and underflow issues
         cov_is_invertible = np.linalg.slogdet(cov)[0] != 0
 
-        if cov_is_invertible:
-            inv_cov = np.linalg.inv(cov)
-        else:
-            inv_cov = np.linalg.pinv(cov)
+        # Im defaulting to pseudo-inverse for everything for numerical stability
+        # if cov_is_invertible:
+        #     inv_cov = np.linalg.inv(cov)
+        # else:
+        #     inv_cov = np.linalg.pinv(cov)
+        inv_cov = np.linalg.pinv(cov, hermitian=True)
     else:
         inv_cov = to_numpy(inv_cov)
 
