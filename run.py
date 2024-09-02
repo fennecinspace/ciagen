@@ -106,6 +106,15 @@ def dtd_task(cfg: DictConfig) -> None:
     return dtd_calculator(paths)
 
 
+def ptd_task(cfg: DictConfig) -> None:
+    from ciagen.exes import PTD
+
+    ptd = PTD(cfg)
+    paths = generate_all_paths(cfg)
+
+    return ptd(paths)
+
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
@@ -119,6 +128,7 @@ allowed_tasks = {
     "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
+    "ptd": ptd_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }

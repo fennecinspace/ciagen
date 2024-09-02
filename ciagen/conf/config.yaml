@@ -158,3 +158,5 @@ metrics:
     dtd:
         - fid
         - inception_score
+    ptd:
+        - mld

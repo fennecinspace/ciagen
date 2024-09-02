@@ -96,8 +96,9 @@ class DTD:
         if "dtd" not in metadata["results"]["metrics"]:
             metadata["results"]["metrics"]["dtd"] = {}
 
-        if metric not in metadata["results"]["metrics"]["dtd"]:
-            metadata["results"]["metrics"]["dtd"] = metrics_values
+        # if metric not in metadata["results"]["metrics"]["dtd"]:
+        #     metadata["results"]["metrics"]["dtd"] = metrics_values
+        metadata["results"]["metrics"]["dtd"] = metrics_values
 
         with open(meta_data_file, "w") as f:
             OmegaConf.save(metadata, f)
