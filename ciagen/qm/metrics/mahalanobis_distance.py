@@ -1,10 +1,11 @@
-# ciagen.qm.metrics
-
-import torch
-from tqdm import tqdm
-from PIL import Image
 from typing import Any, Callable
+
+from tqdm import tqdm
+
 import numpy as np
+import torch
+from PIL import Image
+
 
 from ciagen.qm.ptd_distances.mahalanobis import mahalanobis_distance_calc
 from ciagen.feature_extractors.inception_extractor import (
@@ -24,7 +25,8 @@ class MLD:
         self,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
         transform: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: None | Callable[[Any, Any], torch.Tensor | float] = None,
+        # I'm commenting this, Mahalanobis has only mahalanobis as distance (for now ...)
+        # distribution_distance: None | Callable[[Any, Any], torch.Tensor | float] = None,
     ):
 
         self._feature_extractor = (
@@ -76,13 +78,6 @@ class MLD:
             else:
                 synthetic_transformed = feature_extractor(transform(synthetic_samples))
 
-            print(
-                real_transformed.shape,
-                type(real_transformed),
-                synthetic_transformed.shape,
-                type(synthetic_transformed),
-            )
-
         return torch.squeeze(real_transformed), torch.squeeze(synthetic_transformed)
 
     def get_mahal_distance(
@@ -90,9 +85,10 @@ class MLD:
         real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
         synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: (
-            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        ) = None,
+        # same as the MLD class
+        # distribution_distance: (
+        #     None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
+        # ) = None,
         transform: None | Callable[[Any], torch.Tensor] = None,
         already_transformed: bool = False,
     ):
