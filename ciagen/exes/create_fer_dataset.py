@@ -19,8 +19,9 @@ import json
 from omegaconf import DictConfig, open_dict
 from pathlib import Path
 from typing import List, Tuple, Dict
+import csv
 
-from ciagen.utils.common import create_yaml_file, list_images, create_files_list
+from ciagen.utils.common import list_images, create_files_list, select_equal_classes, create_csv_file
 
 
 def sort_based_on_score(image_paths: List[str], scores: List[float], direction: str = 'smaller') -> Tuple[List[str], List[int]]:
@@ -69,19 +70,17 @@ class CreateMixedFERDataset:
         if not os.path.isdir(paths['mixed_yamls_folder_path']): 
             os.makedirs(paths['mixed_yamls_folder_path'])
         
-        #train_txt_path = Path(paths['mixed_yamls_folder_path']) / 'train.txt'
-        #val_txt_path = Path(paths['mixed_yamls_folder_path']) / 'val.txt'
-        #test_txt_path = Path(paths['mixed_yamls_folder_path']) / 'test.txt'
-        #data_yaml_path = Path(paths['mixed_yamls_folder_path']) / 'data.yaml'
+        data_csv_path = Path(paths['mixed_yamls_folder_path']) / 'train_dataset.csv'
 
         real_images_path = Path(paths['real_images'])
         val_images_path = Path(paths['val_images'])
         test_images_path = Path(Path(paths['test_images']))
-        #  save the captions to eq the class later
-        real_train_captions = Path(paths['real_train_captions_path'])
-        real_test_captions = Path(paths['real_test_captions_path'])
+        ##############
+        real_train_captions = list(Path(paths['real_captions']).glob('*.txt'))
+        real_test_captions = list(Path(paths['test_captions']).glob('*.txt'))
+        real_val_captions = list(Path(paths['val_captions']).glob('*.txt'))
 
-        total_captions = real_train_captions + real_test_captions
+        total_captions = real_train_captions + real_test_captions + real_val_captions
 
         real_images = list_images(real_images_path, formats, train_nb)
         val_images = list_images(val_images_path, formats, val_nb)
@@ -89,13 +88,10 @@ class CreateMixedFERDataset:
 
         synth_images_dir = Path(paths['generated'])
         synth_images = list_images(synth_images_dir, formats)
-        print(synth_images)
+        #print(synth_images)
 
         # shuffle images       
         #random.Random(seed).shuffle(synth_images)
-        def select_equal_classes(tot_cap, synth_images): # I'M HERE
-            #TO DO--> select synth images to eq classes 
-
         
     
         # shuffle images
@@ -103,21 +99,26 @@ class CreateMixedFERDataset:
 
         # nb_real_images = int(len(real_images) * (1 - augmentation_percent))
         nb_synth_images = int(len(real_images) * augmentation_percent)
-        #synth_images = synth_images[:nb_synth_images]
+
+        synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
 
         train_images = real_images + synth_images
 
-        create_files_list(train_images, train_txt_path)
-        #create_files_list(val_images, val_txt_path)
-        #create_files_list(test_images, test_txt_path)
+        create_csv_file(
+            train_images=train_images,
+            val_images=val_images,
+            test_images=test_images,
+            real_train_captions=real_train_captions,
+            val_captions=real_val_captions,
+            test_captions=real_test_captions,
+            output_csv=data_csv_path
+        )
+            
 
-        # TO DO: adapt this to create a csv file
-        create_yaml_file(data_yaml_path, train_txt_path, val_txt_path, test_txt_path)
-
-        print(f"Training yaml files created in : {paths['mixed_yamls_folder_path']}")
+        print(f"Training csv files created in : {paths['mixed_yamls_folder_path']}")
         print(f"Using {train_nb} Real Images from : ", real_images_path)
         print(f"Using Synthetic Images from : ", synth_images_dir)
         print(f"Using {val_nb} Validation Images from : ", val_images_path)
         print(f"Using {test_nb} Test Images from : ", test_images_path)
 
-        return data_yaml_path
+        return data_csv_path
