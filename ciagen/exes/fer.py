@@ -110,6 +110,8 @@ class FERDataset:
 
         os.makedirs(real_path_fer, exist_ok=True)
 
+        generated_path_fer = Path(os.path.join(os.path.dirname(os.path.dirname(paths["generated"])), "fer", self.cfg["model"]["cn_use"]))
+
         possible_fer = self.cfg["data"]["base"]
         if possible_fer not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
             raise ValueError(f"Unknown FER dataset base: {possible_fer}")
@@ -218,8 +220,9 @@ class FERDataset:
                         )
                     )
 
-                shutil.copy(orig_img_path, os.path.join(image_set_path, img))
-
+                os.makedirs(generated_path_fer, exist_ok=True)
+                shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
+                
             for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
                     f.write(lab)
