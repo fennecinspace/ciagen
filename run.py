@@ -135,16 +135,13 @@ allowed_tasks = {
     # "coco": coco_task,
     # "flickr30k": flickr30k_task,
     "prepare_data": prepare_data_task,
-<<<<<<< HEAD
-    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task, 
+    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     "create_mixed_fer_dataset": create_mixed_fer_dataset_task,
 
-=======
-    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
     "ptd": ptd_task,
->>>>>>> 180f0abc703955e19aa0e90e25441ffce309991a
+
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
