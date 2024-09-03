@@ -25,17 +25,7 @@ from ciagen.utils.common import list_images, create_files_list, select_equal_cla
 
 
 def sort_based_on_score(image_paths: List[str], scores: List[float], direction: str = 'smaller') -> Tuple[List[str], List[int]]:
-    """
-    Sorts two arrays of the same size based on scores and returns sorted scores and image paths.
 
-    Args:
-        image_paths (List[str]): List of image paths.
-        scores (List[int]): List of scores for each image.
-        direction (str): either ascending or descending
-
-    Returns:
-        Tuple[List[str], List[int]]: A tuple containing the sorted scores and sorted image paths.
-    """
     # Combine scores and image paths into a list of tuples
     combined_data = list(zip(scores, image_paths))
     # Sort the combined data based on scores (ascending order)
@@ -71,7 +61,22 @@ class CreateMixedFERDataset:
             os.makedirs(paths['mixed_yamls_folder_path'])
         
         data_csv_path = Path(paths['mixed_yamls_folder_path']) / 'train_dataset.csv'
+        ######TO TEST WITH NO REAL STRUCTURE ####
+        base_path_real = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_real'
+        real_images_path = base_path_real+'/train/images'  
+        val_images_path = base_path_real+'/val/images'  
+        test_images_path = base_path_real+'/test/images'  
 
+        real_train_captions = list(Path(base_path_real+'/train/captions').glob('*.txt'))  
+        real_test_captions = list(Path(base_path_real+'/test/captions').glob('*.txt'))  
+        real_val_captions = list(Path(base_path_real+'/val/captions').glob('*.txt'))  
+        synth_images_dir = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_gen_2_1'
+        ##################
+
+
+
+        """
+        #### WITH REAL PATH
         real_images_path = Path(paths['real_images'])
         val_images_path = Path(paths['val_images'])
         test_images_path = Path(Path(paths['test_images']))
@@ -79,14 +84,16 @@ class CreateMixedFERDataset:
         real_train_captions = list(Path(paths['real_captions']).glob('*.txt'))
         real_test_captions = list(Path(paths['test_captions']).glob('*.txt'))
         real_val_captions = list(Path(paths['val_captions']).glob('*.txt'))
-
+    
+        synth_images_dir = Path(paths['generated'])
+        
+        """
         total_captions = real_train_captions + real_test_captions + real_val_captions
 
         real_images = list_images(real_images_path, formats, train_nb)
         val_images = list_images(val_images_path, formats, val_nb)
         test_images = list_images(test_images_path, formats, test_nb)
 
-        synth_images_dir = Path(paths['generated'])
         synth_images = list_images(synth_images_dir, formats)
         #print(synth_images)
 
