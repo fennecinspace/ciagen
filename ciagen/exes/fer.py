@@ -114,11 +114,15 @@ class FERDataset:
         if possible_fer not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
             raise ValueError(f"Unknown FER dataset base: {possible_fer}")
 
+        is_synthetic_data = None
         if self.cfg["data"]["base"] == "fer_real":
+            is_synthetic_data = False
             dataset_name = "face-dataset-real"
         elif self.cfg["data"]["base"] == "fer_gen_1_5":
+            is_synthetic_data = True
             dataset_name = "face-dataset-gen1-5"
         elif self.cfg["data"]["base"] == "fer_gen_2_1":
+            is_synthetic_data = True
             dataset_name = "face-dataset-gen2-1"
 
         # Download if necessary
