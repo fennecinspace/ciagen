@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict
 import csv
 
-from ciagen.utils.common import list_images, create_files_list, select_equal_classes, create_csv_file
+from ciagen.utils.common import list_images, create_files_list, create_csv_file,select_equal_classes
 
 
 def sort_based_on_score(image_paths: List[str], scores: List[float], direction: str = 'smaller') -> Tuple[List[str], List[int]]:
@@ -34,6 +34,99 @@ def sort_based_on_score(image_paths: List[str], scores: List[float], direction: 
     sorted_scores, sorted_image_paths = zip(*sorted_data)
     return sorted_image_paths, sorted_scores
 
+def select_equal_classes_path(total_captions: List[Path], synth_images: List[str], nb_synth_images: int) -> List[str]:
+    """
+    Selects synthetic images such that classes are balanced, based on their captions.
+    """
+    # Create a dictionary to store images by class
+    class_to_images: Dict[str, List[str]] = {}
+
+    # Map captions to corresponding images
+    for caption_path in total_captions:
+        with open(caption_path, 'r') as file:
+            class_name = file.readline().strip()
+
+        base_name = caption_path.stem  # e.g., "0" from "0.txt"
+        corresponding_image = next((img for img in synth_images if Path(img).stem == f"{base_name}_1"), None)
+
+        if corresponding_image:
+            if class_name not in class_to_images:
+                class_to_images[class_name] = []
+            class_to_images[class_name].append(corresponding_image)
+
+    # Calculate number of images per class
+    num_classes = len(class_to_images)
+    if num_classes == 0:
+        raise ZeroDivisionError("No classes were found, cannot divide images among zero classes.")
+    
+    images_per_class = max(1, nb_synth_images // num_classes)
+    
+    selected_images = []
+    
+    for class_name, images in class_to_images.items():
+        # Shuffle images for random selection
+        random.shuffle(images)
+        
+        # Select the required number of images for this class
+        selected_images += images[:images_per_class]
+    
+    # If there is a remainder, distribute remaining images to random classes
+    remaining_images = nb_synth_images - len(selected_images)
+    if remaining_images > 0:
+        available_classes = [cls for cls in class_to_images if len(class_to_images[cls]) > images_per_class]
+        for _ in range(remaining_images):
+            class_name = random.choice(available_classes)
+            selected_images.append(class_to_images[class_name].pop())
+    
+    return selected_images
+
+def create_csv_file_path(train_images: List[str], val_images: List[str], 
+                            test_images: List[str], real_train_captions: List[Path],
+                            val_captions: List[Path], test_captions: List[Path], 
+                            output_csv: str) -> None:
+    """
+    Creating a CSV file that contains filepath, class, and type of dataset (train, test, val).
+
+    Args:
+        train_images (List[str]): Path list of training images.
+        val_images (List[str]): Path list of val images.
+        test_images (List[str]): Path list of test images.
+        real_train_captions (List[Path]): Path list of train captions.
+        val_captions (List[Path]): Path list of val captions.
+        test_captions (List[Path]): Path list of test captions.
+        output_csv (str): Path where the CSV file is created.
+    """
+    
+    def extract_class_from_caption(caption_path: Path) -> str:
+        with open(caption_path, 'r') as file:
+            return file.readline().strip()
+
+    def map_captions_to_images(captions: List[Path]) -> Dict[str, str]:
+        return {caption.stem: extract_class_from_caption(caption) for caption in captions}
+
+    train_name_to_caption = map_captions_to_images(real_train_captions)
+    val_name_to_caption = map_captions_to_images(val_captions)
+    test_name_to_caption = map_captions_to_images(test_captions)
+
+    with open(output_csv, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        
+        writer.writerow(['Filename', 'Emotion', 'Dataset'])
+        
+        for image in train_images:
+            base_name = os.path.splitext(os.path.basename(image))[0].split('_')[0]  # Extract base name from image filename
+            emotion = train_name_to_caption.get(base_name, 'Unknown')
+            writer.writerow([image, emotion, 'train'])
+        
+        for image in val_images:
+            base_name = os.path.splitext(os.path.basename(image))[0]  # Extract base name from image filename
+            emotion = val_name_to_caption.get(base_name, 'Unknown')
+            writer.writerow([image, emotion, 'val'])
+        
+        for image in test_images:
+            base_name = os.path.splitext(os.path.basename(image))[0]  # Extract base name from image filename
+            emotion = test_name_to_caption.get(base_name, 'Unknown')
+            writer.writerow([image, emotion, 'test'])
 
 class CreateMixedFERDataset:
     def __init__(self, cfg: DictConfig) -> None:
@@ -62,15 +155,18 @@ class CreateMixedFERDataset:
         
         data_csv_path = Path(paths['mixed_yamls_folder_path']) / 'train_dataset.csv'
         ######TO TEST WITH NO REAL STRUCTURE ####
-        base_path_real = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_real'
-        real_images_path = base_path_real+'/train/images'  
-        val_images_path = base_path_real+'/val/images'  
-        test_images_path = base_path_real+'/test/images'  
 
-        real_train_captions = list(Path(base_path_real+'/train/captions').glob('*.txt'))  
-        real_test_captions = list(Path(base_path_real+'/test/captions').glob('*.txt'))  
-        real_val_captions = list(Path(base_path_real+'/val/captions').glob('*.txt'))  
-        synth_images_dir = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_gen_2_1'
+
+        base_path_real = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_real'
+        real_images_path = Path(base_path_real + '/train/images')  
+        val_images_path = Path(base_path_real + '/val/images')
+        test_images_path = Path(base_path_real + '/test/images')  
+
+        real_train_captions = list(Path(base_path_real+'/train/labels').glob('*.txt'))  
+        real_test_captions = list(Path(base_path_real+'/test/labels').glob('*.txt'))  
+        real_val_captions = list(Path(base_path_real+'/val/labels').glob('*.txt'))
+  
+        synth_images_dir = Path('/home/DohM/TSW24-projet2-da-fer/data/real/fer_gen_2_1/train/images')
         ##################
 
 
@@ -107,11 +203,16 @@ class CreateMixedFERDataset:
         # nb_real_images = int(len(real_images) * (1 - augmentation_percent))
         nb_synth_images = int(len(real_images) * augmentation_percent)
 
-        synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
+        print(f"Total captions: {len(total_captions)}")
+        print(f"Synthetic images: {len(synth_images)}")
+
+        #synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
+
+        synth_images = select_equal_classes_path(total_captions, synth_images, nb_synth_images)
 
         train_images = real_images + synth_images
 
-        create_csv_file(
+        create_csv_file_path(
             train_images=train_images,
             val_images=val_images,
             test_images=test_images,
