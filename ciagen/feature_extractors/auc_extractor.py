@@ -40,7 +40,8 @@ class AUExtractor(FeatureExtractor):
         face_detection_threshold = kwargs.pop("face_detection_threshold", 0.5)
 
         aus_all = []
-        for sample in tqdm(samples):
+
+        def analyse_once(sample):
             faces = detector.detect_faces(
                 sample, face_detection_threshold, **face_model_kwargs
             )
@@ -48,8 +49,25 @@ class AUExtractor(FeatureExtractor):
                 sample, detected_faces=faces, **landmark_model_kwargs
             )
             aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
-            print(aus)
-            aus_all.extend(aus)
+
+            # AD-HOC solution for the moment
+            # the action unit is capable of detecting several faces, we are
+            # runing with only one for the moment
+            if not len(aus):
+                aus = [np.zeros((1, 20))]
+            else:
+                if not len(aus[0]):
+                    aus = [np.zeros((1, 20))]
+                else:
+                    aus = [aus[0]]
+            aus = [torch.from_numpy(aus[0][0])]
+            return aus
+
+        if not isinstance(samples, list):
+            aus_all.extend(analyse_once(samples))
+        else:
+            for sample in tqdm(samples):
+                aus_all.extend(analyse_once(sample))
 
         return aus_all
 

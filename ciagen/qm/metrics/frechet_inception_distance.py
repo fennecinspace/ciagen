@@ -71,7 +71,7 @@ class FID:
         else:
             self.distribution_distance = distribution_distance
 
-    def trasform_and_extract_features(
+    def transform_and_extract_features(
         self,
         real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
         synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
@@ -93,9 +93,11 @@ class FID:
             if not isinstance(real_samples, torch.Tensor):
                 real_transformed = []
                 for sample in tqdm(real_samples):
-                    real_transformed.append(
-                        feature_extractor(transform(sample).unsqueeze(0))
-                    )
+                    ext = feature_extractor(transform(sample))
+                    if isinstance(ext, list):
+                        real_transformed.extend(ext)
+                    else:
+                        real_transformed.append(ext)
                 real_transformed = torch.stack(real_transformed)
             else:
                 real_transformed = feature_extractor(transform(real_samples))
@@ -103,9 +105,11 @@ class FID:
             if not isinstance(synthetic_samples, torch.Tensor):
                 synthetic_transformed = []
                 for sample in tqdm(synthetic_samples):
-                    synthetic_transformed.append(
-                        feature_extractor(transform(sample).unsqueeze(0))
-                    )
+                    ext = feature_extractor(transform(sample))
+                    if isinstance(ext, list):
+                        synthetic_transformed.extend(ext)
+                    else:
+                        synthetic_transformed.append(ext)
                 synthetic_transformed = torch.stack(synthetic_transformed)
             else:
                 synthetic_transformed = feature_extractor(transform(synthetic_samples))
@@ -127,7 +131,7 @@ class FID:
         if already_transformed:
             real_samples, synthetic_samples = real_samples, synthetic_samples
         else:
-            real_samples, synthetic_samples = self.trasform_and_extract_features(
+            real_samples, synthetic_samples = self.transform_and_extract_features(
                 real_samples=real_samples,
                 synthetic_samples=synthetic_samples,
                 transform=transform,

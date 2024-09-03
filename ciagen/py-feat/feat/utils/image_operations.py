@@ -1,5 +1,5 @@
 """
-py-feat utility and helper functions for performing operations on images. 
+py-feat utility and helper functions for performing operations on images.
 """
 
 import os

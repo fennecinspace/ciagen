@@ -20,9 +20,13 @@ class InceptionFeatureExtractor(FeatureExtractor):
     def __init__(self):
         self.inc_model = InceptionModel()
         self._transform_from_tensor = transforms.Compose(
-            transforms.Resize(299),
-            transforms.CenterCrop(299),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            [
+                transforms.Resize(299),
+                transforms.CenterCrop(299),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
         )
         self._transform_from_image = inception_transform()
 

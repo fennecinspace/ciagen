@@ -157,7 +157,7 @@ active:
 metrics:
     fe:
         - vit
-        - inception
+        # - inception
         - au
     dtd:
         - fid

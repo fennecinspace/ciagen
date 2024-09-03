@@ -16,12 +16,17 @@ class FeatureExtractor(ABC):
         self, samples: List[SampleT] | SampleT, **kwargs
     ) -> List[SampleT] | SampleT: ...
 
-    def extract(self, samples: DataLoader | Dataset | List[SampleT] | SampleT):
+    def extract(
+        self, samples: DataLoader | Dataset | List[SampleT] | SampleT, **kwargs
+    ) -> List[SampleT] | SampleT:
         # test from simpler to harder
         if isinstance(samples, SampleT):
             samples = self.single_transform(sample=samples)
         if isinstance(samples, list):
             samples = [self.single_transform(sample=sample) for sample in samples]
+
+        # add dataset and dataloader stuff here
+        return self._extract(samples, **kwargs)
 
     def single_transform(self, sample: SampleT):
         if isinstance(sample, Image.Image):
@@ -38,7 +43,7 @@ class FeatureExtractor(ABC):
     def __call__(
         self, samples: List[SampleT] | SampleT, **kwargs
     ) -> List[SampleT] | SampleT:
-        return self._extract(samples, **kwargs)
+        return self.extract(samples, **kwargs)
 
     def transform_from_image(self, image: Image.Image) -> SampleT:
         raise NotImplementedError

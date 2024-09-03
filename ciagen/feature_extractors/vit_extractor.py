@@ -1,3 +1,4 @@
+from numpy import ndarray
 import torch
 from transformers import ViTModel
 from transformers import AutoImageProcessor
@@ -57,6 +58,14 @@ class VitExtractor(FeatureExtractor):
             collate_fn=collate_fn,
         )
 
+        self._transfom_from_tensor = Resize((224, 224))
+        self._transfrom_from_image = Compose(
+            [
+                Resize((224, 224)),
+                ToTensor(),
+            ]
+        )
+
     def _extract(
         self, samples: List[SampleT] | SampleT, **kwargs
     ) -> List[SampleT] | SampleT:
@@ -72,6 +81,22 @@ class VitExtractor(FeatureExtractor):
             return self._vit([unsqueeze_if(sample) for sample in samples])
         else:
             return [self._vit([unsqueeze_if(samples)])]
+
+    def transform_from_array(
+        self, array: ndarray
+    ) -> Image.Image | ndarray | torch.Tensor:
+        tensor = torch.from_numpy(array)
+        return self._transfom_from_tensor(tensor)
+
+    def transform_from_tensor(
+        self, tensor: torch.Tensor
+    ) -> Image.Image | ndarray | torch.Tensor:
+        return self._transfom_from_tensor(tensor)
+
+    def transform_from_image(
+        self, image: Image.Image
+    ) -> Image.Image | ndarray | torch.Tensor:
+        return self._transfrom_from_image(image)
 
 
 class WrappedViTModel(torch.nn.Module):
