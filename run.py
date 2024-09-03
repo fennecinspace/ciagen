@@ -114,6 +114,13 @@ def ptd_task(cfg: DictConfig) -> None:
 
     return ptd(paths)
 
+def filtering_task(cfg: DictConfig) -> None:
+    from ciagen.exes import Filtering
+
+    filtering = Filtering(cfg)
+    paths = generate_all_paths(cfg)
+
+    return filtering(paths)
 
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
@@ -129,6 +136,7 @@ allowed_tasks = {
     "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
     "ptd": ptd_task,
+    "filtering": filtering_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }

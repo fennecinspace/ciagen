@@ -160,3 +160,6 @@ metrics:
         - inception_score
     ptd:
         - mld
+filtering:
+    type: "top-k" #One of "threshold", "top-k" or "top-p"
+    value: 1 #If type == "treshold": the threshold to keep the data point. If "top-k": the amount of data point to keep. If "top-p": the proportion of data point to keep (0<=p<=1)
