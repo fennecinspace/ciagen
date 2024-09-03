@@ -55,7 +55,8 @@ class InceptionSoftmax(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.inceptionv3 = inception_v3()
+        # https://pytorch.org/vision/stable/models/generated/torchvision.models.inception_v3.html#torchvision.models.Inception_V3_Weights
+        self.inceptionv3 = inception_v3(weights = "DEFAULT")
         self.softmax = Softmax()
 
     def forward(self, x):
