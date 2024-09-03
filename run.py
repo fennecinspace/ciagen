@@ -81,12 +81,12 @@ def prepare_data_task(cfg: DictConfig) -> None:
 
 def create_mixed_yolo_dataset_task(cfg: DictConfig) -> None:
     from ciagen.exes import CreateMixedYoloDataset
-    
 
     mixed_yolo_dataset_creator = CreateMixedYoloDataset(cfg)
     paths = generate_all_paths(cfg)
 
     return mixed_yolo_dataset_creator(paths)
+
 
 def create_mixed_fer_dataset_task(cfg: DictConfig) -> None:
     from ciagen.exes import CreateMixedFERDataset
@@ -95,7 +95,6 @@ def create_mixed_fer_dataset_task(cfg: DictConfig) -> None:
     paths = generate_all_paths(cfg)
 
     return mixed_fer_dataset_creator(paths)
-
 
 
 def yolo_trainer_task(cfg: DictConfig) -> None:
@@ -125,6 +124,15 @@ def ptd_task(cfg: DictConfig) -> None:
     return ptd(paths)
 
 
+def filtering_task(cfg: DictConfig) -> None:
+    from ciagen.exes import Filtering
+
+    filtering = Filtering(cfg)
+    paths = generate_all_paths(cfg)
+
+    return filtering(paths)
+
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
@@ -137,11 +145,10 @@ allowed_tasks = {
     "prepare_data": prepare_data_task,
     "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
     "create_mixed_fer_dataset": create_mixed_fer_dataset_task,
-
     "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
     "ptd": ptd_task,
-
+    "filtering": filtering_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
