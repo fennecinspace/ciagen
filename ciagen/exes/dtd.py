@@ -11,9 +11,6 @@
 # General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import glob
-import os
-import random
 from pathlib import Path
 from typing import Dict
 from omegaconf import DictConfig, OmegaConf
@@ -40,7 +37,7 @@ class DTD:
         data = self.cfg["data"]
 
         # Paths and data related work
-        real_path = paths["real"]
+        _real_path = paths["real"]
         generated_path = paths["generated"]
         real_path_images = paths["real_images"]
 
@@ -96,8 +93,11 @@ class DTD:
         if "dtd" not in metadata["results"]["metrics"]:
             metadata["results"]["metrics"]["dtd"] = {}
 
-        if metric not in metadata["results"]["metrics"]["dtd"]:
-            metadata["results"]["metrics"]["dtd"] = metrics_values
+        # if metric not in metadata["results"]["metrics"]["dtd"]:
+        #     metadata["results"]["metrics"]["dtd"] = metrics_values
+        metadata["results"]["metrics"]["dtd"] = metrics_values
 
         with open(meta_data_file, "w") as f:
             OmegaConf.save(metadata, f)
+
+        return metrics_values

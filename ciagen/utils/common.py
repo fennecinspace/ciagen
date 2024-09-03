@@ -43,7 +43,11 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
     )
 
     mixed_yamls_folder_path = os.path.join(
-        "data", "mixed", cfg["data"]["base"], str(cfg["ml"]["train_nb"]), cfg["model"]["cn_use"] + '-' + str(cfg['ml']['augmentation_percent'])
+        "data",
+        "mixed",
+        cfg["data"]["base"],
+        str(cfg["ml"]["train_nb"]),
+        cfg["model"]["cn_use"] + "-" + str(cfg["ml"]["augmentation_percent"]),
     )
 
     # all data paths
@@ -69,13 +73,19 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
     vocabulary_config_path = os.path.join(*cfg["prompt"]["template"])
 
     for d in (
-        real_train_images_path, real_train_labels_path, real_train_captions_path,
-        real_test_images_path, real_test_labels_path, real_test_captions_path,
-        real_val_images_path, real_val_labels_path, real_val_captions_path
+        real_train_images_path,
+        real_train_labels_path,
+        real_train_captions_path,
+        real_test_images_path,
+        real_test_labels_path,
+        real_test_captions_path,
+        real_val_images_path,
+        real_val_labels_path,
+        real_val_captions_path,
     ):
         os.makedirs(d, exist_ok=True)
 
-    if cfg['task'] not in ["coco", "flickr30k"]:
+    if cfg["task"] not in ["coco", "flickr30k"]:
 
         if not os.path.exists(real_train_images_path):
             raise ValueError(
@@ -99,24 +109,20 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
         "real": real_dataset,
         "generated": generated_dataset,
         "mixed_yamls_folder_path": mixed_yamls_folder_path,
-
         "real_images": real_train_images_path,
         "real_captions": real_train_captions_path,
         "real_labels": real_train_labels_path,
-
         "test_images": real_test_images_path,
         "test_captions": real_test_captions_path,
         "test_labels": real_test_labels_path,
-
         "val_images": real_val_images_path,
         "val_captions": real_val_captions_path,
         "val_labels": real_val_labels_path,
-
         "vocabulary_config": vocabulary_config_path,
     }
 
 
-def find_model_name(name: str, l: List[Dict[str, str]]) -> Optional[str]:
+def get_model_config(name: str, l: List[Dict]) -> Optional[str]:
     for small_dict in l:
         if name in small_dict:
             return small_dict[name]
@@ -316,37 +322,44 @@ def create_yaml_file(save_path: Path, train: Path, val: Path, test: Path):
         yaml.dump(yaml_file, file)
 
 
-def load_images_from_directory(directory: Union[str, Path], formats: List[str] = ['png', 'jpg', 'jpeg'], to_tensors: bool = False) -> List[str]:
+def load_images_from_directory(
+    directory: Union[str, Path],
+    formats: List[str] = ["png", "jpg", "jpeg"],
+    to_tensors: bool = False,
+    ptd: bool = False,
+) -> List[str]:
     if type(directory) == str:
         directory = Path(directory)
 
     images_paths = list_images(directory, formats)
     images_paths.sort()
 
+    if ptd:
+        image_names = []
     images = []
 
     if to_tensors:
-        inception_transform = transforms.Compose(
+        transform = transforms.Compose(
             [
-                transforms.Resize(299),
-                transforms.CenterCrop(299),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                transforms.ToTensor()  # Converts the image to a PyTorch tensor (scales pixel values to [0, 1])
             ]
         )
+    else:
+        transform = lambda image: image
 
     for image_path in images_paths:
         try:
             image = load_image(image_path)
 
             if to_tensors:
-                image = inception_transform(image).unsqueeze(0)
+                image = transform(image)
 
+            if ptd:
+                image_names.extend([image_path.split("/")[-1]])
             images.append(image)
         except Exception as e:
             print(f"Error loading image {image_path}: {e}")
-
-    if to_tensors:
-        return torch.stack(images)
-
-    return images
+    if ptd:
+        return (images, image_names)
+    else:
+        return images

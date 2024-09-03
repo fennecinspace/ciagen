@@ -10,7 +10,11 @@ from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
 from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
 )
-from ciagen.feature_extractors.inception import InceptionSoftmax, inception_transform
+from ciagen.feature_extractors.inception_extractor import (
+    InceptionSoftmax,
+    inception_transform,
+)
+
 
 class FID:
     """
@@ -148,10 +152,10 @@ class FID:
         **kwargs,
     ):
         return self.instant_score(
-            real_samples = real_samples,
-            synthetic_samples = synthetic_samples,
-            feature_extractor = feature_extractor,
-            distribution_distance = distribution_distance,
-            transform = transform,
-            already_transformed = already_transformed
+            real_samples=real_samples,
+            synthetic_samples=synthetic_samples,
+            feature_extractor=feature_extractor,
+            distribution_distance=distribution_distance,
+            transform=transform,
+            already_transformed=already_transformed,
         )

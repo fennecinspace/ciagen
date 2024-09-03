@@ -147,3 +147,4 @@ notebook_shim==0.2.4
 # wget==3.2
 # yapf==0.40.2
 # zipp==3.19.2
+packaging==24.1
