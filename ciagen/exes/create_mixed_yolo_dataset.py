@@ -76,8 +76,8 @@ class CreateMixedYoloDataset:
 
         real_images_path = Path(paths['real_images'])
         val_images_path = Path(paths['val_images'])
-        test_images_path = Path(Path(paths['test_images']))
-
+        test_images_path = Path(paths['test_images'])
+        
         real_images = list_images(real_images_path, formats, train_nb)
         val_images = list_images(val_images_path, formats, val_nb)
         test_images = list_images(test_images_path, formats, test_nb)
