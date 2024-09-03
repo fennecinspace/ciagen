@@ -35,8 +35,8 @@ ml:
         metric: brisque # brisque (smaller is better), dbcnn (bigger is better), ilniqe (smaller is better)
         sample: best # to take smaller or bigger values is decided depending the metric
     wandb: # SET wabdb parameters for run tracking and model logging
-        entity: your-wandb-username
-        project: sdcn-project
+        entity: cia-lisbon
+        project: cia-lisbon-fer
         download:
             list_all: false
             list_finished: true
@@ -81,7 +81,7 @@ model:
         - slow: 20
     use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
-    sd: runwayml/stable-diffusion-v1-5 # stable diffusion version
+    sd: fennecinspace/sd-v15 # stable diffusion version
     cn_use: controlnet_segmentation # control net to use from the list
     cn:
         # YOU should list all the control nets that you would like to use here
@@ -93,27 +93,57 @@ model:
         #
         # All models listed below can be found on hugging face
 
-        - controlled_false_segmentation: lllyasviel/sd-controlnet-seg # bad extractor, just for paper tests
+        # - controlled_false_segmentation:
+        #     extractor: segmentation
+        #     sd: fennecinspace/sd-v15
+        #     cn: lllyasviel/sd-controlnet-seg # bad extractor, just for paper tests
 
         # Segmentation
-        - controlnet_segmentation: lllyasviel/sd-controlnet-seg
+        - controlnet_segmentation:
+            extractor: segmentation
+            sd: fennecinspace/sd-v15
+            cn: lllyasviel/sd-controlnet-seg
 
         # Canny
-        - lllyasviel_canny: lllyasviel/sd-controlnet-canny
-        - lllyasviel_scribble_canny: lllyasviel/sd-controlnet-scribble
+        - lllyasviel_canny:
+            extractor: canny
+            sd: fennecinspace/sd-v15
+            cn: lllyasviel/sd-controlnet-canny
+
+        - lllyasviel_scribble_canny:
+            extractor: canny
+            sd: fennecinspace/sd-v15
+            cn: lllyasviel/sd-controlnet-scribble
 
         # OpenPose
-        - lllyasviel_openpose: lllyasviel/sd-controlnet-openpose
-        - fusing_openpose: fusing/stable-diffusion-v1-5-controlnet-openpose
-        - frankjoshua_openpose: frankjoshua/control_v11p_sd15_openpose
+        - lllyasviel_openpose:
+            extractor: openpose
+            sd: fennecinspace/sd-v15
+            cn: lllyasviel/sd-controlnet-openpose
+
+        - fusing_openpose:
+            extractor: openpose
+            sd: fennecinspace/sd-v15
+            cn: fusing/stable-diffusion-v1-5-controlnet-openpose
+
+        - frankjoshua_openpose:
+            extractor: openpose
+            sd: fennecinspace/sd-v15
+            cn: frankjoshua/control_v11p_sd15_openpose
 
         # MediaPipeFace
-        - crucible_mediapipe_face: CrucibleAI/ControlNetMediaPipeFace
+        - sd15_crucible_mediapipe_face:
+            extractor: mediapipe_face
+            sd: fennecinspace/sd-v15
+            cn: CrucibleAI/ControlNetMediaPipeFace
+            cn_extra_settings:
+                subfolder: diffusion_sd15
 
-    cn_extra_settings:
-        # In case your control net class takes in other parameters use this section to define them
-        crucible_mediapipe_face:
-            subfolder: diffusion_sd15
+        - sd21_crucible_mediapipe_face:
+            extractor: mediapipe_face
+            sd: stabilityai/stable-diffusion-2-1-base
+            cn: CrucibleAI/ControlNetMediaPipeFace
+
     seed: 34567 # random seed for SDCN generation
     device: cuda # cpu or cuda ?
 
@@ -123,3 +153,10 @@ active:
     rounds: 5 # rounds of AL
     sel: 125 # number of samples added each round
     sampling: confidence # confidence, coreset, baseline (for ablation study)
+
+metrics:
+    dtd:
+        - fid
+        - inception_score
+    ptd:
+        - mld

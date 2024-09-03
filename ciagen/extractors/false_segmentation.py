@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from PIL.Image import Image
 
-from ciagen.extractors.abs_extractor import ExtractorABC
+from ciagen.extractors.abc_extractor import ExtractorABC
 from ultralytics import YOLO
 
 

@@ -98,6 +98,33 @@ def create_mixed_fer_dataset_task(cfg: DictConfig) -> None:
 
 
 
+def yolo_trainer_task(cfg: DictConfig) -> None:
+    from ciagen.exes import YOLOTrainer
+
+    yolo_trainer = YOLOTrainer(cfg)
+    paths = generate_all_paths(cfg)
+
+    return yolo_trainer(paths)
+
+
+def dtd_task(cfg: DictConfig) -> None:
+    from ciagen.exes import DTD
+
+    dtd_calculator = DTD(cfg)
+    paths = generate_all_paths(cfg)
+
+    return dtd_calculator(paths)
+
+
+def ptd_task(cfg: DictConfig) -> None:
+    from ciagen.exes import PTD
+
+    ptd = PTD(cfg)
+    paths = generate_all_paths(cfg)
+
+    return ptd(paths)
+
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
@@ -108,9 +135,16 @@ allowed_tasks = {
     # "coco": coco_task,
     # "flickr30k": flickr30k_task,
     "prepare_data": prepare_data_task,
+<<<<<<< HEAD
     "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task, 
     "create_mixed_fer_dataset": create_mixed_fer_dataset_task,
 
+=======
+    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
+    "yolo_trainer": yolo_trainer_task,
+    "dtd": dtd_task,
+    "ptd": ptd_task,
+>>>>>>> 180f0abc703955e19aa0e90e25441ffce309991a
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
