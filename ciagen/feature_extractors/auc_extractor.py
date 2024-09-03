@@ -1,6 +1,7 @@
 import os
 import re
 import json
+from PIL.Image import Image
 import hydra
 
 from pathlib import Path
@@ -8,6 +9,7 @@ from tqdm import tqdm
 from omegaconf import DictConfig
 import numpy as np
 import torch
+import torchvision
 from typing import List
 
 from ciagen.utils.common import logger
@@ -22,7 +24,7 @@ detector = Detector()
 
 
 class AUExtractor(FeatureExtractor):
-    def extract(
+    def _extract(
         self,
         samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
         **kwargs,
@@ -46,9 +48,19 @@ class AUExtractor(FeatureExtractor):
                 sample, detected_faces=faces, **landmark_model_kwargs
             )
             aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
+            print(aus)
             aus_all.extend(aus)
 
         return aus_all
+
+    def transform_from_array(self, array: np.ndarray) -> SampleT:
+        return torch.from_numpy(array)
+
+    def transform_from_image(self, image: Image) -> SampleT:
+        return torchvision.transforms.functional.pil_to_tensor(image)
+
+    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
+        return tensor
 
 
 # Function to extract AU differences between real and generated images
@@ -157,5 +169,5 @@ def test_au_extractor():
 
     au_extractor = AUExtractor()
 
-    a = au_extractor.extract([image])
+    a = au_extractor._extract([image])
     print(a)

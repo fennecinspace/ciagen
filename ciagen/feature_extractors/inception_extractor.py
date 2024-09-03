@@ -19,11 +19,27 @@ IncSample = (
 class InceptionFeatureExtractor(FeatureExtractor):
     def __init__(self):
         self.inc_model = InceptionModel()
+        self._transform_from_tensor = transforms.Compose(
+            transforms.Resize(299),
+            transforms.CenterCrop(299),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        )
+        self._transform_from_image = inception_transform()
 
-    def extract(
+    def _extract(
         self, samples: torch.List[SampleT | IncSample] | SampleT | IncSample, **kwargs
     ) -> torch.List[SampleT] | SampleT:
         return self.inc_model(samples)
+
+    def transform_from_image(self, image: Image.Image) -> SampleT:
+        return self._transform_from_image(image)
+
+    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
+        return self._transform_from_tensor(tensor)
+
+    def transform_from_array(self, array: np.ndarray) -> SampleT:
+        tensor = torch.from_numpy(array)
+        return self._transform_from_tensor(tensor)
 
 
 class InceptionModel(torch.nn.Module):
@@ -56,7 +72,7 @@ class InceptionSoftmax(torch.nn.Module):
         super().__init__()
 
         # https://pytorch.org/vision/stable/models/generated/torchvision.models.inception_v3.html#torchvision.models.Inception_V3_Weights
-        self.inceptionv3 = inception_v3(weights = "DEFAULT")
+        self.inceptionv3 = inception_v3(weights="DEFAULT")
         self.softmax = Softmax()
 
     def forward(self, x):

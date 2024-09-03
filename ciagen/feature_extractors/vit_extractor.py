@@ -57,7 +57,7 @@ class VitExtractor(FeatureExtractor):
             collate_fn=collate_fn,
         )
 
-    def extract(
+    def _extract(
         self, samples: List[SampleT] | SampleT, **kwargs
     ) -> List[SampleT] | SampleT:
         def unsqueeze_if(x):
