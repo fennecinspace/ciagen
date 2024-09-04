@@ -14,6 +14,7 @@
 from pathlib import Path
 from typing import Dict
 from omegaconf import DictConfig, OmegaConf
+import uuid
 
 import pandas as pd
 import os
@@ -25,7 +26,7 @@ from torchvision import transforms, models
 import torch.nn as nn
 import torch.optim as optim
 import wandb
-
+from tqdm import tqdm
 
 from ciagen.utils.common import logger
 
@@ -103,10 +104,14 @@ class CSVClassificationTrainer:
 
         logger.info(f"Logging to wandb user/team {entity} project {project}")
 
+        cn_use = self.cfg['model']['cn_use']
+        aug_percent = self.cfg['ml']['augmentation_percent']
+        name = f"{uuid.uuid4().hex.upper()[0:6]}_{cn_use}_{aug_percent}"
+
         self.wb = wandb.init(
             entity = entity,
             project = project,
-            name = "test_run",
+            name = name,
             config = dict(self.cfg),
             # settings = wb.Settings(start_method="thread")
         )
@@ -129,7 +134,8 @@ class CSVClassificationTrainer:
             correct = 0
             total = 0
 
-            for images, labels in self.train_loader:
+            train_loader_tqdm = tqdm(self.train_loader, desc=f"Epoch {epoch + 1}/{epochs} [Training]")
+            for images, labels in train_loader_tqdm:
                 images, labels = images.to(self.device), labels.to(self.device)
 
                 # Zero the parameter gradients
@@ -149,6 +155,8 @@ class CSVClassificationTrainer:
                 _, predicted = torch.max(outputs, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
+
+                train_loader_tqdm.set_postfix(loss=loss.item(), accuracy=correct / total)
 
             epoch_loss = running_loss / len(self.train_loader.dataset)
             epoch_acc = correct / total
