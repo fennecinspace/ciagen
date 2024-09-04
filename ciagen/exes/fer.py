@@ -167,20 +167,18 @@ class FERDataset:
 
         if possible_fer == "fer_gen_1_5":
             gen_path = os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5")
-        elif possible_fer == "fer_gen_2_1":
-            gen_path = os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1")
-
-        for img in os.listdir(gen_path):
-            if self.cfg["data"]["base"] == "fer_gen_1_5":
+            for img in os.listdir(gen_path):
                 orig_img_path = Path(
                     os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5", img)
                 )
-                os.makedirs(generated_path_fer_21, exist_ok=True)
+                os.makedirs(generated_path_fer_15, exist_ok=True)
                 shutil.copy(
                     orig_img_path, os.path.join(generated_path_fer.resolve(), img)
                 )
 
-            elif self.cfg["data"]["base"] == "fer_gen_2_1":
+        elif possible_fer == "fer_gen_2_1":
+            gen_path = os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1")
+            for img in os.listdir(gen_path):
                 orig_img_path = Path(
                     os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1", img)
                 )
@@ -188,7 +186,6 @@ class FERDataset:
                 shutil.copy(
                     orig_img_path, os.path.join(generated_path_fer.resolve(), img)
                 )
-
         with open(split_file, "r") as f:
             for line_nbr, line in enumerate(f):
                 if line_nbr == 0:

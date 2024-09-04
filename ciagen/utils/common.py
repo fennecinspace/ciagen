@@ -438,7 +438,7 @@ def load_images_from_directory(
     if type(directory) == str:
         directory = Path(directory)
 
-    images_paths = list_images(directory, formats)
+    images_paths = list_images(directory, formats)[:10]
     images_paths.sort()
 
     if ptd:
