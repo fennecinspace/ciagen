@@ -132,6 +132,9 @@ class FERDataset:
             download_fer(real_path_fer, dataset_name)
         )
 
+        config_file_path = os.path.join(generated_path_fer, "metadata.yaml")
+        OmegaConf.save(self.cfg, config_file_path)
+        
         if "gen" in dataset_name:
             split_file = os.path.join(real_path_fer, "combined_generated.csv")
         else:

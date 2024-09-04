@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "fer_gen_1_5" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
+    base: "fer_gen_2_1" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
 
 # For the future : put every parameter related to machine learning here: dataset size,
@@ -82,7 +82,7 @@ model:
     use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
     sd: fennecinspace/sd-v15 # stable diffusion version
-    cn_use: controlnet_segmentation # control net to use from the list
+    cn_use: sd21_crucible_mediapipe_face # control net to use from the list
     cn:
         # YOU should list all the control nets that you would like to use here
         # add an extractor name to the end in order to define which extractor to use :
