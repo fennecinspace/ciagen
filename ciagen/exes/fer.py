@@ -131,9 +131,6 @@ class FERDataset:
         images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
             download_fer(real_path_fer, dataset_name)
         )
-
-        config_file_path = os.path.join(generated_path_fer, "metadata.yaml")
-        OmegaConf.save(self.cfg, config_file_path)
         
         if "gen" in dataset_name:
             split_file = os.path.join(real_path_fer, "combined_generated.csv")
@@ -227,7 +224,11 @@ class FERDataset:
                     os.makedirs(generated_path_fer, exist_ok=True)
                     shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
 
+            if self.cfg["data"]["base"] == "fer_gen_1_5":
+                shutil.copy(os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"), os.path.join(generated_path_fer, "metadata-sd15.yaml"))
 
+            elif self.cfg["data"]["base"] == "fer_gen_2_1":
+                shutil.copy(os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"), os.path.join(generated_path_fer, "metadata-sd21.yaml"))
 
             for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
