@@ -24,12 +24,13 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
 import torch.nn as nn
 import torch.optim as optim
+import wandb
+
 
 from ciagen.utils.common import logger
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
-
 
 class EmotionDataset(Dataset):
     def __init__(self, dataframe, transform=None):
@@ -97,6 +98,26 @@ class CSVClassificationTrainer:
         # Define Loss Function and Optimizer
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(model.parameters(), lr=0.001)
+        entity = self.cfg['ml']['wandb']['entity']
+        project = self.cfg['ml']['wandb']['project']
+
+        logger.info(f"Logging to wandb user/team {entity} project {project}")
+
+        self.wb = wandb.init(
+            entity = entity,
+            project = project,
+            name = "test_run",
+            config = dict(self.cfg),
+            # settings = wb.Settings(start_method="thread")
+        )
+
+        table_train = wandb.Table(columns = ["Train_images"], data = train_df)
+        table_val = wandb.Table(columns = ["Val_images"], data = val_df)
+        table_test = wandb.Table(columns = ["Test_images"], data = test_df)
+
+        self.wb.log({"Tables/Train": table_train}, commit=False)
+        self.wb.log({"Tables/Val": table_val}, commit=False)
+        self.wb.log({"Tables/Test": table_test}, commit=False)
 
         self.train_model(epochs = epochs)
 
@@ -152,9 +173,25 @@ class CSVClassificationTrainer:
             val_loss /= len(self.val_loader.dataset)
             val_acc = val_correct / val_total
 
+            self.wb.log({
+                "Train Loss": epoch_loss,
+                "Train Accuracy": epoch_acc,
+                "Val Loss": val_loss,
+                "Val Accuracy": val_acc,
+            }, step=epoch + 1, commit=True, sync=True)
+
+
             print(f'Epoch {epoch+1}/{epochs}, '
                 f'Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.4f}, '
                 f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}')
+
+
+        # wb_artifact = self.wb.Artifact(type='model', name=f'run_{self.wb.run.id}_model')
+        # if best_model_exists:
+        #     wb_artifact.add_file(best_model)
+        #     self.run.log_artifact(wb_artifact, aliases=['best'])
+        self.wb.finish()
+
 
 
     def evaluate_model(self):
