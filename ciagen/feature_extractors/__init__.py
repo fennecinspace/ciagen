@@ -3,9 +3,9 @@ from .vit_extractor import VitExtractor, test_vit_extractor
 from .inception_extractor import InceptionFeatureExtractor, test_inception_extractor
 
 AVAILABLE_FEATURE_EXTRACTORS = (
-    "au_extractor",
-    "vit_extractor",
-    "inception_extractor",
+    "au",
+    "vit",
+    "inception",
 )
 
 
@@ -15,9 +15,9 @@ def instance_feature_extractor(feature_extractor_name: str, **kwargs):
             f"Unknown feature extractor: {feature_extractor_name}. Please verify your configuration file."
         )
 
-    if feature_extractor_name == "au_extractor":
+    if feature_extractor_name == "au":
         return AUExtractor(**kwargs)
-    elif feature_extractor_name == "vit_extractor":
+    elif feature_extractor_name == "vit":
         return VitExtractor(**kwargs)
-    elif feature_extractor_name == "inception_extractor":
+    elif feature_extractor_name == "inception":
         return InceptionFeatureExtractor(**kwargs)

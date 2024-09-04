@@ -18,7 +18,7 @@ data:
     # create data folder, and all other folders will be created automatically
     base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
-
+    limit_size: 100
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...
 ml:
@@ -26,8 +26,15 @@ ml:
     val_nb: 300
     test_nb: 300
     train_nb: 250
+
+    #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.1 # controls all aug percents parameters everywhere
+    with_filtering: false #True if the dataset augmentation should only consider the filtered examples
+    preferred_fe: vit
+    filtering_metric: "mld" #The ptd distance to consider to take the best generated images
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
+    keep_training_size: true #Whether the data augmentation should increase the size of the dataset or not
+
     epochs: 300
     sampling: # IQA Sampling, check end of this yaml file for list of available metrics
         # Telling the trainer to use IQA metrics already calculated to sample on best images for training
@@ -155,8 +162,15 @@ active:
     sampling: confidence # confidence, coreset, baseline (for ablation study)
 
 metrics:
+    fe:
+        - vit
+        # - inception
+        - au
     dtd:
         - fid
         - inception_score
     ptd:
         - mld
+filtering:
+    type: "top-k" #One of "threshold", "top-k" or "top-p"
+    value: 4 #If type == "treshold": the threshold to keep the data point. If "top-k": the amount of data point to keep. If "top-p": the proportion of data point to keep (0<=p<=1)

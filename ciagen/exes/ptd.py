@@ -4,6 +4,7 @@ from omegaconf import DictConfig, OmegaConf
 
 import torch
 
+from ciagen.feature_extractors import instance_feature_extractor
 from ciagen.qm.metrics.mahalanobis_distance import MLD
 from ciagen.utils.common import logger, load_images_from_directory
 
@@ -35,6 +36,7 @@ class PTD:
                 formats=data["image_formats"],
                 ptd=True,
                 # to_tensors = True
+                limit_size=self.cfg["data"]["limit_size"],
             )
 
         # Loading real images
@@ -50,6 +52,8 @@ class PTD:
         logger.info(f"Will save to {meta_data_file}")
 
         metrics_values = {}
+        current_fe = self.cfg["metrics"]["fe"]
+
         for metric in self.cfg["metrics"]["ptd"]:
             if metric not in self.available_metrics:
                 logger.exception(
@@ -58,17 +62,24 @@ class PTD:
                 continue
 
             metric_calculator = self.available_metrics[metric]()
-            scores = metric_calculator.get_mahal_distance(
-                real_samples=real_images,
-                synthetic_samples=synthetic_images,
-            )
+            for fe in current_fe:
+                current_metrics_values = {}
+                feature_extractor = instance_feature_extractor(fe)
 
-            for image_iter in range(len(synthetic_images)):
-                full_syn_image_path = str(
-                    Path(generated_path) / synthetic_image_names[image_iter]
+                scores = metric_calculator.get_mahal_distance(
+                    real_samples=real_images,
+                    synthetic_samples=synthetic_images,
+                    feature_extractor=feature_extractor,
                 )
-                metrics_values[full_syn_image_path] = float(scores[image_iter])
 
+                for image_iter in range(len(synthetic_images)):
+                    full_syn_image_path = str(
+                        Path(generated_path) / synthetic_image_names[image_iter]
+                    )
+                    current_metrics_values[full_syn_image_path] = float(
+                        scores[image_iter]
+                    )
+                metrics_values[fe] = current_metrics_values
         metadata = OmegaConf.load(meta_data_file)
 
         if "results" not in metadata:
