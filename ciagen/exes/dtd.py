@@ -51,6 +51,7 @@ class DTD:
         real_images = load_images_from_directory(
             directory=real_path_images,
             formats=data["image_formats"],
+            limit_size=self.cfg["data"]["limit_size"],
         )
         real_dataset_size = len(real_path_images)
 
@@ -58,6 +59,7 @@ class DTD:
         synthetic_images = load_images_from_directory(
             directory=generated_path,
             formats=data["image_formats"],
+            limit_size=self.cfg["data"]["limit_size"],
         )
         synthetic_dataset_size = len(real_path_images)
 

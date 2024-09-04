@@ -36,6 +36,7 @@ class PTD:
                 formats=data["image_formats"],
                 ptd=True,
                 # to_tensors = True
+                limit_size=self.cfg["data"]["limit_size"],
             )
 
         # Loading real images
