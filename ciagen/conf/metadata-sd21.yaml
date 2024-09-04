@@ -1,0 +1,115 @@
+gen_config:
+  task: gen
+  data:
+    base: fer
+    image_formats:
+    - png
+    - jpeg
+    - jpg
+  ml:
+    val_nb: 300
+    test_nb: 300
+    train_nb: 250
+    augmentation_percent: 0.1
+    augmentation_percent_baseline: 0
+    epochs: 300
+    sampling:
+      enable: false
+      metric: brisque
+      sample: best
+    wandb:
+      entity: cia-lisbon
+      project: cia-lisbon-fer
+      download:
+        list_all: false
+        list_finished: true
+        list_running: false
+        sort: false
+        folder:
+        - .
+        - models
+        download: false
+        query_filter: false
+  prompt:
+    template: vocabulary
+    modify_captions: 1
+    generation_size: 10
+    base:
+    - Sandra Oh
+    - Kim Kardashian
+    - 'rihanna '
+    - taylor swift
+    quality: showing emotion, great realistic face, best quality, extremely detailed,
+    modifier: Happy man smiling
+    negative:
+    - monochrome, lowres, bad anatomy, worst quality, low quality, cartoon, unrealistic,
+      bad proportion,
+    - distortion, bad quality, lowres, cropped, bad focus, blurry, ad compression,
+      bad artifact,
+    - bad pixel, deformed iris, deformed pupils, semi-realistic, cgi, 3d, render,
+      sketch, drawing, anime:1.4),
+    - close up, cropped, out of frame, jpeg artifacts, ugly, duplicate, morbid, mutilated,
+    - extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation,
+      deformed, blurry, dehydrated,
+    - extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing
+      arms, missing legs,
+    - extra arms, extra legs, fused fingers, too many fingers, long neck, no cars,
+      no people, illustration, painting,
+    - drawing, art, sketch, anime, deformation, distorsion
+    negative_simple: monochrome, lowres, bad anatomy, worst quality, low quality,
+      cartoon, unrealistic, bad proportion, disfigured, mutation, deformed mouth,
+      deformed eyes, unnatural teeth, unnatural eyes, unnatural mouth, unnatural face,
+      unnatural face expression, not human
+  model:
+    sd_steps:
+    - fast: 5
+    - medium: 10
+    - slow: 20
+    use_captions: 0
+    cn_use: sd21_crucible_mediapipe_face
+    cn:
+    - controlnet_segmentation:
+        extractor: segmentation
+        sd: fennecinspace/sd-v15
+        cn: lllyasviel/sd-controlnet-seg
+    - lllyasviel_canny:
+        extractor: canny
+        sd: fennecinspace/sd-v15
+        cn: lllyasviel/sd-controlnet-canny
+    - lllyasviel_scribble_canny:
+        extractor: canny
+        sd: fennecinspace/sd-v15
+        cn: lllyasviel/sd-controlnet-scribble
+    - lllyasviel_openpose:
+        extractor: openpose
+        sd: fennecinspace/sd-v15
+        cn: lllyasviel/sd-controlnet-openpose
+    - fusing_openpose:
+        extractor: openpose
+        sd: fennecinspace/sd-v15
+        cn: fusing/stable-diffusion-v1-5-controlnet-openpose
+    - frankjoshua_openpose:
+        extractor: openpose
+        sd: fennecinspace/sd-v15
+        cn: frankjoshua/control_v11p_sd15_openpose
+    - sd15_crucible_mediapipe_face:
+        extractor: mediapipe_face
+        sd: fennecinspace/sd-v15
+        cn: CrucibleAI/ControlNetMediaPipeFace
+        cn_extra_settings:
+          subfolder: diffusion_sd15
+    - sd21_crucible_mediapipe_face:
+        extractor: mediapipe_face
+        sd: stabilityai/stable-diffusion-2-1-base
+        cn: CrucibleAI/ControlNetMediaPipeFace
+    seed: 34567
+    device: cuda
+  active:
+    enable: false
+    rounds: 5
+    sel: 125
+    sampling: confidence
+  metrics:
+    dtd:
+    - fid
+    - inception_score
