@@ -115,6 +115,15 @@ def ptd_task(cfg: DictConfig) -> None:
     return ptd(paths)
 
 
+def csv_classifier_trainer_task(cfg: DictConfig) -> None:
+    from ciagen.exes import CSVClassificationTrainer
+
+    csv_classifier_trainer = CSVClassificationTrainer(cfg)
+    paths = generate_all_paths(cfg)
+
+    return csv_classifier_trainer(paths)
+
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
@@ -129,6 +138,7 @@ allowed_tasks = {
     "yolo_trainer": yolo_trainer_task,
     "dtd": dtd_task,
     "ptd": ptd_task,
+    "csv_classifier_trainer": csv_classifier_trainer_task,
     # "iqa": ciagen.iqa,
     # "iqa_paper": ciagen.iqa_paper,
 }
