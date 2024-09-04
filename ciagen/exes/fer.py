@@ -14,6 +14,7 @@
 import hydra
 import os
 import shutil
+from tqdm import tqdm
 import zipfile
 
 from omegaconf import DictConfig
@@ -118,6 +119,9 @@ class FERDataset:
             )
         )
 
+        real_path_fer_train_images = Path(
+            os.path.join(real_path_fer, "train", "images")
+        )
         generated_path_fer_15 = Path(
             os.path.join(
                 os.path.dirname(os.path.dirname(paths["generated"])),
@@ -165,27 +169,34 @@ class FERDataset:
         label_list = {"train": [], "val": [], "test": []}
         file_list = {"train": [], "val": [], "test": []}
 
-        if possible_fer == "fer_gen_1_5":
-            gen_path = os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5")
-            for img in os.listdir(gen_path):
-                orig_img_path = Path(
-                    os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5", img)
+        if possible_fer == "fer_real":
+            gen_path = os.path.join(real_path_fer, "Real", "Real")
+            os.makedirs(real_path_fer_train_images, exist_ok=True)
+            for img in tqdm(os.listdir(gen_path)):
+                orig_img_path = Path(os.path.join(gen_path, img))
+                shutil.copy(
+                    orig_img_path,
+                    os.path.join(real_path_fer_train_images.resolve(), img),
                 )
-                os.makedirs(generated_path_fer_15, exist_ok=True)
+        elif possible_fer == "fer_gen_1_5":
+            gen_path = os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5")
+            os.makedirs(generated_path_fer_15, exist_ok=True)
+            for img in tqdm(os.listdir(gen_path)):
+                orig_img_path = Path(os.path.join(gen_path, img))
                 shutil.copy(
                     orig_img_path, os.path.join(generated_path_fer.resolve(), img)
                 )
 
         elif possible_fer == "fer_gen_2_1":
             gen_path = os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1")
-            for img in os.listdir(gen_path):
-                orig_img_path = Path(
-                    os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1", img)
-                )
-                os.makedirs(generated_path_fer_21, exist_ok=True)
+            os.makedirs(generated_path_fer_21, exist_ok=True)
+
+            for img in tqdm(os.listdir(gen_path)):
+                orig_img_path = Path(os.path.join(gen_path, img))
                 shutil.copy(
                     orig_img_path, os.path.join(generated_path_fer.resolve(), img)
                 )
+
         with open(split_file, "r") as f:
             for line_nbr, line in enumerate(f):
                 if line_nbr == 0:
@@ -240,35 +251,23 @@ class FERDataset:
             label_set_path = labels_path[set_type]
             caption_set_path = captions_path[set_type]
 
-            for img in file_list[set_type]:
-                if self.cfg["data"]["base"] == "fer_real":
-                    orig_img_path = Path(
-                        os.path.join(real_path_fer, "Real", "Real", img)
-                    )
-                elif self.cfg["data"]["base"] == "fer_gen_1_5":
-                    orig_img_path = Path(
-                        os.path.join(
-                            real_path_fer, "Generated_1.5", "Generated_1.5", img
-                        )
-                    )
-                else:
-                    orig_img_path = Path(
-                        os.path.join(
-                            real_path_fer, "Generated_2.1", "Generated_2.1", img
-                        )
-                    )
-            if possible_fer == "fer_gen_1_5":
-                shutil.copy(
-                    os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"),
-                    os.path.join(generated_path_fer_15, "metadata.yaml"),
-                )
-
-            elif possible_fer == "fer_gen_2_1":
-                shutil.copy(
-                    os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"),
-                    os.path.join(generated_path_fer_21, "metadata.yaml"),
-                )
-
+            # for img in file_list[set_type]:
+            # if self.cfg["data"]["base"] == "fer_real":
+            #     orig_img_path = Path(
+            #         os.path.join(real_path_fer, "Real", "Real", img)
+            #     )
+            # elif self.cfg["data"]["base"] == "fer_gen_1_5":
+            #     orig_img_path = Path(
+            #         os.path.join(
+            #             real_path_fer, "Generated_1.5", "Generated_1.5", img
+            #         )
+            #     )
+            # else:
+            #     orig_img_path = Path(
+            #         os.path.join(
+            #             real_path_fer, "Generated_2.1", "Generated_2.1", img
+            #         )
+            #     )
             for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
                     f.write(lab)
@@ -276,6 +275,18 @@ class FERDataset:
             for cap_file, cap in caption_list[set_type]:
                 with open(os.path.join(caption_set_path, cap_file), "w+") as f:
                     f.write(cap)
+
+        if possible_fer == "fer_gen_1_5":
+            shutil.copy(
+                os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"),
+                os.path.join(generated_path_fer_15, "metadata.yaml"),
+            )
+
+        elif possible_fer == "fer_gen_2_1":
+            shutil.copy(
+                os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"),
+                os.path.join(generated_path_fer_21, "metadata.yaml"),
+            )
 
 
 @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
