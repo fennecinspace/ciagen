@@ -128,6 +128,9 @@ class CSVClassificationTrainer:
 
 
     def train_model(self, epochs=10):
+        best_val_acc = 0.0
+        best_model_path = os.path.join(self.wb.dir, "best.pth")
+
         for epoch in range(epochs):
             self.model.train()
             running_loss = 0.0
@@ -188,16 +191,26 @@ class CSVClassificationTrainer:
                 "Val Accuracy": val_acc,
             }, step=epoch + 1, commit=True, sync=True)
 
-
-            print(f'Epoch {epoch+1}/{epochs}, '
+            logger.info(f'Epoch {epoch+1}/{epochs}, '
                 f'Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.4f}, '
                 f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}')
 
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'loss': val_loss,
+                    'accuracy': val_acc,
+                }, best_model_path)
 
-        # wb_artifact = self.wb.Artifact(type='model', name=f'run_{self.wb.run.id}_model')
-        # if best_model_exists:
-        #     wb_artifact.add_file(best_model)
-        #     self.run.log_artifact(wb_artifact, aliases=['best'])
+                logger.info(f"New best model saved with validation accuracy: {best_val_acc:.4f}")
+
+        wb_artifact = wandb.Artifact(type='model', name=f'run_{self.wb.id}_model')
+        wb_artifact.add_file(best_model_path)
+        self.wb.log_artifact(wb_artifact, aliases=['best'])
+
         self.wb.finish()
 
 
@@ -221,7 +234,7 @@ class CSVClassificationTrainer:
 
         test_loss /= len(self.test_loader.dataset)
         test_acc = test_correct / test_total
-        print(f'Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}')
+        logger.info(f'Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}')
 
 
 # if __name__ == '__main__':
