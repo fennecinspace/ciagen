@@ -25,38 +25,8 @@ def create_data_folder() -> bool:
     return True
 
 
-# def install_pyfeat_if_not_installed() -> bool:
-#     # try:
-#     #     import feat
-#     # except ModuleNotFoundError:
-#     import subprocess
-#     import sys
-#     import site
-#     from importlib import reload
-
-#     subprocess.check_call(
-#         [
-#             sys.executable,
-#             "-m",
-#             "pip",
-#             "install",
-#             "-U",
-#             "py-feat",
-#             "--index-url",
-#             "https://github.com/hatellezp/py-feat",
-#         ]
-#     )
-
-#     reload(site)
-
-#     return True
-
-
 # Initialize datafolders
 create_data_folder()
 
 # Add external libraries's paths
 add_ultralytics_path()
-
-# Install pyfeat if not installed
-# install_pyfeat_if_not_installed()
