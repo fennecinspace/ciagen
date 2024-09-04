@@ -20,6 +20,7 @@ from omegaconf import DictConfig, open_dict
 from pathlib import Path
 from typing import List, Tuple, Dict
 import csv
+import yaml
 
 from ciagen.utils.common import list_images, create_files_list, create_csv_file,select_equal_classes
 
@@ -39,6 +40,11 @@ def select_equal_classes_path(total_captions: List[Path], synth_images: List[str
     Selects synthetic images such that classes are balanced, based on their captions.
     """
     # Create a dictionary to store images by class
+    try:
+        assert len(synth_images) >= nb_synth_images
+    except AssertionError as e:
+        raise ValueError(f"The amount of images to select should be lower than the amount of available images, but {nb_synth_images} > {len(synth_images)}")
+
     class_to_images: Dict[str, List[str]] = {}
 
     # Map captions to corresponding images
@@ -147,43 +153,21 @@ class CreateMixedFERDataset:
         seed = 42
         formats = self.cfg['data']['image_formats']
 
-        # if sample['enable']:
-        #     txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
-
-        if not os.path.isdir(paths['mixed_yamls_folder_path']): 
+        if not os.path.isdir(paths['mixed_yamls_folder_path']):
             os.makedirs(paths['mixed_yamls_folder_path'])
-        
+
         data_csv_path = Path(paths['mixed_yamls_folder_path']) / 'train_dataset.csv'
-        ######TO TEST WITH NO REAL STRUCTURE ####
 
-
-        base_path_real = '/home/DohM/TSW24-projet2-da-fer/data/real/fer_real'
-        real_images_path = Path(base_path_real + '/train/images')  
-        val_images_path = Path(base_path_real + '/val/images')
-        test_images_path = Path(base_path_real + '/test/images')  
-
-        real_train_captions = list(Path(base_path_real+'/train/labels').glob('*.txt'))  
-        real_test_captions = list(Path(base_path_real+'/test/labels').glob('*.txt'))  
-        real_val_captions = list(Path(base_path_real+'/val/labels').glob('*.txt'))
-  
-        synth_images_dir = Path('/home/DohM/TSW24-projet2-da-fer/data/real/fer_gen_2_1/train/images')
-        ##################
-
-
-
-        """
-        #### WITH REAL PATH
         real_images_path = Path(paths['real_images'])
         val_images_path = Path(paths['val_images'])
         test_images_path = Path(Path(paths['test_images']))
-        ##############
+
         real_train_captions = list(Path(paths['real_captions']).glob('*.txt'))
         real_test_captions = list(Path(paths['test_captions']).glob('*.txt'))
         real_val_captions = list(Path(paths['val_captions']).glob('*.txt'))
-    
+
         synth_images_dir = Path(paths['generated'])
-        
-        """
+
         total_captions = real_train_captions + real_test_captions + real_val_captions
 
         real_images = list_images(real_images_path, formats, train_nb)
@@ -191,22 +175,46 @@ class CreateMixedFERDataset:
         test_images = list_images(test_images_path, formats, test_nb)
 
         synth_images = list_images(synth_images_dir, formats)
-        #print(synth_images)
 
-        # shuffle images       
-        #random.Random(seed).shuffle(synth_images)
-        
-    
+        # if sample['enable']:
+        #     txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
+
         # shuffle images
+        random.Random(seed).shuffle(synth_images)
         random.Random(seed).shuffle(real_images)
 
-        # nb_real_images = int(len(real_images) * (1 - augmentation_percent))
+        if self.cfg['ml']['keep_training_size']:
+            nb_real_images = int(len(real_images) * (1 - augmentation_percent))
+        else:
+            nb_real_images = train_nb
         nb_synth_images = int(len(real_images) * augmentation_percent)
 
         print(f"Total captions: {len(total_captions)}")
         print(f"Synthetic images: {len(synth_images)}")
 
         #synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
+
+        if self.cfg['ml']['with_filtering']:
+            #1) Load metadata
+            dataset_name = self.cfg["data"]["base"]
+            cn_name = self.cfg["model"]["cn_use"]
+
+            # TODO make this windows compliant using path.join
+            metadata_path = f"data/generated/{dataset_name}/{cn_name}"
+            metadata_file = f"{metadata_path}/metadata.yaml"
+            filtering_metric = self.cfg["ml"]["filtering_metric"]
+            with open(metadata_file, 'r') as f:
+                metadata_dict = yaml.safe_load(f)
+
+            #2) read the filtered images
+            filtered_images = metadata_dict["filtering"][filtering_metric]
+
+            #3) use a map_reduce to filter captions and synth_images
+            synth_images = synth_images
+            print(synth_images)
+
+            print(f"Total captions: {len(total_captions)}")
+            print(f"Synthetic images: {len(synth_images)}")
 
         synth_images = select_equal_classes_path(total_captions, synth_images, nb_synth_images)
 

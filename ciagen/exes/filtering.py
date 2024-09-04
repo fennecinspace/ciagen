@@ -55,7 +55,7 @@ class Filtering:
             kept = sorted(kept, reverse=True, key=lambda a: a[1])
             kept_images[metric_name] = {i[0]: i[1] for i in kept}
 
-        metadata_dict["filtering"][metric_name] = kept_images
+        metadata_dict["filtering"] = kept_images
 
         with open(metadata_file, 'w') as file:
             yaml.dump(metadata_dict, file)

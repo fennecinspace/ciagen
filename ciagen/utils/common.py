@@ -325,7 +325,7 @@ def create_yaml_file(save_path: Path, train: Path, val: Path, test: Path):
 
     with open(save_path, "w") as file:
         yaml.dump(yaml_file, file)
-<<<<<<< HEAD
+
 def select_equal_classes(total_captions: List[Path], synth_images: List[Path], nb_synth_images: int) -> List[Path]:
             """
             Selects synthetic images such that classes are balanced, based on their captions.
@@ -427,7 +427,6 @@ def create_csv_file(train_images: List[Path], val_images: List[Path],
                     image_name = image.stem
                     emotion = test_name_to_caption.get(image_name, 'Unknown')
                     writer.writerow([image.name, emotion, 'test'])
-=======
 
 
 def load_images_from_directory(
@@ -471,4 +470,3 @@ def load_images_from_directory(
         return (images, image_names)
     else:
         return images
->>>>>>> 180f0abc703955e19aa0e90e25441ffce309991a
