@@ -22,6 +22,10 @@ import matplotlib.pyplot as plt
 import mediapipe as mp
 import numpy as np
 import yaml
+
+import random
+import csv
+
 import torch
 from torchvision import transforms
 from diffusers.utils import load_image
@@ -29,6 +33,7 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from omegaconf import DictConfig
 from PIL import Image
+
 
 FORMAT = "%(asctime)s %(clientip)-16s %(user)-8s %(message)s"
 logging.basicConfig(format=FORMAT)
@@ -322,16 +327,136 @@ def create_yaml_file(save_path: Path, train: Path, val: Path, test: Path):
         yaml.dump(yaml_file, file)
 
 
+def select_equal_classes(
+    total_captions: List[Path], synth_images: List[Path], nb_synth_images: int
+) -> List[Path]:
+    """
+    Selects synthetic images such that classes are balanced, based on their captions.
+
+    Args:
+        total_captions (List[Path]): List of file paths for captions (txt files).
+        synth_images (List[Path]): List of synthetic image paths (png files).
+        nb_synth_images (int): Total number of synthetic images needed.
+
+    Returns:
+        List[Path]: A list of selected synthetic image paths, balanced by class.
+    """
+    # Create a dictionary to store images by class
+    class_to_images: Dict[str, List[Path]] = {}
+
+    # Map captions to corresponding images
+    for caption_path in total_captions:
+        # Read the class from the caption file
+        with open(caption_path, "r") as file:
+            class_name = file.readline().strip()
+
+        # Corresponding image name (e.g., 0_1.png for 0.txt)
+        base_name = caption_path.stem  # e.g., "0" from "0.txt"
+        corresponding_image = next(
+            (img for img in synth_images if img.stem == f"{base_name}_1"), None
+        )
+
+        if corresponding_image:
+            if class_name not in class_to_images:
+                class_to_images[class_name] = []
+            class_to_images[class_name].append(corresponding_image)
+
+    # Calculate number of images per class
+    num_classes = len(class_to_images)
+    images_per_class = max(1, nb_synth_images // num_classes)
+
+    selected_images = []
+
+    for class_name, images in class_to_images.items():
+        # Shuffle images for random selection
+        random.shuffle(images)
+
+        # Select the required number of images for this class
+        selected_images += images[:images_per_class]
+
+    # If there is a remainder, distribute remaining images to random classes
+    remaining_images = nb_synth_images - len(selected_images)
+    if remaining_images > 0:
+        available_classes = [
+            cls
+            for cls in class_to_images
+            if len(class_to_images[cls]) > images_per_class
+        ]
+        for _ in range(remaining_images):
+            class_name = random.choice(available_classes)
+            selected_images.append(class_to_images[class_name].pop())
+
+    return selected_images
+
+
+def create_csv_file(
+    train_images: List[Path],
+    val_images: List[Path],
+    test_images: List[Path],
+    real_train_captions: List[Path],
+    val_captions: List[Path],
+    test_captions: List[Path],
+    output_csv: Path,
+) -> None:
+    """
+    creating csv file that contains filepath,class, and type od dataset(train,test,val).
+
+    Args:
+        train_images (List[Path]): path list of training images.
+        val_images (List[Path]): path list of val images.
+        test_images (List[Path]): path list of test images.
+        real_train_captions (List[Path]): path list of train captions
+        val_captions (List[Path]): path list of val captions
+        test_captions (List[Path]): path list of test captions
+        output_csv (Path): path where the csv file is created
+    """
+
+    def extract_class_from_caption(caption_path: Path) -> str:
+        with open(caption_path, "r") as file:
+            return file.readline().strip()
+
+    def map_captions_to_images(captions: List[Path]) -> Dict[str, str]:
+        return {
+            caption.stem: extract_class_from_caption(caption) for caption in captions
+        }
+
+    train_name_to_caption = map_captions_to_images(real_train_captions)
+    val_name_to_caption = map_captions_to_images(val_captions)
+    test_name_to_caption = map_captions_to_images(test_captions)
+
+    with open(output_csv, mode="w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerow(["Filename", "Emotion", "Dataset"])
+
+        for image in train_images:
+            base_name = image.stem.split("_")[0]
+            emotion = train_name_to_caption.get(base_name, "Unknown")
+            writer.writerow([image.name, emotion, "train"])
+
+        for image in val_images:
+            image_name = image.stem
+            emotion = val_name_to_caption.get(image_name, "Unknown")
+            writer.writerow([image.name, emotion, "val"])
+
+        for image in test_images:
+            image_name = image.stem
+            emotion = test_name_to_caption.get(image_name, "Unknown")
+            writer.writerow([image.name, emotion, "test"])
+
+
 def load_images_from_directory(
     directory: Union[str, Path],
     formats: List[str] = ["png", "jpg", "jpeg"],
     to_tensors: bool = False,
     ptd: bool = False,
+    limit_size: int = 0,
 ) -> List[str]:
     if type(directory) == str:
         directory = Path(directory)
 
-    images_paths = list_images(directory, formats)
+    limit_size = limit_size or len(list_images(directory, formats))
+    images_paths = list_images(directory, formats)[:limit_size]
     images_paths.sort()
 
     if ptd:
