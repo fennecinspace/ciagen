@@ -110,21 +110,39 @@ class FERDataset:
 
         os.makedirs(real_path_fer, exist_ok=True)
 
-        generated_path_fer = Path(os.path.join(os.path.dirname(os.path.dirname(paths["generated"])), "fer", self.cfg["model"]["cn_use"]))
+        generated_path_fer = Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(paths["generated"])),
+                "fer",
+                self.cfg["model"]["cn_use"],
+            )
+        )
+
+        generated_path_fer_15 = Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(paths["generated"])),
+                "fer",
+                "sd15_crucible_mediapipe_face",
+            )
+        )
+
+        generated_path_fer_21 = Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(paths["generated"])),
+                "fer",
+                "sd21_crucible_mediapipe_face",
+            )
+        )
 
         possible_fer = self.cfg["data"]["base"]
         if possible_fer not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
             raise ValueError(f"Unknown FER dataset base: {possible_fer}")
 
-        is_synthetic_data = None
-        if self.cfg["data"]["base"] == "fer_real":
-            is_synthetic_data = False
+        if possible_fer == "fer_real":
             dataset_name = "face-dataset-real"
-        elif self.cfg["data"]["base"] == "fer_gen_1_5":
-            is_synthetic_data = True
+        elif possible_fer == "fer_gen_1_5":
             dataset_name = "face-dataset-gen1-5"
-        elif self.cfg["data"]["base"] == "fer_gen_2_1":
-            is_synthetic_data = True
+        elif possible_fer == "fer_gen_2_1":
             dataset_name = "face-dataset-gen2-1"
 
         # Download if necessary
@@ -147,29 +165,29 @@ class FERDataset:
         label_list = {"train": [], "val": [], "test": []}
         file_list = {"train": [], "val": [], "test": []}
 
-        if self.cfg["data"]["base"] == "fer_gen_1_5":
+        if possible_fer == "fer_gen_1_5":
             gen_path = os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5")
-        elif self.cfg["data"]["base"] == "fer_gen_2_1":
+        elif possible_fer == "fer_gen_2_1":
             gen_path = os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1")
-        
+
         for img in os.listdir(gen_path):
             if self.cfg["data"]["base"] == "fer_gen_1_5":
                 orig_img_path = Path(
-                    os.path.join(
-                        real_path_fer, "Generated_1.5", "Generated_1.5", img
-                        )
-                    )
-                os.makedirs(generated_path_fer, exist_ok=True)
-                shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
-            
+                    os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5", img)
+                )
+                os.makedirs(generated_path_fer_21, exist_ok=True)
+                shutil.copy(
+                    orig_img_path, os.path.join(generated_path_fer.resolve(), img)
+                )
+
             elif self.cfg["data"]["base"] == "fer_gen_2_1":
-                    orig_img_path = Path(
-                        os.path.join(
-                            real_path_fer, "Generated_2.1", "Generated_2.1", img
-                        )
-                    )
-                    os.makedirs(generated_path_fer, exist_ok=True)
-                    shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
+                orig_img_path = Path(
+                    os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1", img)
+                )
+                os.makedirs(generated_path_fer_21, exist_ok=True)
+                shutil.copy(
+                    orig_img_path, os.path.join(generated_path_fer.resolve(), img)
+                )
 
         with open(split_file, "r") as f:
             for line_nbr, line in enumerate(f):
@@ -219,7 +237,7 @@ class FERDataset:
             "val": paths["val_captions"],
             "test": paths["test_captions"],
         }
-        
+
         for set_type in ["train", "val", "test"]:
             image_set_path = images_path[set_type]
             label_set_path = labels_path[set_type]
@@ -236,22 +254,23 @@ class FERDataset:
                             real_path_fer, "Generated_1.5", "Generated_1.5", img
                         )
                     )
-                    #os.makedirs(generated_path_fer, exist_ok=True)
-                    #shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
                 else:
                     orig_img_path = Path(
                         os.path.join(
                             real_path_fer, "Generated_2.1", "Generated_2.1", img
                         )
                     )
-                    #os.makedirs(generated_path_fer, exist_ok=True)
-                    #shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
-        
-            if self.cfg["data"]["base"] == "fer_gen_1_5":
-                shutil.copy(os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"), os.path.join(generated_path_fer, "metadata-sd15.yaml"))
+            if possible_fer == "fer_gen_1_5":
+                shutil.copy(
+                    os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"),
+                    os.path.join(generated_path_fer_15, "metadata.yaml"),
+                )
 
-            elif self.cfg["data"]["base"] == "fer_gen_2_1":
-                shutil.copy(os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"), os.path.join(generated_path_fer, "metadata-sd21.yaml"))
+            elif possible_fer == "fer_gen_2_1":
+                shutil.copy(
+                    os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"),
+                    os.path.join(generated_path_fer_21, "metadata.yaml"),
+                )
 
             for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
