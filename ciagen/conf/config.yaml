@@ -30,6 +30,7 @@ ml:
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.1 # controls all aug percents parameters everywhere
     with_filtering: false #True if the dataset augmentation should only consider the filtered examples
+    preferred_fe: vit
     filtering_metric: "mld" #The ptd distance to consider to take the best generated images
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
     keep_training_size: true #Whether the data augmentation should increase the size of the dataset or not
