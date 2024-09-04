@@ -59,24 +59,21 @@ class MLD:
             feature_extractor.eval()
 
         def transform_images(samples):
-            im_transformed = torch.empty(0)
+            all_ext = []
             for sample in tqdm(samples):
-                im_transformed = torch.cat(
-                    (im_transformed, feature_extractor(transform(sample).unsqueeze(0))),
-                    dim=0,
-                )
-            return im_transformed
+                ext = feature_extractor(transform(sample))
+
+                if isinstance(ext, list):
+                    all_ext.extend(ext)
+                else:
+                    all_ext.append(ext)
+
+            all_ext = torch.stack(all_ext)
+            return all_ext
 
         with torch.no_grad():
-            if not isinstance(real_samples, torch.Tensor):
-                real_transformed = transform_images(real_samples)
-            else:
-                real_transformed = feature_extractor(transform(real_samples))
-
-            if not isinstance(synthetic_samples, torch.Tensor):
-                synthetic_transformed = transform_images(synthetic_samples)
-            else:
-                synthetic_transformed = feature_extractor(transform(synthetic_samples))
+            real_transformed = transform_images(real_samples)
+            synthetic_transformed = transform_images(synthetic_samples)
 
         return torch.squeeze(real_transformed), torch.squeeze(synthetic_transformed)
 

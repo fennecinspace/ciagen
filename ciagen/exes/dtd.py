@@ -20,6 +20,10 @@ import torch
 from ciagen.qm.metrics.frechet_inception_distance import FID
 from ciagen.qm.metrics.inception_score import IS
 from ciagen.utils.common import logger, load_images_from_directory
+from ciagen.feature_extractors import (
+    AVAILABLE_FEATURE_EXTRACTORS,
+    instance_feature_extractor,
+)
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
@@ -64,7 +68,10 @@ class DTD:
         logger.info(f"Will save to {meta_data_file}")
 
         metrics_values = {}
-        for metric in self.cfg["metrics"]["dtd"]:
+        current_metrics = self.cfg["metrics"]["dtd"]
+        current_fe = self.cfg["metrics"]["fe"]
+
+        for metric in current_metrics:
             if metric not in self.available_metrics:
                 logger.exception(
                     f"There is no {metric} metric available, metrics are {list(self.available_metrics.keys())}"
@@ -72,15 +79,28 @@ class DTD:
                 continue
 
             metric_calculator = self.available_metrics[metric]()
+            current_metric_values = {}
 
-            score = metric_calculator.run_score(
-                real_samples=real_images,
-                synthetic_samples=synthetic_images,
-            )
+            for fe in current_fe:
+                if fe not in AVAILABLE_FEATURE_EXTRACTORS:
+                    logger.exception(
+                        f"There is no {fe} feature extractor available, feature extractors are {AVAILABLE_FEATURE_EXTRACTORS}"
+                    )
+                    continue
 
-            metrics_values[metric] = score
+                feature_extractor = instance_feature_extractor(fe)
 
-            logger.info(f"{metric} is {score}")
+                logger.info(f"Running {metric}x{fe}")
+                score = metric_calculator.run_score(
+                    real_samples=real_images,
+                    synthetic_samples=synthetic_images,
+                    feature_extractor=feature_extractor,
+                )
+
+                current_metric_values[fe] = score
+                logger.info(f"{metric}x{fe} is {score}")
+
+            metrics_values[metric] = current_metric_values
 
         metadata = OmegaConf.load(meta_data_file)
 

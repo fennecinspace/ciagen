@@ -20,11 +20,31 @@ IncSample = (
 class InceptionFeatureExtractor(FeatureExtractor):
     def __init__(self):
         self.inc_model = InceptionModel()
+        self._transform_from_tensor = transforms.Compose(
+            [
+                transforms.Resize(299),
+                transforms.CenterCrop(299),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        self._transform_from_image = inception_transform()
 
     def extract(
         self, samples: List[SampleT | IncSample] | SampleT | IncSample, **kwargs
     ) -> List[SampleT] | SampleT:
         return self.inc_model(samples)
+
+    def transform_from_image(self, image: Image.Image) -> SampleT:
+        return self._transform_from_image(image)
+
+    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
+        return self._transform_from_tensor(tensor)
+
+    def transform_from_array(self, array: np.ndarray) -> SampleT:
+        tensor = torch.from_numpy(array)
+        return self._transform_from_tensor(tensor)
 
 
 class InceptionModel(torch.nn.Module):
@@ -35,7 +55,6 @@ class InceptionModel(torch.nn.Module):
     def forward(self, x):
         if len(x.size()) == 3:
             x = torch.unsqueeze(x, 0)
-        # x= torch.unsqueeze(x,0)
         x = self.inceptionv3(x)
 
         return x
