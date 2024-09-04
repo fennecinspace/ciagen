@@ -161,6 +161,10 @@ active:
     sampling: confidence # confidence, coreset, baseline (for ablation study)
 
 metrics:
+    fe:
+        - vit
+        # - inception
+        - au
     dtd:
         - fid
         - inception_score
