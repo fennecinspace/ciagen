@@ -61,9 +61,8 @@ class PTD:
                 continue
 
             metric_calculator = self.available_metrics[metric]()
-            current_metrics_values = {}
-
             for fe in current_fe:
+                current_metrics_values = {}
                 feature_extractor = instance_feature_extractor(fe)
 
                 scores = metric_calculator.get_mahal_distance(
