@@ -210,11 +210,10 @@ class CreateMixedFERDataset:
             filtered_images = metadata_dict["filtering"][filtering_metric]
 
             #3) use a map_reduce to filter captions and synth_images
-            synth_images = synth_images
+            print(filtered_images)
+            print(synth_images[0])
+            synth_images = list(filtered_images.keys())
             print(synth_images)
-
-            print(f"Total captions: {len(total_captions)}")
-            print(f"Synthetic images: {len(synth_images)}")
 
         synth_images = select_equal_classes_path(total_captions, synth_images, nb_synth_images)
 
