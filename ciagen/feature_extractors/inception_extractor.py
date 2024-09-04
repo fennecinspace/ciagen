@@ -9,6 +9,7 @@ from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTen
 
 import numpy as np
 
+from typing import List
 from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor, SampleT
 
 IncSample = (
@@ -21,8 +22,8 @@ class InceptionFeatureExtractor(FeatureExtractor):
         self.inc_model = InceptionModel()
 
     def extract(
-        self, samples: torch.List[SampleT | IncSample] | SampleT | IncSample, **kwargs
-    ) -> torch.List[SampleT] | SampleT:
+        self, samples: List[SampleT | IncSample] | SampleT | IncSample, **kwargs
+    ) -> List[SampleT] | SampleT:
         return self.inc_model(samples)
 
 
@@ -56,7 +57,7 @@ class InceptionSoftmax(torch.nn.Module):
         super().__init__()
 
         # https://pytorch.org/vision/stable/models/generated/torchvision.models.inception_v3.html#torchvision.models.Inception_V3_Weights
-        self.inceptionv3 = inception_v3(weights = "DEFAULT")
+        self.inceptionv3 = inception_v3(weights="DEFAULT")
         self.softmax = Softmax()
 
     def forward(self, x):
