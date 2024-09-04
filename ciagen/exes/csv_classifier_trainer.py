@@ -33,19 +33,27 @@ from ciagen.utils.common import logger
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
 
-class EmotionDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
+class CSVDataframeDataset(Dataset):
+    def __init__(self,
+            dataframe: pd.DataFrame,
+            transform = None, # In case we need to transform images later, I don't know what type atm.
+            images_column_index: int = 0, # first column by default
+            labels_column_index: int = 1, # second column by default
+            labels_column_title: str = 'labels'
+        ):
+        self.images_column_index = images_column_index
+        self.labels_column_index = labels_column_index
         self.dataframe = dataframe
         self.transform = transform
-        self.label_dict = {label: idx for idx, label in enumerate(self.dataframe['Emotion'].unique())}
+        self.label_dict = {label: idx for idx, label in enumerate(self.dataframe[labels_column_title].unique())}
 
     def __len__(self):
         return len(self.dataframe)
 
-    def __getitem__(self, idx):
-        img_path = self.dataframe.iloc[idx, 0]
+    def __getitem__(self, idx: int):
+        img_path = self.dataframe.iloc[idx, self.images_column_index]
         image = Image.open(img_path).convert('RGB')
-        label = self.label_dict[self.dataframe.iloc[idx, 1]]
+        label = self.label_dict[self.dataframe.iloc[idx, self.labels_column_index]]
 
         if self.transform:
             image = self.transform(image)
@@ -62,13 +70,16 @@ class CSVClassificationTrainer:
         # CONFIG
         meta_data_file = Path(paths['mixed_yamls_folder_path']) / "train_dataset.csv"
 
+        labels_column_title = "Emotion" # This shouldn't be hard coded, we must find a better way.
+
         epochs = self.cfg['ml']['epochs']
         df = pd.read_csv(meta_data_file)
 
         logger.info(f"Training Classifier to {epochs} epochs using Dataset {meta_data_file}")
 
         # Split the data into train, validation, and test sets
-        train_df, val_df = train_test_split(df[df['Dataset'] == 'train'], test_size=0.2, random_state=42)
+        train_df = df[df['Dataset'] == 'train']
+        val_df = df[df['Dataset'] == 'val']
         test_df = df[df['Dataset'] == 'test']
 
         # Define Image Transformations
@@ -79,9 +90,9 @@ class CSVClassificationTrainer:
         ])
 
         # Create Data Loaders
-        self.train_dataset = EmotionDataset(train_df, transform=transform)
-        self.val_dataset = EmotionDataset(val_df, transform=transform)
-        self.test_dataset = EmotionDataset(test_df, transform=transform)
+        self.train_dataset = CSVDataframeDataset(train_df, transform=transform, labels_column_title = labels_column_title)
+        self.val_dataset = CSVDataframeDataset(val_df, transform=transform,  labels_column_title = labels_column_title)
+        self.test_dataset = CSVDataframeDataset(test_df, transform=transform,  labels_column_title = labels_column_title)
 
         self.train_loader = DataLoader(self.train_dataset, batch_size=32, shuffle=True)
         self.val_loader = DataLoader(self.val_dataset, batch_size=32, shuffle=False)
@@ -127,7 +138,7 @@ class CSVClassificationTrainer:
         self.train_model(epochs = epochs)
 
 
-    def train_model(self, epochs=10):
+    def train_model(self, epochs: int = 10):
         best_val_acc = 0.0
         best_model_path = os.path.join(self.wb.dir, "best.pth")
 
