@@ -213,16 +213,19 @@ class FERDataset:
                             real_path_fer, "Generated_1.5", "Generated_1.5", img
                         )
                     )
+                    os.makedirs(generated_path_fer, exist_ok=True)
+                    shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
                 else:
                     orig_img_path = Path(
                         os.path.join(
                             real_path_fer, "Generated_2.1", "Generated_2.1", img
                         )
                     )
+                    os.makedirs(generated_path_fer, exist_ok=True)
+                    shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
 
-                os.makedirs(generated_path_fer, exist_ok=True)
-                shutil.copy(orig_img_path, os.path.join(generated_path_fer.resolve(), img))
-                
+
+
             for lab_file, lab in label_list[set_type]:
                 with open(os.path.join(label_set_path, lab_file), "w+") as f:
                     f.write(lab)
