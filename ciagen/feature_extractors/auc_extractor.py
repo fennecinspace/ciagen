@@ -54,10 +54,10 @@ class AUExtractor(FeatureExtractor):
             # the action unit is capable of detecting several faces, we are
             # runing with only one for the moment
             if not len(aus):
-                aus = [np.zeros((1, 20))]
+                aus = [np.ones((1, 20))]
             else:
                 if not len(aus[0]):
-                    aus = [np.zeros((1, 20))]
+                    aus = [np.ones((1, 20))]
                 else:
                     aus = [aus[0]]
             aus = [torch.from_numpy(aus[0][0])]
