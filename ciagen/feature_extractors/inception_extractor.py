@@ -54,7 +54,6 @@ class InceptionModel(torch.nn.Module):
     def forward(self, x):
         if len(x.size()) == 3:
             x = torch.unsqueeze(x, 0)
-        # x= torch.unsqueeze(x,0)
         x = self.inceptionv3(x)
 
         return x
