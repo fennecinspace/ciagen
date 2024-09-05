@@ -345,15 +345,18 @@ def select_equal_classes(
     class_to_images: Dict[str, List[Path]] = {}
 
     # Map captions to corresponding images
-    for caption_path in total_captions:
+    for idx, caption_path in enumerate(total_captions):
         # Read the class from the caption file
         with open(caption_path, "r") as file:
             class_name = file.readline().strip()
 
         # Corresponding image name (e.g., 0_1.png for 0.txt)
         base_name = caption_path.stem  # e.g., "0" from "0.txt"
+
         corresponding_image = next(
-            (img for img in synth_images if img.stem == f"{base_name}_1"), None
+            # (img for img in synth_images if Path(img).stem == f"{base_name}_1"), None
+            (img for img in synth_images if Path(img).stem.startswith(f"{base_name}_")),
+            None,
         )
 
         if corresponding_image:
