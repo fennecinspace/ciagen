@@ -200,13 +200,14 @@ class CreateMixedFERDataset:
         val_images_path = Path(paths["val_images"])
         test_images_path = Path(Path(paths["test_images"]))
 
-        real_train_captions = list(Path(paths["real_captions"]).glob("*.txt"))
-        real_test_captions = list(Path(paths["test_captions"]).glob("*.txt"))
-        real_val_captions = list(Path(paths["val_captions"]).glob("*.txt"))
+        real_train_labels = list(Path(paths["real_labels "]).glob("*.txt"))
+        real_test_labels = list(Path(paths["test_labels "]).glob("*.txt"))
+        real_val_labels = list(Path(paths["val_labels "]).glob("*.txt"))
 
         synth_images_dir = Path(paths["generated"])
 
-        total_captions = real_train_captions + real_test_captions + real_val_captions
+        # TODO change total_captions to total_labels
+        total_captions = real_train_labels + real_test_labels + real_val_labels
 
         real_images = list_images(real_images_path, formats, train_nb)
         val_images = list_images(val_images_path, formats, val_nb)
@@ -230,7 +231,7 @@ class CreateMixedFERDataset:
         print(f"Total captions: {len(total_captions)}")
         print(f"Synthetic images: {len(synth_images)}")
 
-        # synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
+        synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
 
         if self.cfg["ml"]["with_filtering"]:
             # 1) Load metadata
@@ -265,9 +266,9 @@ class CreateMixedFERDataset:
             train_images=train_images,
             val_images=val_images,
             test_images=test_images,
-            real_train_captions=real_train_captions,
-            val_captions=real_val_captions,
-            test_captions=real_test_captions,
+            real_train_captions=real_train_labels,
+            val_captions=real_val_labels,
+            test_captions=real_test_labels,
             output_csv=data_csv_path,
         )
 
