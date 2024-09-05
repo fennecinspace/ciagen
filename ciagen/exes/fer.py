@@ -184,7 +184,7 @@ class FERDataset:
             for img in tqdm(os.listdir(gen_path)):
                 orig_img_path = Path(os.path.join(gen_path, img))
                 shutil.copy(
-                    orig_img_path, os.path.join(generated_path_fer.resolve(), img)
+                    orig_img_path, os.path.join(generated_path_fer_15.resolve(), img)
                 )
 
         elif possible_fer == "fer_gen_2_1":
@@ -194,7 +194,7 @@ class FERDataset:
             for img in tqdm(os.listdir(gen_path)):
                 orig_img_path = Path(os.path.join(gen_path, img))
                 shutil.copy(
-                    orig_img_path, os.path.join(generated_path_fer.resolve(), img)
+                    orig_img_path, os.path.join(generated_path_fer_21.resolve(), img)
                 )
 
         with open(split_file, "r") as f:
