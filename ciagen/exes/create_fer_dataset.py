@@ -198,17 +198,22 @@ class CreateMixedFERDataset:
 
         real_images_path = Path(paths["real_images"].replace("/fer/", "/fer_real/"))
         val_images_path = Path(paths["val_images"].replace("/fer/", "/fer_real/"))
-        test_images_path = Path(Path(paths["test_images"].replace("/fer/", "/fer_real/")))
+        test_images_path = Path(
+            Path(paths["test_images"].replace("/fer/", "/fer_real/"))
+        )
 
-        real_train_labels = list(Path(paths["real_labels"].replace("/fer/", "/fer_real/")).glob("*.txt"))
-        real_test_labels = list(Path(paths["test_labels"].replace("/fer/", "/fer_real/")).glob("*.txt"))
-        real_val_labels = list(Path(paths["val_labels"].replace("/fer/", "/fer_real/")).glob("*.txt"))
+        real_train_labels = list(
+            Path(paths["real_labels"].replace("/fer/", "/fer_real/")).glob("*.txt")
+        )
+        real_test_labels = list(
+            Path(paths["test_labels"].replace("/fer/", "/fer_real/")).glob("*.txt")
+        )
+        real_val_labels = list(
+            Path(paths["val_labels"].replace("/fer/", "/fer_real/")).glob("*.txt")
+        )
 
-        print(paths["real_images"])
-        print(paths["real_labels"])
         synth_images_dir = Path(paths["generated"])
-        print(synth_images_dir)
-        
+
         # TODO change total_captions to total_labels
         total_captions = real_train_labels + real_test_labels + real_val_labels
 
@@ -217,7 +222,6 @@ class CreateMixedFERDataset:
         test_images = list_images(test_images_path, formats, test_nb)
 
         synth_images = list_images(synth_images_dir, formats)
-        print(real_images[0], synth_images[0])
 
         synth_images_full = list_images(synth_images_dir, formats)
 
@@ -227,16 +231,19 @@ class CreateMixedFERDataset:
         for img in real_images:
 
             # TODO make this windows compliant to please hamed
-            real_img_id = img.split('/')[-1].split('_')[0].replace(".png", "").replace(".jpg", "")
+            real_img_id = (
+                img.split("/")[-1].split("_")[0].replace(".png", "").replace(".jpg", "")
+            )
             real_img_dict[real_img_id] = True
 
         synth_images = []
         for img in synth_images_full:
             # TODO make this windows compliant to please hamed
-            synth_img_id = img.split('/')[-1].split('_')[0].replace(".png", "").replace(".jpg", "")
+            synth_img_id = (
+                img.split("/")[-1].split("_")[0].replace(".png", "").replace(".jpg", "")
+            )
             if synth_img_id in real_img_dict:
                 synth_images += [img]
-
 
         # if sample['enable']:
         #     txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
@@ -253,7 +260,6 @@ class CreateMixedFERDataset:
 
         print(f"Total captions: {len(total_captions)}")
         print(f"Synthetic images: {len(synth_images)}")
-        print(total_captions[0], synth_images[0], nb_synth_images)
 
         if self.cfg["ml"]["with_filtering"]:
             # 1) Load metadata
@@ -270,16 +276,20 @@ class CreateMixedFERDataset:
                 metadata_dict = yaml.safe_load(f)
 
             # 2) read the filtered images
-            filtered_images = metadata_dict["results"]["filtering"][filtering_metric][preferred_fe]
+            filtered_images = metadata_dict["results"]["filtering"][filtering_metric][
+                preferred_fe
+            ]
 
             # 3) use a map_reduce to filter captions and synth_images
-            #synth_images = [i.replace('/fer/', '/fer_real/') for i in list(filtered_images.keys())]
-            synth_images =  list(filtered_images.keys())
-            #nb_synth_images = len(synth_images)
+            # synth_images = [i.replace('/fer/', '/fer_real/') for i in list(filtered_images.keys())]
+            synth_images = list(filtered_images.keys())
+            # nb_synth_images = len(synth_images)
 
         print(total_captions[0], synth_images[0], nb_synth_images)
-        synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
-        #synth_images = select_equal_classes_path(total_captions, synth_images, nb_synth_images)
+        synth_images = select_equal_classes(
+            total_captions, synth_images, nb_synth_images
+        )
+        # synth_images = select_equal_classes_path(total_captions, synth_images, nb_synth_images)
 
         train_images = real_images + synth_images
 
