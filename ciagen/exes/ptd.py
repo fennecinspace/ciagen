@@ -29,21 +29,25 @@ class PTD:
 
         meta_data_file = Path(generated_path) / "metadata.yaml"
 
-        def loading_images(directory):
+        def loading_images(directory, limit_size):
 
             return load_images_from_directory(
                 directory=directory,
                 formats=data["image_formats"],
                 ptd=True,
                 # to_tensors = True
-                limit_size=self.cfg["data"]["limit_size"],
+                limit_size=limit_size,
             )
 
         # Loading real images
-        real_images, _real_image_names = loading_images(real_path_images)
+        real_images, _real_image_names = loading_images(
+            real_path_images, limit_size=self.cfg["data"]["limit_size_real"]
+        )
 
         # Loading synthetic images
-        synthetic_images, synthetic_image_names = loading_images(generated_path)
+        synthetic_images, synthetic_image_names = loading_images(
+            generated_path, limit_size=self.cfg["data"]["limit_size_syn"]
+        )
 
         logger.info(f"Using {len(real_images)} Real images from: {real_path_images}")
         logger.info(
