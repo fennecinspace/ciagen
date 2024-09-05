@@ -26,7 +26,7 @@ ml:
     # number of samples for training, validation, and test
     val_nb: 300
     test_nb: 300
-    train_nb: 250
+    train_nb: 800
 
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.25 # controls all aug percents parameters everywhere

@@ -218,17 +218,15 @@ class FERDataset:
                 if set_type == "test" and current_sizes["val"] < max_sizes["val"]:
                     set_type = "val"
 
-                if current_sizes[set_type] < max_sizes[set_type]:
-                    file_list[set_type] += [file_name]
-                    caption = f"{ETHNICITY_MAPPING[ethnicity]} {gender} person with {EMOTION_MAPPING[emotion]} expression"
-                    caption_list[set_type] += [
-                        (file_name.replace(".jpg", ".txt"), caption)
-                    ]
+                # if current_sizes[set_type] < max_sizes[set_type]:
+                file_list[set_type] += [file_name]
+                caption = f"{ETHNICITY_MAPPING[ethnicity]} {gender} person with {EMOTION_MAPPING[emotion]} expression"
+                caption_list[set_type] += [(file_name.replace(".jpg", ".txt"), caption)]
 
-                    label = emotion
-                    label_list[set_type] += [(file_name.replace(".jpg", ".txt"), label)]
+                label = emotion
+                label_list[set_type] += [(file_name.replace(".jpg", ".txt"), label)]
 
-                    current_sizes[set_type] += 1
+                current_sizes[set_type] += 1
 
         images_path = {
             "train": paths["real_images"],
