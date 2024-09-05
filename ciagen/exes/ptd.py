@@ -78,7 +78,7 @@ class PTD:
 
                 for image_iter in range(len(synthetic_images)):
                     full_syn_image_path = str(
-                        Path(generated_path) / synthetic_image_names[image_iter]
+                        Path(generated_path).absolute() / synthetic_image_names[image_iter]
                     )
                     current_metrics_values[full_syn_image_path] = float(
                         scores[image_iter]

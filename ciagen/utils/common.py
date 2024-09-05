@@ -353,7 +353,7 @@ def select_equal_classes(
         # Corresponding image name (e.g., 0_1.png for 0.txt)
         base_name = caption_path.stem  # e.g., "0" from "0.txt"
         corresponding_image = next(
-            (img for img in synth_images if img.stem == f"{base_name}_1"), None
+            (img for img in synth_images if Path(img).stem == f"{base_name}_1"), None
         )
 
         if corresponding_image:
