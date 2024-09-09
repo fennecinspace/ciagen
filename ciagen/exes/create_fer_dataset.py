@@ -196,7 +196,9 @@ class CreateMixedFERDataset:
 
         data_csv_path = Path(paths["mixed_yamls_folder_path"]) / "train_dataset.csv"
 
-        real_images_path = Path(paths["real_images"].replace("/fer/", "/fer_real/"))
+        real_images_path = Path(
+            paths["real_images"]
+        )  # .replace("/fer/", "/fer_real/"))
         val_images_path = Path(paths["val_images"].replace("/fer/", "/fer_real/"))
         test_images_path = Path(
             Path(paths["test_images"].replace("/fer/", "/fer_real/"))
@@ -244,7 +246,6 @@ class CreateMixedFERDataset:
             )
             if synth_img_id in real_img_dict:
                 synth_images += [img]
-
         # if sample['enable']:
         #     txt_dir = txt_dir / (sample['metric'] + '_' + sample['sample'])
 

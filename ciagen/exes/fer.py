@@ -48,7 +48,7 @@ ETHNICITY_MAPPING = {
 }
 
 
-def download_fer(
+def download_fer_dataset(
     data_path: Path | str,
     dataset_name: AnyStr,  # TODO change this to Str
     captions_path: str = "Captions",
@@ -99,6 +99,65 @@ def download_fer(
     return image_path, annotations_path, sentences_path, caps_path, labels_path
 
 
+def prepare_fer_dataset(
+    which_dataset: str,
+    cfg: DictConfig,
+    paths: Dict[str, str | Path],
+) -> None:
+
+    real_path = paths["root"]
+    real_path_fer = os.path.join(real_path, "fer")
+    real_path_fer_download = os.path.join(real_path, "fer_download")
+
+    for p in (real_path_fer, real_path_fer_download):
+        os.makedirs(p, exist_ok=True)
+
+    real_path_fer_train_images = Path(os.path.join(real_path_fer, "train", "images"))
+    generated_path_fer_15 = Path(
+        os.path.join(
+            os.path.dirname(os.path.dirname(paths["generated"])),
+            "fer",
+            "sd15_crucible_mediapipe_face",
+        )
+    )
+    generated_path_fer_21 = Path(
+        os.path.join(
+            os.path.dirname(os.path.dirname(paths["generated"])),
+            "fer",
+            "sd21_crucible_mediapipe_face",
+        )
+    )
+
+    if which_dataset not in ("fer_real", "fer_generated_1_5", "fer_generated_2_1"):
+        raise ValueError(
+            "which_dataset must be 'fer_real', 'fer_generated_1_5', or 'fer_generated_2_1'",
+            f"got {which_dataset}",
+        )
+
+    if which_dataset == "fer_real":
+        dataset_name = "face-dataset-real"
+        real_path_fer_download_which = os.path.join(real_path_fer_download, "real")
+    elif which_dataset == "fer_gen_1_5":
+        dataset_name = "face-dataset-gen1-5"
+        real_path_fer_download_which = os.path.join(real_path_fer_download, "sd15")
+    elif which_dataset == "fer_gen_2_1":
+        dataset_name = "face-dataset-gen2-1"
+        real_path_fer_download_which = os.path.join(real_path_fer_download, "sd21")
+
+    # Download if necessary
+    print(
+        f"calling download fer with {dataset_name=} and {real_path_fer_download_which=}"
+    )
+    images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
+        download_fer_dataset(real_path_fer_download_which, dataset_name)
+    )
+    print(
+        f"called download fer with {dataset_name=} and {real_path_fer_download_which=}"
+    )
+    print("go verify the zip")
+    return
+
+
 class FERDataset:
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -106,53 +165,22 @@ class FERDataset:
     # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
     def __call__(self, paths: Dict[str, str | Path]) -> None:
 
-        real_path = paths["root"]
-        real_path_fer = os.path.join(real_path, "fer")
+        for which_dataset in ("fer_real", "fer_generated_1_5", "fer_generated_2_1"):
+            prepare_fer_dataset(which_dataset, self.cfg, paths)
 
-        os.makedirs(real_path_fer, exist_ok=True)
-
-        generated_path_fer = Path(
-            os.path.join(
-                os.path.dirname(os.path.dirname(paths["generated"])),
-                "fer",
-                self.cfg["model"]["cn_use"],
-            )
-        )
-
-        real_path_fer_train_images = Path(
-            os.path.join(real_path_fer, "train", "images")
-        )
-        generated_path_fer_15 = Path(
-            os.path.join(
-                os.path.dirname(os.path.dirname(paths["generated"])),
-                "fer",
-                "sd15_crucible_mediapipe_face",
-            )
-        )
-
-        generated_path_fer_21 = Path(
-            os.path.join(
-                os.path.dirname(os.path.dirname(paths["generated"])),
-                "fer",
-                "sd21_crucible_mediapipe_face",
-            )
-        )
-
-        possible_fer = self.cfg["data"]["base"]
-        if possible_fer not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
-            raise ValueError(f"Unknown FER dataset base: {possible_fer}")
-
-        if possible_fer == "fer_real":
-            dataset_name = "face-dataset-real"
-        elif possible_fer == "fer_gen_1_5":
-            dataset_name = "face-dataset-gen1-5"
-        elif possible_fer == "fer_gen_2_1":
-            dataset_name = "face-dataset-gen2-1"
+        return
 
         # Download if necessary
-        images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
-            download_fer(real_path_fer, dataset_name)
+        print(
+            f"calling download fer with {dataset_name=} and {real_path_fer_download=}"
         )
+        images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
+            download_fer_dataset(real_path_fer_download, dataset_name)
+        )
+        print(f"called download fer with {dataset_name=} and {real_path_fer_download=}")
+        print("go verify the zip")
+        return
+
         if "gen" in dataset_name:
             split_file = os.path.join(real_path_fer, "combined_generated.csv")
         else:
