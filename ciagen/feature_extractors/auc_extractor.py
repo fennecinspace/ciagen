@@ -1,29 +1,26 @@
+import json
 import os
 import re
-import json
-from PIL.Image import Image
-import hydra
-
 from pathlib import Path
-from tqdm import tqdm
-from omegaconf import DictConfig
+from typing import List
+
+import hydra
 import numpy as np
 import torch
 import torchvision
-from typing import List
-
-from ciagen.utils.common import logger
-from ciagen.feature_extractors.abc_feature_extractor import (
-    FeatureExtractor,
-    SampleT,
-)
-
 from feat import Detector
+from omegaconf import DictConfig
+from PIL.Image import Image
+from tqdm import tqdm
 
-detector = Detector()
+from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor, SampleT
+from ciagen.utils.common import logger
 
 
 class AUExtractor(FeatureExtractor):
+    def __init__(self, **kwargs):
+        self.detector = Detector()
+
     def _extract(
         self,
         samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
@@ -42,17 +39,14 @@ class AUExtractor(FeatureExtractor):
         aus_all = []
 
         def analyse_once(sample):
-            faces = detector.detect_faces(
+            faces = self.detector.detect_faces(
                 sample, face_detection_threshold, **face_model_kwargs
             )
-            landmarks = detector.detect_landmarks(
+            landmarks = self.detector.detect_landmarks(
                 sample, detected_faces=faces, **landmark_model_kwargs
             )
-            aus = detector.detect_aus(sample, landmarks, **au_model_kwargs)
+            aus = self.detector.detect_aus(sample, landmarks, **au_model_kwargs)
 
-            # AD-HOC solution for the moment
-            # the action unit is capable of detecting several faces, we are
-            # runing with only one for the moment
             if not len(aus):
                 aus = [np.ones((1, 20))]
             else:
@@ -177,8 +171,8 @@ def main(cfg: DictConfig) -> None:
 
 def test_au_extractor():
     image_test = "/gen_data/data/real/demo/trump.jpeg"
-    from PIL import Image
     import torchvision
+    from PIL import Image
 
     image = Image.open(image_test)
     print(f"{image_test} loaded")

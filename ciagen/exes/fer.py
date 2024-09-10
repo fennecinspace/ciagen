@@ -11,23 +11,19 @@
 # General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import hydra
 import os
 import shutil
-import pandas as pd
-from tqdm import tqdm
-import zipfile
-
-from omegaconf import DictConfig
-from pathlib import Path
-
-from typing import Dict, AnyStr
-
-import os
 import subprocess
+import zipfile
+from pathlib import Path
+from typing import AnyStr, Dict
+
+import hydra
+import pandas as pd
+from omegaconf import DictConfig
+from tqdm import tqdm
 
 from ciagen.utils.common import logger
-
 
 EMOTION_MAPPING = {
     "Anger": "an angry",
@@ -155,8 +151,6 @@ def prepare_fer_dataset(
     download_fer_dataset(real_path_fer_download_which, dataset_name)
     labels = load_csv_file(split_file)
 
-    print(f"{images_download_path=}")
-
     if "gen" in which_dataset:
         # only copy to the images stuff
         for p in (images_download_path, images_desination_path):
@@ -167,12 +161,10 @@ def prepare_fer_dataset(
             dest_img_path = os.path.join(images_desination_path.resolve(), img)
 
             if not os.path.exists(dest_img_path):
-                shutil.copy(orig_img_path, dest_img_path)
+                shutil.move(orig_img_path, dest_img_path)
     else:
         # generate the labels and copy to each needed directory
         labels = list((x[0], x[1]) for x in labels[["Filename", "Emotion"]].values)
-        # print(labels)
-        # print(paths)
 
         all_real_images = list(
             x
@@ -192,7 +184,7 @@ def prepare_fer_dataset(
 
         print("tttttttttttttttttttttttttttttttttttttttttt")
         print(f"{val_nb=} {test_nb=} {train_nb=}")
-        print(all_real_images)
+        # print(all_real_images)
         total_length = (
             (val_nb + test_nb + train_nb)
             if (val_nb + test_nb + train_nb) < len(all_real_images)
