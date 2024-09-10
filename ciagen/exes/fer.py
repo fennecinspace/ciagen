@@ -14,6 +14,7 @@
 import hydra
 import os
 import shutil
+import pandas as pd
 from tqdm import tqdm
 import zipfile
 
@@ -51,23 +52,12 @@ ETHNICITY_MAPPING = {
 def download_fer_dataset(
     data_path: Path | str,
     dataset_name: AnyStr,  # TODO change this to Str
-    captions_path: str = "Captions",
-    sentences_path: str = "Sentences",
-    images_path: str = "Images",
-    annotations_path: str = "Annotations",
-    labels_path: str = "Labels",
 ):
 
     data_zip_name: str = f"{dataset_name}.zip"
 
     data_path = Path(data_path)
-    image_path: Path = data_path / images_path
-    annotations_path: Path = data_path / annotations_path
-    caps_path: Path = data_path / captions_path
-    sentences_path: Path = data_path / sentences_path
-    labels_path: Path = data_path / labels_path
-
-    dirs = data_path, image_path, annotations_path, caps_path, sentences_path
+    dirs = (data_path,)
     logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
     for d in dirs:
         try:
@@ -96,7 +86,7 @@ def download_fer_dataset(
     with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
         zip_ref.extractall(data_path)
 
-    return image_path, annotations_path, sentences_path, caps_path, labels_path
+    return True
 
 
 def prepare_fer_dataset(
@@ -112,50 +102,120 @@ def prepare_fer_dataset(
     for p in (real_path_fer, real_path_fer_download):
         os.makedirs(p, exist_ok=True)
 
-    real_path_fer_train_images = Path(os.path.join(real_path_fer, "train", "images"))
-    generated_path_fer_15 = Path(
-        os.path.join(
-            os.path.dirname(os.path.dirname(paths["generated"])),
-            "fer",
-            "sd15_crucible_mediapipe_face",
-        )
-    )
-    generated_path_fer_21 = Path(
-        os.path.join(
-            os.path.dirname(os.path.dirname(paths["generated"])),
-            "fer",
-            "sd21_crucible_mediapipe_face",
-        )
-    )
-
-    if which_dataset not in ("fer_real", "fer_generated_1_5", "fer_generated_2_1"):
+    if which_dataset not in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
         raise ValueError(
-            "which_dataset must be 'fer_real', 'fer_generated_1_5', or 'fer_generated_2_1'",
+            "which_dataset must be 'fer_real', 'fer_gen_1_5', or 'fer_gen_2_1'",
             f"got {which_dataset}",
         )
 
     if which_dataset == "fer_real":
         dataset_name = "face-dataset-real"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "real")
+        images_download_path = os.path.join(
+            real_path_fer_download_which, "Real", "Real"
+        )
+        split_file = os.path.join(real_path_fer_download_which, "combined_real.csv")
+        images_desination_path: Path = Path(
+            os.path.join(real_path_fer, "train", "images")
+        )
     elif which_dataset == "fer_gen_1_5":
         dataset_name = "face-dataset-gen1-5"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "sd15")
+        images_download_path = os.path.join(
+            real_path_fer_download_which, "Generated_1.5", "Generated_1.5"
+        )
+        split_file = os.path.join(
+            real_path_fer_download_which, "combined_generated.csv"
+        )
+        images_desination_path: Path = Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(paths["generated"])),
+                "fer",
+                "sd15_crucible_mediapipe_face",
+            )
+        )
     elif which_dataset == "fer_gen_2_1":
         dataset_name = "face-dataset-gen2-1"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "sd21")
+        images_download_path = os.path.join(
+            real_path_fer_download_which, "Generated_2.1", "Generated_2.1"
+        )
+        split_file = os.path.join(
+            real_path_fer_download_which, "combined_generated.csv"
+        )
+        images_desination_path: Path = Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(paths["generated"])),
+                "fer",
+                "sd21_crucible_mediapipe_face",
+            )
+        )
 
     # Download if necessary
-    print(
-        f"calling download fer with {dataset_name=} and {real_path_fer_download_which=}"
-    )
-    images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
-        download_fer_dataset(real_path_fer_download_which, dataset_name)
-    )
-    print(
-        f"called download fer with {dataset_name=} and {real_path_fer_download_which=}"
-    )
-    print("go verify the zip")
-    return
+    download_fer_dataset(real_path_fer_download_which, dataset_name)
+    labels = load_csv_file(split_file)
+
+    print(f"{images_download_path=}")
+
+    if "gen" in which_dataset:
+        # only copy to the images stuff
+        for p in (images_download_path, images_desination_path):
+            os.makedirs(p, exist_ok=True)
+
+        for img in tqdm(os.listdir(images_download_path), unit="img"):
+            orig_img_path = Path(os.path.join(images_download_path, img))
+            dest_img_path = os.path.join(images_desination_path.resolve(), img)
+
+            if not os.path.exists(dest_img_path):
+                shutil.copy(orig_img_path, dest_img_path)
+    else:
+        # generate the labels and copy to each needed directory
+        labels = list((x[0], x[1]) for x in labels[["Filename", "Emotion"]].values)
+        # print(labels)
+        # print(paths)
+
+        all_real_images = list(
+            x
+            for x in os.listdir(images_download_path)
+            if ("jpg" in x or "png" in x or "jpeg" in x)
+        )
+        test_nb = cfg["ml"]["test_nb"]
+        val_nb = cfg["ml"]["val_nb"]
+        train_nb = cfg["ml"]["train_nb"]
+
+        max_sizes = {"train": train_nb, "val": val_nb, "test": test_nb}
+        current_sizes = {"train": 0, "val": 0, "test": 0}
+
+        caption_list = {"train": [], "val": [], "test": []}
+        label_list = {"train": [], "val": [], "test": []}
+        file_list = {"train": [], "val": [], "test": []}
+
+        print("tttttttttttttttttttttttttttttttttttttttttt")
+        print(f"{val_nb=} {test_nb=} {train_nb=}")
+        print(all_real_images)
+        total_length = (
+            (val_nb + test_nb + train_nb)
+            if (val_nb + test_nb + train_nb) < len(all_real_images)
+            else len(all_real_images)
+        )
+
+        all_real_images = all_real_images[:total_length]
+
+        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+        i = 0
+        for img in tqdm(all_real_images, unit="img"):
+            print("=====================")
+            print("here", img)
+            print("ee")
+            if i > 100:
+                return
+            i += 1
+
+    return True
+
+
+def load_csv_file(path: str) -> pd.DataFrame:
+    return pd.read_csv(path)
 
 
 class FERDataset:
@@ -165,38 +225,10 @@ class FERDataset:
     # @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
     def __call__(self, paths: Dict[str, str | Path]) -> None:
 
-        for which_dataset in ("fer_real", "fer_generated_1_5", "fer_generated_2_1"):
+        for which_dataset in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
             prepare_fer_dataset(which_dataset, self.cfg, paths)
 
         return
-
-        # Download if necessary
-        print(
-            f"calling download fer with {dataset_name=} and {real_path_fer_download=}"
-        )
-        images_path, _annotations_path, _sentences_path, _caps_path, labels_path = (
-            download_fer_dataset(real_path_fer_download, dataset_name)
-        )
-        print(f"called download fer with {dataset_name=} and {real_path_fer_download=}")
-        print("go verify the zip")
-        return
-
-        if "gen" in dataset_name:
-            split_file = os.path.join(real_path_fer, "combined_generated.csv")
-        else:
-            split_file = os.path.join(real_path_fer, "combined_real.csv")
-
-        test_nb = self.cfg["ml"]["test_nb"]
-        val_nb = self.cfg["ml"]["val_nb"]
-        train_nb = self.cfg["ml"]["train_nb"]
-
-        max_sizes = {"train": train_nb, "val": val_nb, "test": test_nb}
-        current_sizes = {"train": 0, "val": 0, "test": 0}
-
-        caption_list = {"train": [], "val": [], "test": []}
-        label_list = {"train": [], "val": [], "test": []}
-        file_list = {"train": [], "val": [], "test": []}
-
         if possible_fer == "fer_real":
             gen_path = os.path.join(real_path_fer, "Real", "Real")
             os.makedirs(real_path_fer_train_images, exist_ok=True)
