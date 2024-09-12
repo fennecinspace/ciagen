@@ -1,26 +1,5 @@
 # CIA: Controllable Image Augmentation Framework based on Stable Diffusion Synthesis
 
-## For us
-
-### docker installation (if needed):
-
-- [install docker](https://docs.docker.com/engine/install/)
-- [install docker compose plugin](https://docs.docker.com/compose/install/) **do not install the docker-desktop environment**
-- if you want to use a gpu with docker you need to install the [docker runtime for nvidia](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-
-after that what I do is
-- install [vscode](https://code.visualstudio.com/)
-- install the [dev containers plugin](https://code.visualstudio.com/docs/devcontainers/containers)
-
-run the docker script:
-```bash
-./run_and_build_docker_file.sh nvidia
-```
-
-put the `nvidia` argument at the end so the script build the container with the nvidia runtime.
-
-Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
-
 ## Kaggle API
 
 To download the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project.
@@ -101,21 +80,22 @@ python run.py task=yolo_trainer data.base=coco
 
 This is a data generation framework that uses [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) with [ControlNet](https://huggingface.co/blog/train-your-controlnet), to do Data Augmentation for:
 - Object Detection using [YOLOv8](https://github.com/ultralytics/ultralytics)
-- FER (facial emotion recognition) **to come**
+- FER (facial emotion recognition)
 
 Models can be trained using a mix of real and generated data. They can also be logged and evaluated.
+Quality metrics are available to enhance the training of models thereafter.
 
 <img src="ciagen/docs/images/general_pipeline.png" />
 
 
 ## Installation
 
-We recommend using either a virtual enviroment or a docker container.
+We recommend using either a virtual enviroment or a [docker container](#docker-installation).
 
 ### Docker
 You need [docker compose](https://docs.docker.com/compose/) to run it. Simply do
 ```bash
-./run_and_builder_docker_file.sh
+./run_and_builder_docker_file.sh nvidia
 ```
 and connect it in the command line with
 ```bash
@@ -129,7 +109,26 @@ Use `conda`, `virtualenv` or another. Do not forget to run
 pip install -r requirements.txt
 ```
 
+## How to:
+
+The current pipe works by performing several tasks, the advised order is:
+
+`prepare_data` &rarr; `gen` &rarr;`dtd` &rarr;`ptd` &rarr;`filtering` &rarr;`create_mixed_dataset` &rarr;`train`
+
+The `run.py` script works by means of a configuration file `ciagen/conf/config.yaml` that
+can be udpated dynamically:
+```bash
+python run.py some-new-value=<my-new-value>
+```
+
+Thus calling a task on the framework is done by `python run.py task=<my-task>` or modyfing the configuration file directly.
+
+### `prepare_data`
+aa
+
 ## Datasets
+
+There are available datastes to test or use the framework:
 
 - [COCO](https://cocodataset.org/#home) PEOPLE dataset :
 
@@ -141,6 +140,12 @@ python run.py task=prepare_data data.base=coco
 
 ```bash
 python run.py task=prepare_data data.base=flickr30k
+```
+
+- FER (facial emotion recognition) dataset:
+
+```bash
+python run.py task=prepare_data data.base=fer
 ```
 
 
@@ -304,3 +309,23 @@ Here are some plots for some of the many runs and studies that we performed :
 ### Random Sampling - Regular Runs
 
 <img src="ciagen/docs/images/random_sampling.png" />
+
+### Docker installation:
+
+- [install docker](https://docs.docker.com/engine/install/)
+- [install docker compose plugin](https://docs.docker.com/compose/install/) **do not install the docker-desktop environment**
+- if you want to use a gpu with docker you need to install the [docker runtime for nvidia](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+
+after that what I do is
+- install [vscode](https://code.visualstudio.com/)
+- install the [dev containers plugin](https://code.visualstudio.com/docs/devcontainers/containers)
+
+run the docker script:
+```bash
+./run_and_build_docker_file.sh nvidia
+```
+
+put the `nvidia` argument at the end so the script build the container with the nvidia runtime.
+
+Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
+
