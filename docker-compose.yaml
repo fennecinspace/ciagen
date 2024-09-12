@@ -16,7 +16,6 @@ services:
       - .:/gen_data
       - /data:/data
       - ${HOME}/docker/home/user:/home/user
-      # - ../vscode/ciagen:/home/user/.vscode-server
     user: ${USER_ID}:${GROUP_ID}
     environment:
       - DATA_DIR=/gen_data/data

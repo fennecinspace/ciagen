@@ -68,7 +68,7 @@ def prepare_data_task(cfg: DictConfig) -> None:
         downloader = COCODataset(cfg)
     elif cfg["data"]["base"] == "flickr30k":
         downloader = Flickr30kDataset(cfg)
-    elif cfg["data"]["base"] in ["fer_real", "fer_gen_1_5", "fer_gen_2_1"]:
+    elif cfg["data"]["base"] == "fer":
         downloader = FERDataset(cfg)
     else:
         downloader: lambda paths: print(

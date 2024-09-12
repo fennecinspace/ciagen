@@ -6,7 +6,7 @@ ARG USER_ID=1000
 RUN addgroup --gid $GROUP_ID user
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
 
-RUN apt-get update && apt -y install ffmpeg libsm6 libxext6 build-essential
+RUN apt-get update && apt -y install ffmpeg libsm6 libxext6 build-essential vim
 
 # to build doc to pdf https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
 RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y

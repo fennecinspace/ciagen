@@ -24,9 +24,9 @@ data:
 # ratio between train and test, learning rate ...
 ml:
     # number of samples for training, validation, and test
-    val_nb: 300
-    test_nb: 300
-    train_nb: 250
+    val_nb: 1000
+    test_nb: 1000
+    train_nb: 2000
 
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.25 # controls all aug percents parameters everywhere
@@ -166,10 +166,10 @@ metrics:
     fe:
         - vit
         # - inception
-        - au
+        # - au
     dtd:
         - fid
-        - inception_score
+        # - inception_score
     ptd:
         - mld
 filtering:

@@ -328,7 +328,7 @@ def create_yaml_file(save_path: Path, train: Path, val: Path, test: Path):
 
 
 def select_equal_classes(
-    total_captions: List[Path], synth_images: List[Path], nb_synth_images: int
+    total_labels: List[Path], synth_images: List[Path], nb_synth_images: int
 ) -> List[Path]:
     """
     Selects synthetic images such that classes are balanced, based on their captions.
@@ -345,13 +345,13 @@ def select_equal_classes(
     class_to_images: Dict[str, List[Path]] = {}
 
     # Map captions to corresponding images
-    for idx, caption_path in enumerate(total_captions):
+    for _, label_path in enumerate(total_labels):
         # Read the class from the caption file
-        with open(caption_path, "r") as file:
+        with open(label_path, "r") as file:
             class_name = file.readline().strip()
 
         # Corresponding image name (e.g., 0_1.png for 0.txt)
-        base_name = caption_path.stem  # e.g., "0" from "0.txt"
+        base_name = label_path.stem  # e.g., "0" from "0.txt"
 
         corresponding_image = next(
             # (img for img in synth_images if Path(img).stem == f"{base_name}_1"), None
