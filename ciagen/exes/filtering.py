@@ -28,9 +28,13 @@ class Filtering:
             for fe in ptd_by_fe:
                 ptd = list(ptd_by_fe[fe].items())
 
+                # TODO: this should not be the case, distances should be always positive, there is a issue with Mahalanobis
+                ptd = [(x[0], abs(float(x[1]))) for x in ptd]
+
                 if self.cfg["filtering"]["type"] == "threshold":
                     t = self.cfg["filtering"]["value"]
-                    kept = [i for i in ptd if float(i[1]) >= t]
+                    # kept = [i for i in ptd if float(i[1]) >= t]
+                    kept = [i for i in ptd if float(i[1]) <= t]
                 elif self.cfg["filtering"]["type"] == "top-p":
                     p = self.cfg["filtering"]["value"]
                     try:
@@ -40,7 +44,8 @@ class Filtering:
                             "When using top-p filtering, the value (i.e. The proportion of kept datapoint) should be between 0 and 1"
                         )
 
-                    ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=True)
+                    # ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=True)
+                    ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=False)
                     kept = ptd[: int(len(ptd) * p)]
                 elif self.cfg["filtering"]["type"] == "top-k":
                     k = self.cfg["filtering"]["value"]
