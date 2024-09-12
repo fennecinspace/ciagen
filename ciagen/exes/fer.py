@@ -45,6 +45,29 @@ ETHNICITY_MAPPING = {
 }
 
 
+def create_label_file_from_label_and_path(
+    labels_desination_path, image_name, list_of_name_label_pairs
+):
+    emotion = list(filter(lambda x: x[0] == image_name, list_of_name_label_pairs))
+
+    if len(emotion) == 0:
+        logger.warning(f"No label found for {image_name}")
+        return
+    if len(emotion) > 1:
+        logger.warning(f"More than one label found for {image_name}: {emotion}")
+        return
+
+    emotion = emotion[0][1]
+
+    image_pure_name = image_name.split(".")[0]
+    label_name = f"{image_pure_name}.txt"
+    label_desination_path = os.path.join(labels_desination_path, label_name)
+
+    with open(label_desination_path, "w+") as f:
+        f.write(emotion)
+    return
+
+
 def download_fer_dataset(
     data_path: Path | str,
     dataset_name: AnyStr,  # TODO change this to Str
@@ -104,6 +127,7 @@ def prepare_fer_dataset(
             f"got {which_dataset}",
         )
 
+    labels_desination_path = None
     if which_dataset == "fer_real":
         dataset_name = "face-dataset-real"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "real")
@@ -113,6 +137,9 @@ def prepare_fer_dataset(
         split_file = os.path.join(real_path_fer_download_which, "combined_real.csv")
         images_desination_path: Path = Path(
             os.path.join(real_path_fer, "train", "images")
+        )
+        labels_desination_path: Path = Path(
+            os.path.join(real_path_fer, "train", "labels")
         )
     elif which_dataset == "fer_gen_1_5":
         dataset_name = "face-dataset-gen1-5"
@@ -130,6 +157,10 @@ def prepare_fer_dataset(
                 "sd15_crucible_mediapipe_face",
             )
         )
+        metatdata_cheat_file = os.path.join(
+            os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"
+        )
+        metadata_dest_path = os.path.join(images_desination_path, "metadata.yaml")
     elif which_dataset == "fer_gen_2_1":
         dataset_name = "face-dataset-gen2-1"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "sd21")
@@ -146,62 +177,116 @@ def prepare_fer_dataset(
                 "sd21_crucible_mediapipe_face",
             )
         )
+        metatdata_cheat_file = os.path.join(
+            os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"
+        )
+        metadata_dest_path = os.path.join(images_desination_path, "metadata.yaml")
 
     # Download if necessary
     download_fer_dataset(real_path_fer_download_which, dataset_name)
     labels = load_csv_file(split_file)
 
+    all_images = list(
+        x
+        for x in os.listdir(images_download_path)
+        if ("jpg" in x or "png" in x or "jpeg" in x)
+    )
+
+    # for real images create the labels
     if "gen" in which_dataset:
-        # only copy to the images stuff
+        logger.info(
+            f"Creating pre-generated directories: {str(images_download_path), str(images_desination_path)}"
+        )
         for p in (images_download_path, images_desination_path):
             os.makedirs(p, exist_ok=True)
 
-        for img in tqdm(os.listdir(images_download_path), unit="img"):
+        logger.info(
+            f"Moving pre-generated images from {str(images_download_path)} to {str(images_desination_path)}"
+        )
+        for img in tqdm(all_images, unit="img"):
             orig_img_path = Path(os.path.join(images_download_path, img))
             dest_img_path = os.path.join(images_desination_path.resolve(), img)
 
             if not os.path.exists(dest_img_path):
                 shutil.move(orig_img_path, dest_img_path)
+
+        logger.info(
+            f"Copying cheat metadata file from {str(metatdata_cheat_file)} to {str(metadata_dest_path)}"
+        )
+        shutil.copy(metatdata_cheat_file, metadata_dest_path)
+
     else:
-        # generate the labels and copy to each needed directory
+        # real images remain in this directory, they are copied each time
+
+        real_train_images_path = paths["real_images"]
+        real_test_images_path = paths["test_images"]
+        real_val_images_path = paths["val_images"]
+
+        real_train_labels_path = paths["real_labels"]
+        real_test_labels_path = paths["test_labels"]
+        real_val_labels_path = paths["val_labels"]
+
         labels = list((x[0], x[1]) for x in labels[["Filename", "Emotion"]].values)
 
-        all_real_images = list(
-            x
-            for x in os.listdir(images_download_path)
-            if ("jpg" in x or "png" in x or "jpeg" in x)
-        )
         test_nb = cfg["ml"]["test_nb"]
         val_nb = cfg["ml"]["val_nb"]
         train_nb = cfg["ml"]["train_nb"]
 
-        max_sizes = {"train": train_nb, "val": val_nb, "test": test_nb}
-        current_sizes = {"train": 0, "val": 0, "test": 0}
+        # clean the directories
+        for p in (
+            real_train_images_path,
+            real_test_images_path,
+            real_val_images_path,
+            real_train_labels_path,
+            real_test_labels_path,
+            real_val_labels_path,
+        ):
+            for filename in os.listdir(p):
+                filepath = os.path.join(p, filename)
+                if os.path.isfile(filepath) or os.path.islink(filepath):
+                    os.unlink(filepath)
+                elif os.path.isdir(filepath):
+                    shutil.rmtree(filepath)
 
-        caption_list = {"train": [], "val": [], "test": []}
-        label_list = {"train": [], "val": [], "test": []}
-        file_list = {"train": [], "val": [], "test": []}
+        logger.info(f"Moving train to {str(real_train_images_path)}")
+        logger.info(f"Moving test to {str(real_test_images_path)}")
+        logger.info(f"Moving val to {str(real_val_images_path)}")
+        logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
-        print("tttttttttttttttttttttttttttttttttttttttttt")
-        print(f"{val_nb=} {test_nb=} {train_nb=}")
-        # print(all_real_images)
         total_length = (
             (val_nb + test_nb + train_nb)
-            if (val_nb + test_nb + train_nb) < len(all_real_images)
-            else len(all_real_images)
+            if (val_nb + test_nb + train_nb) < len(all_images)
+            else len(all_images)
         )
 
-        all_real_images = all_real_images[:total_length]
+        all_images = all_images[:total_length]
 
-        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-        i = 0
-        for img in tqdm(all_real_images, unit="img"):
-            print("=====================")
-            print("here", img)
-            print("ee")
-            if i > 100:
-                return
-            i += 1
+        counter = 0
+        for img in tqdm(all_images, unit="img"):
+            orig_img_path = Path(os.path.join(images_download_path, img))
+
+            if counter < val_nb:
+                images_desination_path = real_val_images_path
+                labels_desination_path = real_val_labels_path
+            elif counter < val_nb + test_nb:
+                images_desination_path = real_test_images_path
+                labels_desination_path = real_test_labels_path
+            else:
+                images_desination_path = real_train_images_path
+                labels_desination_path = real_train_labels_path
+
+            images_desination_path = Path(images_desination_path)
+            labels_desination_path = Path(labels_desination_path)
+
+            dest_img_path = os.path.join(images_desination_path.resolve(), img)
+
+            # create the label and copy
+            create_label_file_from_label_and_path(labels_desination_path, img, labels)
+
+            # copy the image
+            if not os.path.exists(dest_img_path):
+                shutil.copy(orig_img_path, dest_img_path)
+            counter += 1
 
     return True
 
@@ -221,122 +306,6 @@ class FERDataset:
             prepare_fer_dataset(which_dataset, self.cfg, paths)
 
         return
-        if possible_fer == "fer_real":
-            gen_path = os.path.join(real_path_fer, "Real", "Real")
-            os.makedirs(real_path_fer_train_images, exist_ok=True)
-            for img in tqdm(os.listdir(gen_path)):
-                orig_img_path = Path(os.path.join(gen_path, img))
-                shutil.copy(
-                    orig_img_path,
-                    os.path.join(real_path_fer_train_images.resolve(), img),
-                )
-        elif possible_fer == "fer_gen_1_5":
-            gen_path = os.path.join(real_path_fer, "Generated_1.5", "Generated_1.5")
-            os.makedirs(generated_path_fer_15, exist_ok=True)
-            for img in tqdm(os.listdir(gen_path)):
-                orig_img_path = Path(os.path.join(gen_path, img))
-                shutil.copy(
-                    orig_img_path, os.path.join(generated_path_fer_15.resolve(), img)
-                )
-
-        elif possible_fer == "fer_gen_2_1":
-            gen_path = os.path.join(real_path_fer, "Generated_2.1", "Generated_2.1")
-            os.makedirs(generated_path_fer_21, exist_ok=True)
-
-            for img in tqdm(os.listdir(gen_path)):
-                orig_img_path = Path(os.path.join(gen_path, img))
-                shutil.copy(
-                    orig_img_path, os.path.join(generated_path_fer_21.resolve(), img)
-                )
-
-        with open(split_file, "r") as f:
-            for line_nbr, line in enumerate(f):
-                if line_nbr == 0:
-                    continue
-                if all(
-                    [current_sizes[i] == max_sizes[i] for i in current_sizes.keys()]
-                ):
-                    break
-
-                line = line.replace("\n", "")
-
-                try:
-                    [file_name, emotion, gender, ethnicity, set_type] = line.split(",")
-                except Exception as e:
-                    raise ValueError(
-                        f"Error with line (too long or too short) {line_nbr}: {e}"
-                    )
-
-                if set_type == "test" and current_sizes["val"] < max_sizes["val"]:
-                    set_type = "val"
-
-                # if current_sizes[set_type] < max_sizes[set_type]:
-                file_list[set_type] += [file_name]
-                caption = f"{ETHNICITY_MAPPING[ethnicity]} {gender} person with {EMOTION_MAPPING[emotion]} expression"
-                caption_list[set_type] += [(file_name.replace(".jpg", ".txt"), caption)]
-
-                label = emotion
-                label_list[set_type] += [(file_name.replace(".jpg", ".txt"), label)]
-
-                current_sizes[set_type] += 1
-
-        images_path = {
-            "train": paths["real_images"],
-            "val": paths["val_images"],
-            "test": paths["test_images"],
-        }
-        labels_path = {
-            "train": paths["real_labels"],
-            "val": paths["val_labels"],
-            "test": paths["test_labels"],
-        }
-        captions_path = {
-            "train": paths["real_captions"],
-            "val": paths["val_captions"],
-            "test": paths["test_captions"],
-        }
-
-        for set_type in ["train", "val", "test"]:
-            image_set_path = images_path[set_type]
-            label_set_path = labels_path[set_type]
-            caption_set_path = captions_path[set_type]
-
-            # for img in file_list[set_type]:
-            # if self.cfg["data"]["base"] == "fer_real":
-            #     orig_img_path = Path(
-            #         os.path.join(real_path_fer, "Real", "Real", img)
-            #     )
-            # elif self.cfg["data"]["base"] == "fer_gen_1_5":
-            #     orig_img_path = Path(
-            #         os.path.join(
-            #             real_path_fer, "Generated_1.5", "Generated_1.5", img
-            #         )
-            #     )
-            # else:
-            #     orig_img_path = Path(
-            #         os.path.join(
-            #             real_path_fer, "Generated_2.1", "Generated_2.1", img
-            #         )
-            #     )
-            for lab_file, lab in label_list[set_type]:
-                with open(os.path.join(label_set_path, lab_file), "w+") as f:
-                    f.write(lab)
-
-            for cap_file, cap in caption_list[set_type]:
-                with open(os.path.join(caption_set_path, cap_file), "w+") as f:
-                    f.write(cap)
-
-        if possible_fer == "fer_gen_1_5":
-            shutil.copy(
-                os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"),
-                os.path.join(generated_path_fer_15, "metadata.yaml"),
-            )
-
-        elif possible_fer == "fer_gen_2_1":
-            shutil.copy(
-                os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"),
-                os.path.join(generated_path_fer_21, "metadata.yaml"),
-            )
 
 
 @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")

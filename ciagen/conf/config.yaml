@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "fer" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
+    base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
     limit_size_real: 2000
     limit_size_syn: 2000
@@ -24,9 +24,9 @@ data:
 # ratio between train and test, learning rate ...
 ml:
     # number of samples for training, validation, and test
-    val_nb: 300
-    test_nb: 300
-    train_nb: 800
+    val_nb: 1000
+    test_nb: 1000
+    train_nb: 2000
 
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.25 # controls all aug percents parameters everywhere
@@ -166,10 +166,10 @@ metrics:
     fe:
         - vit
         # - inception
-        - au
+        # - au
     dtd:
         - fid
-        - inception_score
+        # - inception_score
     ptd:
         - mld
 filtering:

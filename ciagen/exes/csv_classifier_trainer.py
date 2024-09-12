@@ -13,13 +13,12 @@
 
 from pathlib import Path
 from typing import Dict
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 import uuid
 
 import pandas as pd
 import os
 from PIL import Image
-from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
@@ -70,19 +69,21 @@ class CSVClassificationTrainer:
     def __init__(self, cfg: DictConfig):
         self.cfg = cfg
 
-    def __call__(self, paths: Dict[str, str | Path]) -> None:
-        # CONFIG
-        meta_data_file = Path(paths["mixed_yamls_folder_path"]) / "train_dataset.csv"
-
-        labels_column_title = (
-            "Emotion"  # This shouldn't be hard coded, we must find a better way.
+    def __call__(
+        self,
+        paths: Dict[str, str | Path],
+        train_dataset_csv_filename: str = "train_dataset.csv",
+        labels_column_title: str = "Emotion",
+    ) -> None:
+        metadata_file = (
+            Path(paths["mixed_yamls_folder_path"]) / train_dataset_csv_filename
         )
 
         epochs = self.cfg["ml"]["epochs"]
-        df = pd.read_csv(meta_data_file)
+        df = pd.read_csv(metadata_file)
 
         logger.info(
-            f"Training Classifier to {epochs} epochs using Dataset {meta_data_file}"
+            f"Training Classifier to {epochs} epochs using Dataset {metadata_file}"
         )
 
         # Split the data into train, validation, and test sets
@@ -281,15 +282,3 @@ class CSVClassificationTrainer:
         test_loss /= len(self.test_loader.dataset)
         test_acc = test_correct / test_total
         logger.info(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}")
-
-
-# if __name__ == '__main__':
-#     paths = {
-#         'mixed_yamls_folder_path': "/home/mohamed/Desktop",
-#     }
-
-#     classifier = CSVClassificationTrainer({
-#         'ml': {'epochs': 300}
-#     })
-
-#     classifier(paths)

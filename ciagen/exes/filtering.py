@@ -52,11 +52,12 @@ class Filtering:
                             "When using top-k filtering, the value (i.e. The amount of kept datapoint) should be between 0 and the total amount of datapoints"
                         )
 
-                    ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=True)
+                    # ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=True)
+                    ptd = sorted(ptd, key=lambda a: float(a[1]), reverse=False)
                     kept = ptd[:k]
                 else:
                     raise ValueError(
-                        "Wrong filtering type specified, please select threshold, top-p or top-k"
+                        "Wrong filtering type specified, please select 'threshold', 'top-p' or 'top-k'"
                     )
 
                 kept = sorted(kept, reverse=True, key=lambda a: a[1])
