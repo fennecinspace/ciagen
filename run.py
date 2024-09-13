@@ -142,25 +142,46 @@ def filtering_task(cfg: DictConfig) -> None:
     return filtering(paths)
 
 
+def mix_dataset(cfg: DictConfig) -> None:
+    dataset = cfg["data"]["base"]
+
+    if dataset == "coco":
+        create_mixed_yolo_dataset_task(cfg)
+    elif dataset == "flickr30k":
+        create_mixed_fer_dataset_task(cfg)
+    elif dataset == "fer":
+        create_mixed_fer_dataset_task(cfg)
+    else:
+        raise ValueError(
+            f"Dataset {dataset} not defined, please use 'coco', 'flickr30k', 'fer' in the config file"
+        )
+
+
+def train(cfg: DictConfig) -> None:
+    dataset = cfg["data"]["base"]
+
+    if dataset == "coco":
+        yolo_trainer_task(cfg)
+    elif dataset == "flickr30k":
+        yolo_trainer_task(cfg)
+    elif dataset == "fer":
+        csv_classifier_trainer_task(cfg)
+    else:
+        raise ValueError(
+            f"Dataset {dataset} not defined, please use 'coco', 'flickr30k', 'fer' in the config file"
+        )
+
+
 architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
-    "gen": gen_task,
-    # "test": ciagen.test,
-    # "train_studies": ciagen.train_studies,
-    # "train": ciagen.train,
-    # "coco": coco_task,
-    # "flickr30k": flickr30k_task,
     "prepare_data": prepare_data_task,
-    "create_mixed_yolo_dataset": create_mixed_yolo_dataset_task,
-    "create_mixed_fer_dataset": create_mixed_fer_dataset_task,
-    "yolo_trainer": yolo_trainer_task,
+    "gen": gen_task,
     "dtd": dtd_task,
     "ptd": ptd_task,
-    "csv_classifier_trainer": csv_classifier_trainer_task,
     "filtering": filtering_task,
-    # "iqa": ciagen.iqa,
-    # "iqa_paper": ciagen.iqa_paper,
+    "mix": mix_dataset,
+    "train": train,
 }
 
 
