@@ -1,83 +1,5 @@
 # CIA: Controllable Image Augmentation Framework based on Stable Diffusion Synthesis
 
-## Kaggle API
-
-To download the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project.
-
-## UNDER Heavy development
-Below this line everything should be taken with a grain of salt. Because of the refactoring some binaries might not work.
-
-METRICS should work in this way distance_name(real, synth, feature)
-
-### What works:
-- gen
-- coco
-- flickr30k
-
-### Data structuring
-
-Please respect this structure when writing code :
-images_dir
-This project contains the following directory structure:
-
-```
-└─ data/
-    ├─ real/
-    │   └─ dataset-name/ (e.g., coco)
-    │       ├─ train/
-    │       │   ├─ images/
-    │       │   │   └─ image001.png
-    │       │   ├─ labels/
-    │       │   │   └─ image001.txt
-    │       │   └─ captions/
-    │       │       └─ image001.txt
-    │       ├─ val/
-    │       │   ├─ images/
-    │       │   │   └─ image005.png
-    │       │   ├─ labels/
-    │       │   │   └─ image005.txt
-    │       │   └─ captions/
-    │       │       └─ image005.txt
-    │       └─ test/
-    │           ├─ images/
-    │           │   └─ image006.png
-    │           ├─ labels/
-    │           │   └─ image006.txt
-    │           └─ captions/
-    │               └─ image006.txt
-    ├─ generated/
-    │   └─ dataset-name/ (e.g., coco)
-    │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
-    │           ├─ image001_1.png
-    │           └─ image001_2.png
-    └─ mixed/
-        └─ dataset-name/ (e.g., coco)
-            └─ train_nb/ (e.g., 250)
-                └─ [controlnet-model-name]-[augmentation_percent]/ (e.g., controlnet_segmentation-0.1)
-                    ├─ data.txt
-                    ├─ train.txt
-                    ├─ test.txt
-                    └─ val.txt
-```
-
-`train, val, test .txt` files contain a list of the images to use, here's an example :
-
-```
-/path/to/data/real/coco/images/000000368475.jpg
-/path/to/data/real/coco/images/000000368488.jpg
-```
-
-### Quick new commands :
-```
-python run.py task=prepare_data data.base=coco
-python run.py task=gen data.base=coco
-python run.py task=create_mixed_yolo_dataset data.base=coco
-wandb login
-python run.py task=yolo_trainer data.base=coco
-```
-
-## Rest of the README.md
-
 This is a data generation framework that uses [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) with [ControlNet](https://huggingface.co/blog/train-your-controlnet), to do Data Augmentation for:
 - Object Detection using [YOLOv8](https://github.com/ultralytics/ultralytics)
 - FER (facial emotion recognition)
@@ -109,11 +31,11 @@ Use `conda`, `virtualenv` or another. Do not forget to run
 pip install -r requirements.txt
 ```
 
-## How to:
+## How to use it:
 
 The current pipe works by performing several tasks, the advised order is:
 
-`prepare_data` &rarr; `gen` &rarr;`dtd` &rarr;`ptd` &rarr;`filtering` &rarr;`create_mixed_dataset` &rarr;`train`
+`prepare_data` &rarr; `gen` &rarr;`dtd` &rarr;`ptd` &rarr;`filtering` &rarr;`mix` &rarr;`train`
 
 The `run.py` script works by means of a configuration file `ciagen/conf/config.yaml` that
 can be udpated dynamically:
@@ -124,7 +46,147 @@ python run.py some-new-value=<my-new-value>
 Thus calling a task on the framework is done by `python run.py task=<my-task>` or modyfing the configuration file directly.
 
 ### `prepare_data`
-aa
+
+The `prepare_data` task should put your real data to be used as seed in the `data/real`
+directory with labels and captions if needed in the following fashion:
+
+```
+└─ data/
+    ├─ real/
+    │   └─ dataset-name/ (e.g., coco)
+    │       ├─ train/
+    │       │   ├─ images/
+    │       │   │   └─ image001.png
+    │       │   ├─ labels/
+    │       │   │   └─ image001.txt
+    │       │   └─ captions/
+    │       │       └─ image001.txt
+    │       ├─ val/
+    │       │   ├─ images/
+    │       │   │   └─ image005.png
+    │       │   ├─ labels/
+    │       │   │   └─ image005.txt
+    │       │   └─ captions/
+    │       │       └─ image005.txt
+    │       └─ test/
+    │           ├─ images/
+    │           │   └─ image006.png
+    │           ├─ labels/
+    │           │   └─ image006.txt
+    │           └─ captions/
+    │               └─ image006.txt
+```
+
+For the moment three datasets are already available to use: `coco, flickr30k, fer`. You
+can of course add a new script to prepare your own data. Please follow the same schema for your data.
+
+### `gen`
+
+The `gen` task will extract some condition from real data:
+
+- by means of segmentation
+- canny
+- face features
+
+or any other condition that [ControlNet](https://huggingface.co/blog/train-your-controlnet)
+is able to learn.
+The  new samples will be store in the corresponding directory:
+
+```
+└─ data/
+    ├─ real/
+    │   └─ ...
+    ├─ generated/
+    │   └─ dataset-name/ (e.g., coco)
+    │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
+    │           ├─ metadata.yaml
+    │           ├─ image001_1.png
+    │           └─ image001_2.png
+    └─ mixed/
+        └─ ...
+```
+
+The `metadata.yaml` file stores both the initial configuration used to generate the
+dataset and will keep the value for future metrics and filtering tasks.
+
+### `dtd`
+
+(D)istribution (t)o (D)istribution metrics are thought to compare real and generated
+empiric distributions, some examples are:
+ - [Frechet Inception Distance](https://arxiv.org/abs/1706.08500)
+ - [Inception Score](https://arxiv.org/abs/1606.03498)
+
+You can specify the metrics that you want to use in the `config.yaml` file in the `metrics` section:
+```yaml
+metrics:
+    dtd:
+        - fid
+        # - inception_score
+        - ...
+```
+
+To use them of course run the script: `python run.py task=dtd`
+
+### `ptd`
+
+(P)oint (t)o (D)istribution are meant to function as outlier detectors. As for `dtd`
+you can specify them in the `metrics` section of the `config.yaml` file.
+
+### `filtering`
+
+Will write to the `metadata.yaml` file the chosen samples to be kept and use during
+training. Specify them in the `config.yaml` file:
+```yaml
+filtering:
+    type: "top-k" #One of "threshold", "top-k" or "top-p"
+    value: 4
+```
+
+works with better `k` copies, better `p` percent of copies or copies above or below
+the specified `threshold`.
+
+### `mix_dataset`
+
+You can specify how you want to mix your initial real data and the generated one for
+training or another ML task with the following parameters:
+
+```yaml
+ml:
+    # number of samples for training, validation, and test
+    val_nb: 1000
+    test_nb: 1000
+    train_nb: 2000
+
+    augmentation_percent: 0.25
+    with_filtering: false
+    preferred_fe: vit
+    filtering_metric: "mld"
+    keep_training_size: true
+```
+
+The data will be put in the `mixed` directory:
+```
+└─ data/
+    ├─ real/
+    │   └─ ...
+    ├─ generated/
+    │   └─ ...
+    └─ mixed/
+        └─ dataset-name/ (e.g., coco)
+            └─ train_nb/ (e.g., 250)
+                └─ [controlnet-model-name]-[augmentation_percent]/ (e.g., controlnet_segmentation-0.1)
+                    ├─ data.txt
+                    ├─ train.txt
+                    ├─ test.txt
+                    └─ val.txt
+```
+
+
+
+### `train`
+
+You can create your own train script to be called with the `train` task. Training scripts
+exists for `yolo`  and `fer` classification models using the [Weigths and Bias](https://wandb.ai/) framework.
 
 ## Datasets
 
@@ -188,64 +250,9 @@ List of available models can be found in `conf/config.yaml`. We have 4 available
 - segmentation
 - mediapipe_face
 
-
-## Test the quality of images with IQA measures
-
-One way of testing the quality of the generated images is to use computational and statistical methods. One good library for it is [IQA-PyTroch](https://github.com/chaofengc/IQA-PyTorch), you can go read its [paper](https://arxiv.org/pdf/2208.14818.pdf).
-
-There are two approaches to measure image quality
-- full reference: compare against a real pristine image
-- no reference: compute metrics following a learned opinion
-
-You can use metrics in the same way the generation is done:
-
-```bash
-# For paper
-./run.sh src/iqa_paper.py
-# Framework general script
-./run.sh iqa
-```
-
-It follows the same configuration of the generation part, with the same file `conf/config.yaml`.
-
-<img src="ciage/docs/images/iqa_measure.png" />
-
-
-There is file created in `data/iqa/<cn_use>_iqa.json` with the following structure:
-
-```
-{
-    "image_paths": [
-        "data/generated/controlnet_segmentation/000000000474_1.png",
-        "data/generated/controlnet_segmentation/000000000474_2.png",
-        "data/generated/controlnet_segmentation/000000000474_3.png",
-        "data/generated/controlnet_segmentation/000000000474_4.png",
-        "data/generated/controlnet_segmentation/000000000474_5.png"
-    ],
-    "name": "controlnet_segmentation",
-    "brisque": [
-        20.71453857421875,
-        11.63690185546875,
-        17.65740966796875,
-        5.10711669921875,
-        32.71502685546875
-    ],
-    "dbcnn": [
-        0.7001792192459106,
-        0.6730189323425293,
-        0.5987531542778015,
-        0.5892908573150635,
-        0.5235083699226379
-    ],
-    "ilniqe": [
-        27.35899873000946,
-        34.540625520909074,
-        26.03838433381286,
-        25.595288318528816,
-        34.6185153006446
-    ]
-}
-```
+Note that training your own pair of Stable Diffusion and ControlNet models that are
+compliant with the [HuggingFace API](https://huggingface.co/) is possible and then
+add it as possible condition.
 
 
 ## Create YOLO Dataset and Train :
@@ -309,6 +316,65 @@ Here are some plots for some of the many runs and studies that we performed :
 ### Random Sampling - Regular Runs
 
 <img src="ciagen/docs/images/random_sampling.png" />
+
+## Misc
+
+### Kaggle API
+
+To download the dataset related to Face Emotion Recognition (FER) you will need to use Kaggle. The easiest way is to download the dataset using Kaggle API. If you never used Kaggle API, first go to your account page on Kaggle, and go to the settings. Scroll down to the API section and create a new token. This will generate a jsonfile that you can then download on your computer. Move that file to `~/.kaggle/kaggle.json`. Make sure you have access to the dataset you are trying to download, as we are only using private kaggle datasets in the project.
+
+### Data structuring
+
+Please respect this structure when writing code :
+images_dir
+This project contains the following directory structure:
+
+```
+└─ data/
+    ├─ real/
+    │   └─ dataset-name/ (e.g., coco)
+    │       ├─ train/
+    │       │   ├─ images/
+    │       │   │   └─ image001.png
+    │       │   ├─ labels/
+    │       │   │   └─ image001.txt
+    │       │   └─ captions/
+    │       │       └─ image001.txt
+    │       ├─ val/
+    │       │   ├─ images/
+    │       │   │   └─ image005.png
+    │       │   ├─ labels/
+    │       │   │   └─ image005.txt
+    │       │   └─ captions/
+    │       │       └─ image005.txt
+    │       └─ test/
+    │           ├─ images/
+    │           │   └─ image006.png
+    │           ├─ labels/
+    │           │   └─ image006.txt
+    │           └─ captions/
+    │               └─ image006.txt
+    ├─ generated/
+    │   └─ dataset-name/ (e.g., coco)
+    │       └─ controlnet-model-name/ (e.g., controlnet_segmentation)
+    │           ├─ image001_1.png
+    │           └─ image001_2.png
+    └─ mixed/
+        └─ dataset-name/ (e.g., coco)
+            └─ train_nb/ (e.g., 250)
+                └─ [controlnet-model-name]-[augmentation_percent]/ (e.g., controlnet_segmentation-0.1)
+                    ├─ data.txt
+                    ├─ train.txt
+                    ├─ test.txt
+                    └─ val.txt
+```
+
+`train, val, test .txt` files contain a list of the images to use, here's an example :
+
+```
+/path/to/data/real/coco/images/000000368475.jpg
+/path/to/data/real/coco/images/000000368488.jpg
+```
 
 ### Docker installation:
 

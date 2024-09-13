@@ -169,7 +169,7 @@ metrics:
         # - au
     dtd:
         - fid
-        # - inception_score
+        - inception_score
     ptd:
         - mld
 filtering:
