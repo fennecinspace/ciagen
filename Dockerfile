@@ -6,13 +6,13 @@ ARG USER_ID=1000
 RUN addgroup --gid $GROUP_ID user
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
 
-RUN apt-get update && apt -y install ffmpeg libsm6 libxext6 build-essential vim
+RUN apt-get update && apt -y install ffmpeg libsm6 libxext6 build-essential
 
 # to build doc to pdf https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
 RUN DEBIAN_FRONTEND=noninteractive apt-get install tzdata -y
 
 # Install zsh and oh-my-zsh
-RUN apt-get update && apt-get install -y curl zsh git wget
+RUN apt-get update && apt-get install -y curl zsh git wget vim git-lfs
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 ENV PATH="$PATH:/home/user/.local/bin"
