@@ -19,8 +19,19 @@ Note that you can use them as is. But also some metrics implementing the them al
 - Frechet inception distance
 """
 
+from ciagen.qm import TL, to_numpy, to_tensor
+
 from .frechet_distance import frechet_distance_gaussian_version
 from .wasserstein_distance import (
     wasserstein_distance_gaussian_version,
     wasserstein_distance_multi_dimensional,
 )
+
+
+def cast_to(x: TL, to_type: str) -> TL:
+    if to_type == "numpy":
+        return to_numpy(x)
+    elif to_type == "torch":
+        return to_tensor(x)
+    else:
+        raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")

@@ -3,18 +3,18 @@
 
 
 from typing import Any, Callable, Collection
-from tqdm import tqdm
 
+import numpy as np
 import torch
 import torch.utils
-import numpy as np
 from PIL import Image
+from tqdm import tqdm
 
 from ciagen.feature_extractors.inception_extractor import (
-    InceptionSoftmax,
+    InceptionModelSoftmaxed,
     inception_transform,
 )
-from ciagen.qm import VirtualDataloader, id_transform, TL
+from ciagen.qm import TL, VirtualDataloader, id_transform
 from ciagen.qm.divergences import kl_divergence
 
 
@@ -35,7 +35,9 @@ class IS:
         eps: float = 1e-16,
     ):
         self._feature_extractor = (
-            InceptionSoftmax() if feature_extractor is None else feature_extractor
+            InceptionModelSoftmaxed()
+            if feature_extractor is None
+            else feature_extractor
         )
         self._eps = eps
         self._using_inception = feature_extractor is None

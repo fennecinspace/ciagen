@@ -1,11 +1,13 @@
-import numpy as np
 import torch
-from torch.utils.data.dataloader import DataLoader
 
 
 class MeanCalculator(torch.nn.Module):
     def __init__(self):
         super().__init__()
+        self._samples_computed = 0
+        self._current_sum = 0
+
+    def reset(self):
         self._samples_computed = 0
         self._current_sum = 0
 
@@ -16,9 +18,9 @@ class MeanCalculator(torch.nn.Module):
             self._current_sum += torch.sum(x, axis=0)
             self._samples_computed += number_of_samples_in_x
 
-        return True
+        return self.state()
 
-    def get_mean(self):
+    def state(self):
         current_mean = self._current_sum / self._samples_computed
         return current_mean
 
@@ -32,56 +34,65 @@ class CovCalculator(torch.nn.Module):
         self._samples_computed = 0
         self._cov_accum = 0
 
+    def reset(self):
+        self._samples_computed = 0
+        self._cov_accum = 0
+
+        self._mean_calculator.reset()
+
     def forward(self, x):
-        self._mean_calculator(x)
         with torch.no_grad():
+            self._mean_calculator(x)
+
             number_of_samples_in_x = x.shape[0]
 
             # torch recommends using mT to transpose batches of matrices
             self._cov_accum += torch.matmul(x.mT, x)
             self._samples_computed += number_of_samples_in_x
 
-        return True
+        return self.state()
 
-    def get_cov(self):
+    def state(self):
         current_mean = self._mean_calculator.get_mean().unsqueeze(0)
 
-        # print(self._cov_accum.size())
-        # print(current_mean.size())
-        current_cov = self._cov_accum - self._samples_computed * torch.matmul(
-            current_mean.T, current_mean
-        )
+        mean_matrix = torch.matmul(current_mean.T, current_mean)
+        current_cov = self._cov_accum - self._samples_computed * mean_matrix
 
         current_cov = current_cov / (self._samples_computed - 1)  # unbiased estimator
 
         return current_cov
 
 
-class CDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def __getitem__(self, index):
-        return self.dataset[index]
-
-    def __len__(self):
-        return len(self.dataset)
-
-
 if __name__ == "__main__":
-    a = MeanCalculator()
-    tt = torch.rand((100, 10))
+    from torch.utils.data.dataloader import DataLoader
+    from tqdm import tqdm
 
-    print(torch.cov(tt.T), torch.cov(tt.T).size())
+    class CDataset(torch.utils.data.Dataset):
+        def __init__(self, dataset):
+            self.dataset = dataset
 
-    tdataset = CDataset(tt)
-    tdataloader = DataLoader(tdataset, batch_size=2)
+        def __getitem__(self, index):
+            return self.dataset[index]
 
-    t = torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=torch.float32)
+        def __len__(self):
+            return len(self.dataset)
 
-    b = CovCalculator()
-    for x in tdataloader:
-        b(x)
+    torch.set_printoptions(precision=8)
+    m = MeanCalculator()
+    c = CovCalculator()
 
-    # ee = b.get_cov()
-    print(b.get_cov(), b.get_cov().size())
+    for i in range(10):
+        m.reset()
+        c.reset()
+
+        tt = torch.rand((2000, 768))
+
+        tdataset = CDataset(tt)
+        tdataloader = DataLoader(tdataset, batch_size=32)
+        print("finished creating dataset")
+
+        for x in tqdm(tdataloader):
+            m(x)
+            c(x)
+
+        print("=======================================")

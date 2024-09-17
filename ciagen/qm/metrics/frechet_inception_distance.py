@@ -1,18 +1,20 @@
 from typing import Any, Callable
+
+import numpy as np
+import torch
+from PIL import Image
 from tqdm import tqdm
 
-import torch
-import numpy as np
-from PIL import Image
-
+from ciagen.feature_extractors.inception_extractor import (
+    InceptionModel,
+    InceptionModelSoftmaxed,
+    inception_transform,
+)
 from ciagen.qm import id_transform
+from ciagen.qm.calculator import CovCalculator, MeanCalculator
 from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
 from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
-)
-from ciagen.feature_extractors.inception_extractor import (
-    InceptionSoftmax,
-    inception_transform,
 )
 
 
@@ -25,141 +27,67 @@ class FID:
         self,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
         transform: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: None | Callable[[Any, Any], torch.Tensor | float] = None,
         eps: float = 1e-16,
         use_wasserstein: bool = False,
+        softmaxed: bool = False,
+        weights: str = "DEFAULT",
     ):
 
-        # TODO: I'm using the softmaxed version of the inception model.
-        # Mathematically the transformation should not affect the distance between distributions,
-        # I feel like the paper uses the inception model without the softmaxed layer. For the
-        # moment I'm not able to make it work, weights go to infinity after matrix multiplication.
-
-        # self._feature_extractor = (
-        #     inception_v3() if feature_extractor is None else feature_extractor
-        # )
+        self._using_inception = feature_extractor is None
 
         self._feature_extractor = (
-            InceptionSoftmax() if feature_extractor is None else feature_extractor
+            (
+                InceptionModelSoftmaxed(weights=weights)
+                if softmaxed
+                else InceptionModel(weights=weights)
+            )
+            if feature_extractor is None
+            else feature_extractor
         )
-
-        self._using_inception = feature_extractor is None
 
         if self._using_inception:
             self._transform = inception_transform()
         else:
             self._transform = transform or id_transform()
 
-        if distribution_distance is None:
+        self._distribution_distance = (
+            wasserstein_distance_gaussian_version
+            if use_wasserstein
+            else frechet_distance_gaussian_version
+        )
 
-            def dd(real_samples, synthetic_samples):
-                real_mean = real_samples.mean(dim=0)
-                synthetic_mean = synthetic_samples.mean(dim=0)
-                real_cov = real_samples.T.cov()
-                synthetic_cov = synthetic_samples.T.cov()
+        self._real_mean_calculator = MeanCalculator()
+        self._real_cov_calculator = CovCalculator()
 
-                if use_wasserstein:
-                    return wasserstein_distance_gaussian_version(
-                        real_mean, real_cov, synthetic_mean, synthetic_cov
-                    )
-                else:
-                    return frechet_distance_gaussian_version(
-                        real_mean, real_cov, synthetic_mean, synthetic_cov
-                    )
+        self._synthetic_mean_calculator = MeanCalculator()
+        self._synthetic_cov_calculator = CovCalculator()
 
-            self.distribution_distance = dd
+        self._composed = lambda x: self._feature_extractor(self._transform(x))
+
+        self.eps = eps
+
+    def update(self, samples: torch.Tensor, is_real: bool = True):
+        if is_real:
+            self._real_mean_calculator(self._composed(samples))
+            self._real_cov_calculator(self._composed(samples))
         else:
-            self.distribution_distance = distribution_distance
+            self._synthetic_mean_calculator(self._composed(samples))
+            self._synthetic_cov_calculator(self._composed(samples))
 
-    def transform_and_extract_features(
-        self,
-        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        transform: Callable[[Any], torch.Tensor] | None = None,
-        feature_extractor: Callable[[Any], torch.Tensor] | None = None,
-    ):
+    def score(self):
 
-        if feature_extractor is not None:
-            transform = id_transform() if transform is None else transform
-        else:
-            transform = self._transform
+        real_mean = self._real_mean_calculator.state()
+        real_cov = self._real_cov_calculator.state()
 
-        feature_extractor = feature_extractor or self._feature_extractor
+        synthetic_mean = self._synthetic_mean_calculator.state()
+        synthetic_cov = self._synthetic_cov_calculator.state()
 
-        if isinstance(feature_extractor, torch.nn.Module):
-            feature_extractor.eval()
-
-        with torch.no_grad():
-            if not isinstance(real_samples, torch.Tensor):
-                real_transformed = []
-                for sample in tqdm(real_samples):
-                    ext = feature_extractor(transform(sample))
-                    if isinstance(ext, list):
-                        real_transformed.extend(ext)
-                    else:
-                        real_transformed.append(ext)
-                real_transformed = torch.stack(real_transformed)
-            else:
-                real_transformed = feature_extractor(transform(real_samples))
-
-            if not isinstance(synthetic_samples, torch.Tensor):
-                synthetic_transformed = []
-                for sample in tqdm(synthetic_samples):
-                    ext = feature_extractor(transform(sample))
-                    if isinstance(ext, list):
-                        synthetic_transformed.extend(ext)
-                    else:
-                        synthetic_transformed.append(ext)
-                synthetic_transformed = torch.stack(synthetic_transformed)
-            else:
-                synthetic_transformed = feature_extractor(transform(synthetic_samples))
-
-        return torch.squeeze(real_transformed), torch.squeeze(synthetic_transformed)
-
-    def instant_score(
-        self,
-        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: (
-            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        ) = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
-        already_transformed: bool = False,
-    ):
-
-        if already_transformed:
-            real_samples, synthetic_samples = real_samples, synthetic_samples
-        else:
-            real_samples, synthetic_samples = self.transform_and_extract_features(
-                real_samples=real_samples,
-                synthetic_samples=synthetic_samples,
-                transform=transform,
-                feature_extractor=feature_extractor,
-            )
-
-        distribution_distance = distribution_distance or self.distribution_distance
-        res = distribution_distance(real_samples, synthetic_samples)
+        res = frechet_distance_gaussian_version(
+            umean=real_mean,
+            ucov=real_cov,
+            vmean=synthetic_mean,
+            vcov=synthetic_cov,
+            to_type="torch",
+        )
 
         return float(res)
-
-    def run_score(
-        self,
-        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: (
-            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        ) = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
-        already_transformed: bool = False,
-        **kwargs,
-    ):
-        return self.instant_score(
-            real_samples=real_samples,
-            synthetic_samples=synthetic_samples,
-            feature_extractor=feature_extractor,
-            distribution_distance=distribution_distance,
-            transform=transform,
-            already_transformed=already_transformed,
-        )
