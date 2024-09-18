@@ -14,7 +14,7 @@ import torch
 from scipy.linalg import sqrtm as matrix_sqrt
 
 from ciagen.qm import TL
-from ciagen.qm.dtd_distances import cast_to
+from ciagen.qm import cast_to
 
 
 def wasserstein_distance_multi_dimensional(u: TL, v: TL, as_expectance=True):

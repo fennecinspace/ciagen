@@ -51,3 +51,12 @@ class VirtualDataloader:
         self,
     ):  # quick fix for reading data issues caused by tensor transforms between FID and IS
         return self.dataset
+
+
+def cast_to(x: TL, to_type: str) -> TL:
+    if to_type == "numpy":
+        return to_numpy(x)
+    elif to_type == "torch":
+        return to_tensor(x)
+    else:
+        raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")

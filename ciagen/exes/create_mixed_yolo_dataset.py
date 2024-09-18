@@ -20,7 +20,7 @@ from omegaconf import DictConfig, open_dict
 from pathlib import Path
 from typing import List, Tuple, Dict
 
-from ciagen.utils.common import create_yaml_file, list_images, create_files_list
+from ciagen.utils.common import create_yaml_file, list_files, create_files_list
 
 
 def sort_based_on_score(
@@ -83,37 +83,13 @@ class CreateMixedYoloDataset:
         val_images_path = Path(paths["val_images"])
         test_images_path = Path(paths["test_images"])
 
-        real_images = list_images(real_images_path, formats, train_nb)
-        val_images = list_images(val_images_path, formats, val_nb)
-        test_images = list_images(test_images_path, formats, test_nb)
+        real_images = list_files(real_images_path, formats, train_nb)
+        val_images = list_files(val_images_path, formats, val_nb)
+        test_images = list_files(test_images_path, formats, test_nb)
 
         synth_images_dir = Path(paths["generated"])
 
-        # if sample['enable']:
-        #     with open(sample['score_file'], 'r') as f:
-        #         score_data = json.load(f)
-
-        #     # set sort direction of synthetic images to work with best or worst
-        #     if sample['sample'] == 'best':
-        #         order = score_data['best'][sample['metric']]
-        #     else:
-        #         if score_data['best'][sample['metric']] == 'smaller':
-        #             order = 'bigger'
-        #         else:
-        #             order = 'smaller'
-
-        #     synth_images, scores = sort_based_on_score(
-        #         score_data['image_paths'],
-        #         score_data[sample['metric']],
-        #         order
-        #     )
-
-        #     synth_images = [str((Path(base_path).parent / img).absolute()) for img, score in zip(synth_images, scores)]
-
-        # else:train_txt_path
-
-        synth_images = list_images(synth_images_dir, formats)
-        print(synth_images)
+        synth_images = list_files(synth_images_dir, formats)
         # shuffle images
         random.Random(seed).shuffle(synth_images)
 

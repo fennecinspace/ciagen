@@ -20,6 +20,8 @@ data:
     image_formats: ["png", "jpeg", "jpg"]
     limit_size_real: 2000
     limit_size_syn: 2000
+    batch_size: 32
+    datatype: "image"
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...
 ml:

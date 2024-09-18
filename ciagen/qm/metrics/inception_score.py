@@ -11,6 +11,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from ciagen.feature_extractors.inception_extractor import (
+    InceptionModel,
     InceptionModelSoftmaxed,
     inception_transform,
 )
@@ -31,21 +32,15 @@ class IS:
         distribution_distance: (
             None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
         ) = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
         eps: float = 1e-16,
+        softmaxed: bool = True,
     ):
         self._feature_extractor = (
-            InceptionModelSoftmaxed()
+            (InceptionModelSoftmaxed() if softmaxed else InceptionModel())
             if feature_extractor is None
             else feature_extractor
         )
         self._eps = eps
-        self._using_inception = feature_extractor is None
-
-        if self._using_inception:
-            self._transform = inception_transform()
-        else:
-            self._transform = transform or id_transform()
 
         if distribution_distance is None:
 
@@ -89,27 +84,12 @@ class IS:
         self,
         samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
         as_float: bool = True,
-        feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: (
-            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        ) = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
-        already_transformed: bool = False,
     ):
 
-        if already_transformed:
-            pconditional = samples
-        else:
-            pconditional = self.transform_and_extract_features(
-                samples=samples,
-                transform=transform,
-                feature_extractor=feature_extractor,
-            )
-
+        pconditional = samples
         pmarginal = torch.mean(pconditional, dim=0)
 
-        distribution_distance = distribution_distance or self.distribution_distance
-        res = distribution_distance(pconditional, pmarginal)
+        res = self.distribution_distance(pconditional, pmarginal)
 
         if as_float:
             res = float(res)

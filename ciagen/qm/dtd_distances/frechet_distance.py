@@ -11,20 +11,22 @@ Wasserstein distance in gaussian case: https://www.sciencedirect.com/science/art
 
 import numpy as np
 import torch
-from scipy.linalg import sqrtm as matrix_sqrt
+from scipy.linalg import sqrtm
 
 from ciagen.qm import TL
-from ciagen.qm.dtd_distances import cast_to
+from ciagen.qm import cast_to
+
+
+def matrix_sqrt(x: TL, to_type="numpy") -> TL:
+    y = cast_to(x, to_type="numpy")
+    y = sqrtm(y)
+
+    return cast_to(y, to_type)
 
 
 def frechet_distance_gaussian_version(
     umean: TL, ucov: TL, vmean: TL, vcov: TL, to_type="numpy"
 ):
-    umean, vmean, ucov, vcov = (
-        cast_to(umean, to_type),
-        cast_to(vmean, to_type),
-        cast_to(ucov, to_type),
-    )
 
     if to_type == "torch":
         norm_square = torch.linalg.norm(umean - vmean, ord=2) ** 2
@@ -32,7 +34,7 @@ def frechet_distance_gaussian_version(
         covar_matmul = torch.matmul(ucov, vcov)
 
         trace_part1 = torch.trace(ucov + vcov)
-        trace_part2 = -2 * torch.trace(matrix_sqrt(covar_matmul))
+        trace_part2 = -2 * torch.trace(matrix_sqrt(covar_matmul, to_type=to_type))
 
         res = torch.sqrt(norm_square + trace_part1 + trace_part2)
     elif to_type == "numpy":
@@ -41,7 +43,7 @@ def frechet_distance_gaussian_version(
         covar_matmul = np.matmul(ucov, vcov)
 
         trace_part1 = np.trace(ucov + vcov)
-        trace_part2 = -2 * np.trace(matrix_sqrt(covar_matmul))
+        trace_part2 = -2 * np.trace(matrix_sqrt(covar_matmul, to_type=to_type))
 
         res = np.sqrt(norm_square + trace_part1 + trace_part2)
     else:

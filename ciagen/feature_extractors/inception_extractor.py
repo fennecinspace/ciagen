@@ -9,17 +9,24 @@ from torch.nn import Softmax
 from torchvision.models import inception_v3
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 
-from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor, SampleT
-
-IncSample = (
-    torch.Tensor | Image.Image | torch.utils.data.DataLoader | torch.utils.data.Dataset
-)
+from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 
-class InceptionFeatureExtractor(FeatureExtractor):
-    def __init__(self, softmaxed=True):
-        self.inc_model = InceptionModelSoftmaxed() if softmaxed else InceptionModel()
-        self._transform_from_tensor = transforms.Compose(
+# TODO: maybe we need to add to tensor here
+def inception_transform(to_tensor=False):
+    if to_tensor:
+        return transforms.Compose(
+            [
+                transforms.Resize(299),
+                transforms.CenterCrop(299),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+    else:
+        return Compose(
             [
                 transforms.Resize(299),
                 transforms.CenterCrop(299),
@@ -28,22 +35,19 @@ class InceptionFeatureExtractor(FeatureExtractor):
                 ),
             ]
         )
-        self._transform_from_image = inception_transform()
 
-    def extract(
-        self, samples: List[SampleT | IncSample] | SampleT | IncSample, **kwargs
-    ) -> List[SampleT] | SampleT:
-        return self.inc_model(samples)
 
-    def transform_from_image(self, image: Image.Image) -> SampleT:
-        return self._transform_from_image(image)
+class InceptionFeatureExtractor(FeatureExtractor):
+    def __init__(self, softmaxed=True, weights="DEFAULT"):
+        super().__init__()
+        self.inc_model = (
+            InceptionModelSoftmaxed(weights=weights)
+            if softmaxed
+            else InceptionModel(weights=weights)
+        )
 
-    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
-        return self._transform_from_tensor(tensor)
-
-    def transform_from_array(self, array: np.ndarray) -> SampleT:
-        tensor = torch.from_numpy(array)
-        return self._transform_from_tensor(tensor)
+    def forward(self, x):
+        return self.inc_model(x)
 
 
 class InceptionModel(torch.nn.Module):
@@ -57,17 +61,6 @@ class InceptionModel(torch.nn.Module):
         x = self.inceptionv3(x)
 
         return x
-
-
-def inception_transform():
-    return transforms.Compose(
-        [
-            transforms.Resize(299),  # this should be Resize((299, 299)) ?
-            transforms.CenterCrop(299),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
 
 
 class InceptionModelSoftmaxed(torch.nn.Module):

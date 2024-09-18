@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from ciagen.qm import TL, to_numpy
-from ciagen.qm.dtd_distances import cast_to
+from ciagen.qm import cast_to
 
 
 def mahalanobis_distance_calc(

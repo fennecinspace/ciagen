@@ -1,19 +1,15 @@
-from numpy import ndarray
 import torch
 from transformers import ViTModel
 from transformers import AutoImageProcessor
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from transformers import ViTModel, ViTFeatureExtractor, ViTForImageClassification
+from transformers import ViTModel, ViTForImageClassification
 from transformers.models.vit.modeling_vit import ViTSelfAttention
 import torch
 
-from PIL import Image
-from typing import Collection, List
-from torchvision.transforms import ToTensor, Resize, Compose
-from torchvision.transforms.functional import pil_to_tensor
-from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor, SampleT
+from typing import Collection
+from torchvision.transforms import Resize, Compose
+from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 
 def _default_collate(batch):
@@ -38,6 +34,15 @@ def _instance_vit_extractor(
     )
 
 
+def vit_transform():
+    return Compose(
+        [
+            Resize((224, 224)),
+            # ToTensor(),
+        ]
+    )
+
+
 class VitExtractor(FeatureExtractor):
     def __init__(
         self,
@@ -48,7 +53,7 @@ class VitExtractor(FeatureExtractor):
         features_output="pooler",
         collate_fn=_default_collate,
     ):
-
+        super().__init__()
         self._vit = InnerFeatureExtractor(
             model_name=model_name,
             batch_size=batch_size,
@@ -58,45 +63,8 @@ class VitExtractor(FeatureExtractor):
             collate_fn=collate_fn,
         )
 
-        self._transfom_from_tensor = Resize((224, 224))
-        self._transfrom_from_image = Compose(
-            [
-                Resize((224, 224)),
-                ToTensor(),
-            ]
-        )
-
-    def _extract(
-        self, samples: List[SampleT] | SampleT, **kwargs
-    ) -> List[SampleT] | SampleT:
-        def unsqueeze_if(x):
-            if isinstance(x, torch.Tensor):
-                if len(x.size()) == 3:
-                    return x.unsqueeze(0)
-                else:
-                    return x
-            return x
-
-        if isinstance(samples, list):
-            return self._vit([unsqueeze_if(sample) for sample in samples])
-        else:
-            return [self._vit([unsqueeze_if(samples)])]
-
-    def transform_from_array(
-        self, array: ndarray
-    ) -> Image.Image | ndarray | torch.Tensor:
-        tensor = torch.from_numpy(array)
-        return self._transfom_from_tensor(tensor)
-
-    def transform_from_tensor(
-        self, tensor: torch.Tensor
-    ) -> Image.Image | ndarray | torch.Tensor:
-        return self._transfom_from_tensor(tensor)
-
-    def transform_from_image(
-        self, image: Image.Image
-    ) -> Image.Image | ndarray | torch.Tensor:
-        return self._transfrom_from_image(image)
+    def forward(self, x):
+        return self._vit(x)
 
 
 class WrappedViTModel(torch.nn.Module):
@@ -186,66 +154,37 @@ class InnerFeatureExtractor:
 
         self.image_processor = AutoImageProcessor.from_pretrained(model_name)
 
-    def __call__(self, dataset: Collection[SampleT]):
-        # dataloader = DataLoader(
-        #     dataset,
-        #     batch_size=self.batch_size,
-        #     shuffle=False,
-        #     num_workers=self.num_workers,
-        #     collate_fn=self.collate_fn,
-        # )
-
+    def __call__(self, x):
         # Define the feature extractor
         features = []
         with torch.no_grad():
             # for batch in tqdm(dataloader):
-            for batch in tqdm(dataset):
-                images = batch
-                if not isinstance(images[0], torch.Tensor):
-                    raise ValueError(
-                        "Dataset gettitem should return only one value (not data, labels). Use a collate funtion."
-                    )
-                # Preprocess images using ViT feature extractor
-                inputs = self.image_processor(
-                    images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
-                )  # Adjust dimensions
-                inputs = {
-                    key: val.to(self.device) for key, val in inputs.items()
-                }  # Move inputs to GPU
-                # Forward pass through the model
-                outputs = self.model(**inputs)
-                if self.features_output == "last_hidden":
-                    # Extract features (last hidden state)
-                    feature_batch = (
-                        outputs.last_hidden_state.detach().cpu().to(dtype=torch.float32)
-                    )
-                if self.features_output == "pooler":
-                    # Extract features (pooler output)
-                    # pooler output is the first token passed trough a FC layer + activation:
-                    # https://github.com/huggingface/transformers/blob/main/src/transformers/models/vit/modeling_vit.py#L610
-                    feature_batch = (
-                        outputs.pooler_output.detach().cpu().to(dtype=torch.float32)
-                    )
+            images = x
+            if not isinstance(images[0], torch.Tensor):
+                raise ValueError(
+                    "Dataset gettitem should return only one value (not data, labels). Use a collate funtion."
+                )
+            # Preprocess images using ViT feature extractor
+            inputs = self.image_processor(
+                images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
+            )  # Adjust dimensions
+            inputs = {
+                key: val.to(self.device) for key, val in inputs.items()
+            }  # Move inputs to GPU
+            # Forward pass through the model
+            outputs = self.model(**inputs)
+            if self.features_output == "last_hidden":
+                # Extract features (last hidden state)
+                feature_batch = (
+                    outputs.last_hidden_state.detach().cpu().to(dtype=torch.float32)
+                )
+            if self.features_output == "pooler":
+                # Extract features (pooler output)
+                # pooler output is the first token passed trough a FC layer + activation:
+                # https://github.com/huggingface/transformers/blob/main/src/transformers/models/vit/modeling_vit.py#L610
+                feature_batch = (
+                    outputs.pooler_output.detach().cpu().to(dtype=torch.float32)
+                )
 
-                features.append(feature_batch)
+            features.append(feature_batch)
         return torch.cat(features)
-
-
-def test_vit_extractor():
-    transform = Compose(
-        [
-            Resize((224, 224)),
-            ToTensor(),
-        ]
-    )
-
-    image = "/gen_data/data/real/demo/trump.jpeg"
-
-    image_in_tensor = Image.open(image)
-    image_in_tensor = transform(image_in_tensor)
-
-    vit_extractor = VitExtractor()
-    res = vit_extractor([image_in_tensor])
-    print(type(res))
-    print(type(res[0]))
-    print(res[0].size())

@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 import numpy as np
 import torch
@@ -17,6 +17,8 @@ from ciagen.qm.dtd_distances.wasserstein_distance import (
     wasserstein_distance_gaussian_version,
 )
 
+from torch.utils.data import Dataset, DataLoader
+
 
 class FID:
     """
@@ -26,7 +28,6 @@ class FID:
     def __init__(
         self,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
         eps: float = 1e-16,
         use_wasserstein: bool = False,
         softmaxed: bool = False,
@@ -45,15 +46,26 @@ class FID:
             else feature_extractor
         )
 
-        if self._using_inception:
-            self._transform = inception_transform()
-        else:
-            self._transform = transform or id_transform()
-
         self._distribution_distance = (
-            wasserstein_distance_gaussian_version
+            (
+                lambda umean, ucov, vmean, vcov: wasserstein_distance_gaussian_version(
+                    umean=umean,
+                    ucov=ucov,
+                    vmean=vmean,
+                    vcov=vcov,
+                    to_type="torch",
+                )
+            )
             if use_wasserstein
-            else frechet_distance_gaussian_version
+            else (
+                lambda umean, ucov, vmean, vcov: frechet_distance_gaussian_version(
+                    umean=umean,
+                    ucov=ucov,
+                    vmean=vmean,
+                    vcov=vcov,
+                    to_type="torch",
+                )
+            )
         )
 
         self._real_mean_calculator = MeanCalculator()
@@ -62,19 +74,63 @@ class FID:
         self._synthetic_mean_calculator = MeanCalculator()
         self._synthetic_cov_calculator = CovCalculator()
 
-        self._composed = lambda x: self._feature_extractor(self._transform(x))
-
         self.eps = eps
 
     def update(self, samples: torch.Tensor, is_real: bool = True):
-        if is_real:
-            self._real_mean_calculator(self._composed(samples))
-            self._real_cov_calculator(self._composed(samples))
-        else:
-            self._synthetic_mean_calculator(self._composed(samples))
-            self._synthetic_cov_calculator(self._composed(samples))
+        with torch.no_grad():
+            features = self._feature_extractor(samples)
+            if is_real:
+                self._real_mean_calculator(features)
+                self._real_cov_calculator(features)
+            else:
+                self._synthetic_mean_calculator(features)
+                self._synthetic_cov_calculator(features)
 
-    def score(self):
+    def score(
+        self,
+        real_samples: Union[torch.Tensor, Dataset, DataLoader],
+        synthetic_samples: Union[torch.Tensor, Dataset, DataLoader],
+        batch_size=32,
+    ):
+
+        self._real_cov_calculator.reset()
+        self._real_mean_calculator.reset()
+
+        self._synthetic_cov_calculator.reset()
+        self._synthetic_mean_calculator.reset()
+
+        if isinstance(real_samples, torch.Tensor) and isinstance(
+            synthetic_samples, torch.Tensor
+        ):
+            self.update(real_samples, is_real=True)
+            self.update(synthetic_samples, is_real=False)
+
+            return self.instant_score()
+        if isinstance(real_samples, Dataset) and isinstance(synthetic_samples, Dataset):
+            real_dataloader = DataLoader(real_samples, batch_size=batch_size)
+            synthetic_dataloader = DataLoader(synthetic_samples, batch_size=batch_size)
+
+            for rx in tqdm(real_dataloader):
+                self.update(rx, is_real=True)
+            for sx in tqdm(synthetic_dataloader):
+                self.update(sx, is_real=False)
+
+            return self.instant_score()
+        if isinstance(real_samples, DataLoader) and isinstance(
+            synthetic_samples, DataLoader
+        ):
+            for rx in tqdm(real_samples):
+                self.update(rx, is_real=True)
+            for sx in tqdm(synthetic_samples):
+                self.update(sx, is_real=False)
+
+            return self.instant_score()
+
+        raise ValueError(
+            f"Data type not supported or not the same type: {type(real_samples)=}, {type(synthetic_samples)=}"
+        )
+
+    def instant_score(self):
 
         real_mean = self._real_mean_calculator.state()
         real_cov = self._real_cov_calculator.state()
@@ -82,12 +138,12 @@ class FID:
         synthetic_mean = self._synthetic_mean_calculator.state()
         synthetic_cov = self._synthetic_cov_calculator.state()
 
-        res = frechet_distance_gaussian_version(
+        res = self._distribution_distance(
             umean=real_mean,
             ucov=real_cov,
             vmean=synthetic_mean,
             vcov=synthetic_cov,
-            to_type="torch",
         )
 
+        res = res.real
         return float(res)

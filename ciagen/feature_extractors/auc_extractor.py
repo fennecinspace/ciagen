@@ -13,71 +13,48 @@ from omegaconf import DictConfig
 from PIL.Image import Image
 from tqdm import tqdm
 
-from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor, SampleT
+from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 from ciagen.utils.common import logger
+
+
+def au_transform():
+    return torchvision.transforms.ToTensor()
 
 
 class AUExtractor(FeatureExtractor):
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.detector = Detector()
 
-    def _extract(
-        self,
-        samples: List[torch.Tensor | np.ndarray] | torch.Tensor | np.ndarray,
-        **kwargs,
-    ) -> List[SampleT] | SampleT:
-
-        # The py-feat detector does not expose a API to extract the Action Unit
-        # from tensor or arrays directly.
-        # We are simply reusing their inner code here.
+    def forward(self, x, **kwargs):
 
         face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
         landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
         au_model_kwargs = kwargs.pop("au_model_kwargs", dict())
         face_detection_threshold = kwargs.pop("face_detection_threshold", 0.5)
 
-        aus_all = []
+        faces = self.detector.detect_faces(
+            x, face_detection_threshold, **face_model_kwargs
+        )
+        landmarks = self.detector.detect_landmarks(
+            x, detected_faces=faces, **landmark_model_kwargs
+        )
+        aus = self.detector.detect_aus(x, landmarks, **au_model_kwargs)
 
-        def analyse_once(sample):
-            faces = self.detector.detect_faces(
-                sample, face_detection_threshold, **face_model_kwargs
-            )
-            landmarks = self.detector.detect_landmarks(
-                sample, detected_faces=faces, **landmark_model_kwargs
-            )
-            aus = self.detector.detect_aus(sample, landmarks, **au_model_kwargs)
-
-            if not len(aus):
-                aus = [np.ones((1, 20))]
-            else:
-                if not len(aus[0]):
-                    aus = [np.ones((1, 20))]
-                else:
-                    aus = [aus[0]]
-            aus = [torch.from_numpy(aus[0][0])]
-            return aus
-
-        if not isinstance(samples, list):
-            aus_all.extend(analyse_once(samples))
+        if not len(aus):
+            aus = [torch.ones((1, 20))]
         else:
-            for sample in tqdm(samples):
-                aus_all.extend(analyse_once(sample))
-
-        return aus_all
-
-    def transform_from_array(self, array: np.ndarray) -> SampleT:
-        return torch.from_numpy(array)
-
-    def transform_from_image(self, image: Image) -> SampleT:
-        return torchvision.transforms.functional.pil_to_tensor(image)
-
-    def transform_from_tensor(self, tensor: torch.Tensor) -> SampleT:
-        return tensor
+            if not len(aus[0]):
+                aus = [torch.ones((1, 20))]
+            else:
+                aus = [aus[0]]
+        aus = [torch.from_numpy(aus[0][0])]
+        return aus
 
 
 # Function to extract AU differences between real and generated images
 def extract_au_difference_from_paths(
-    real_image_path: str, generated_image_path: str
+    detector: Detector, real_image_path: str, generated_image_path: str
 ) -> np.ndarray:
     # Extract AUs from both images
     aus_real = detector.detect_image(real_image_path).aus
