@@ -15,8 +15,11 @@ from ciagen.feature_extractors.inception_extractor import (
     InceptionModelSoftmaxed,
     inception_transform,
 )
+
+from torch.utils.data import DataLoader, Dataset
 from ciagen.qm import TL, VirtualDataloader, id_transform
 from ciagen.qm.divergences import kl_divergence
+from ciagen.qm.calculator import KLCalculator
 
 
 class IS:
@@ -29,9 +32,6 @@ class IS:
     def __init__(
         self,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        distribution_distance: (
-            None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        ) = None,
         eps: float = 1e-16,
         softmaxed: bool = True,
     ):
@@ -41,60 +41,53 @@ class IS:
             else feature_extractor
         )
         self._eps = eps
+        self._kl_calculator = KLCalculator()
 
-        if distribution_distance is None:
-
-            def dd(p, q):
-                score = kl_divergence(p, q, as_expectance=True)
-                return torch.exp(score)
-
-            self.distribution_distance = dd
-        else:
-            self.distribution_distance = distribution_distance
-
-    def transform_and_extract_features(
+    def update(
         self,
-        samples: Collection[torch.Tensor] | torch.utils.data.DataLoader,
-        transform: Callable[[Any], torch.Tensor] | None = None,
-        feature_extractor: Callable[[Any], torch.Tensor] | None = None,
-    ) -> torch.Tensor:
-
-        if feature_extractor is not None:
-            transform = id_transform() if transform is None else transform
-        else:
-            transform = self._transform
-
-        feature_extractor = feature_extractor or self._feature_extractor
-
-        if isinstance(feature_extractor, torch.nn.Module):
-            feature_extractor.eval()
-
+        synthetic_samples: torch.Tensor | Image.Image | DataLoader | Dataset,
+    ):
         with torch.no_grad():
-            if not isinstance(samples, torch.Tensor):
-                transformed = []
-                for sample in tqdm(samples):
-                    transformed.append(feature_extractor(transform(sample)))
-                transformed = torch.stack(transformed)
-            else:
-                transformed = feature_extractor(transform(samples))
+            probabilities = self._feature_extractor(synthetic_samples)
+            self._kl_calculator(probabilities)
 
-        return torch.squeeze(transformed)
+    def score(
+        self,
+        real_samples: torch.Tensor | Dataset | DataLoader,
+        synthetic_samples: torch.Tensor | Dataset | DataLoader,
+        batch_size=32,
+    ):
+        self._kl_calculator.reset()
+
+        if isinstance(synthetic_samples, torch.Tensor):
+            self.update(synthetic_samples)
+            return self.instant_score()
+        if isinstance(synthetic_samples, Dataset):
+            dataloader = DataLoader(synthetic_samples, batch_size=batch_size)
+
+            for x in tqdm(dataloader):
+                self.update(x)
+
+            return self.instant_score()
+
+        if isinstance(synthetic_samples, DataLoader):
+            for x in tqdm(synthetic_samples):
+                self.update(x)
+
+            return self.instant_score()
+
+        raise ValueError(f"Data type not supported: {type(synthetic_samples)}")
 
     def instant_score(
         self,
-        samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        as_float: bool = True,
     ):
 
-        pconditional = samples
-        pmarginal = torch.mean(pconditional, dim=0)
-
-        res = self.distribution_distance(pconditional, pmarginal)
-
-        if as_float:
-            res = float(res)
-
-        return res
+        res = self._kl_calculator.state()
+        print("==Inception Score==")
+        print(self._feature_extractor)
+        print("Inception Score: ", res)
+        res = res.real
+        return float(res)
 
     def run_score(
         self,
