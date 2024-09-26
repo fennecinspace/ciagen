@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 from ciagen.feature_extractors.inception_extractor import (
     InceptionModel,
-    InceptionModelSoftmaxed,
     inception_transform,
 )
 from ciagen.qm import id_transform
@@ -37,11 +36,7 @@ class FID:
         self._using_inception = feature_extractor is None
 
         self._feature_extractor = (
-            (
-                InceptionModelSoftmaxed(weights=weights)
-                if softmaxed
-                else InceptionModel(weights=weights)
-            )
+            InceptionModel(weights=weights, softmaxed=softmaxed)
             if feature_extractor is None
             else feature_extractor
         )

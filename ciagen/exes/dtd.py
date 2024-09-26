@@ -143,7 +143,7 @@ class DTD:
                     feature_extractor=feature_extractor,
                 )
 
-                logger.info(f"Running {metric}x{fe}")
+                logger.info(f"Running {metric} metric with {fe} as feature extractor")
 
                 score = metric_calculator.score(
                     real_samples=real_dataloader,
@@ -152,7 +152,7 @@ class DTD:
                 )
 
                 current_metric_values[fe] = score
-                logger.info(f"{metric}x{fe} is {score}")
+                logger.info(f"{metric}[{fe}] = {score}")
 
             metrics_values[metric] = current_metric_values
 

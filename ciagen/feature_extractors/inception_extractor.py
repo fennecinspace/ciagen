@@ -40,40 +40,28 @@ def inception_transform(to_tensor=False):
 class InceptionFeatureExtractor(FeatureExtractor):
     def __init__(self, softmaxed=True, weights="DEFAULT"):
         super().__init__()
-        self.inc_model = (
-            InceptionModelSoftmaxed(weights=weights)
-            if softmaxed
-            else InceptionModel(weights=weights)
-        )
+        self.inception_model = InceptionModel(weights=weights, softmaxed=softmaxed)
 
     def forward(self, x):
-        return self.inc_model(x)
+        return self.inception_model(x)
 
 
 class InceptionModel(torch.nn.Module):
-    def __init__(self, weights="DEFAULT"):
+    def __init__(self, weights="DEFAULT", softmaxed: bool = True):
         super().__init__()
+        self.softmaxed = softmaxed
         self.inceptionv3 = inception_v3(weights=weights)
+
+        if self.softmaxed:
+            self.softmax = Softmax(dim=1)
 
     def forward(self, x):
         if len(x.size()) == 3:
             x = torch.unsqueeze(x, 0)
-        x = self.inceptionv3(x)
+        x = self.inceptionv3(x).logits  # TODO: verify this !!!
 
-        return x
-
-
-class InceptionModelSoftmaxed(torch.nn.Module):
-    def __init__(self, weights="DEFAULT"):
-        super().__init__()
-
-        # https://pytorch.org/vision/stable/models/generated/torchvision.models.inception_v3.html#torchvision.models.Inception_V3_Weights
-        self.inception_model = InceptionModel(weights=weights)
-        self.softmax = Softmax()
-
-    def forward(self, x):
-        x = self.inception_model(x)
-        x = self.softmax(x)
+        if self.softmaxed:
+            x = self.softmax(x)
 
         return x
 

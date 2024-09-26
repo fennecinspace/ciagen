@@ -22,8 +22,8 @@ def instance_transform(feature_extractor_name: str, **kwargs):
     if feature_extractor_name == "vit":
         return vit_transform()
     elif feature_extractor_name == "inception":
-        # return inception_transform(to_tensor=True)
-        return inception_transform()
+        return inception_transform(to_tensor=True)
+        # return inception_transform()
     elif feature_extractor_name == "au":
         return au_transform()
 

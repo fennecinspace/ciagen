@@ -164,14 +164,19 @@ class CovCalculator(torch.nn.Module):
         return current_cov
 
 
-class KLCalculator(torch.nn.Module):
-    def __init__(self, eps=1e-16):
+class KLISCalculator(torch.nn.Module):
+    def __init__(self, eps=1e-16, force_probability: bool = False):
         super().__init__()
         self._eps = eps
 
         self._samples_computed = None
         self._conditional_probability_accumulator = None
         self._total_probability_accumulator = None
+
+        if force_probability is True:
+            self._softmax_layer = torch.nn.Softmax(dim=1)  # why this ?(dim=0)
+        else:
+            self._softmax_layer = None
 
     def reset(self):
         self._samples_computed = None
@@ -192,8 +197,19 @@ class KLCalculator(torch.nn.Module):
             raise RuntimeError("KLCalculator is not in a valid state.")
 
         with torch.no_grad():
+
+            # verify everything is positive
+            x_is_positive = torch.all(x >= 0)
+
+            if not x_is_positive and self._softmax_layer is not None:
+                x = self._softmax_layer(x)
+            if not x_is_positive and self._softmax_layer is None:
+                raise ValueError("x must be positive or use `force_probability`=True")
+
             number_of_samples_in_x = x.shape[0]
-            conditional_accumulator = torch.sum(x * torch.log(x + self._eps), dim=0)
+            x_log = torch.log(x + self._eps)
+
+            conditional_accumulator = torch.sum(x * x_log, dim=0)
             total_accumulator = torch.sum(x, dim=0)
 
             if self._samples_computed is None:
@@ -208,7 +224,8 @@ class KLCalculator(torch.nn.Module):
 
         return self.state()
 
-    def state(self):
+    def state(self, return_exp_expectation: bool = False):
+
         current_conditional_probability = self._conditional_probability_accumulator
         current_total_probability = self._total_probability_accumulator
         current_number_of_samples = self._samples_computed
@@ -222,9 +239,13 @@ class KLCalculator(torch.nn.Module):
             - current_total_probability * total_probability_log
         )
 
-        # Now we compute its expectation plus exp
-        expectation_kl = torch.sum(kl_difference) / current_number_of_samples
-        return torch.exp(expectation_kl)
+        res = kl_difference
+
+        if return_exp_expectation:
+            res = torch.sum(kl_difference) / current_number_of_samples
+            res = torch.exp(res)
+
+        return res
 
 
 if __name__ == "__main__":

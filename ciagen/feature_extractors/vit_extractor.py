@@ -7,8 +7,7 @@ from transformers import ViTModel, ViTForImageClassification
 from transformers.models.vit.modeling_vit import ViTSelfAttention
 import torch
 
-from typing import Collection
-from torchvision.transforms import Resize, Compose
+from torchvision.transforms import Resize, Compose, ToTensor
 from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 
@@ -38,7 +37,7 @@ def vit_transform():
     return Compose(
         [
             Resize((224, 224)),
-            # ToTensor(),
+            ToTensor(),
         ]
     )
 

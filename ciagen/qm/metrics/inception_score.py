@@ -12,14 +12,13 @@ from tqdm import tqdm
 
 from ciagen.feature_extractors.inception_extractor import (
     InceptionModel,
-    InceptionModelSoftmaxed,
     inception_transform,
 )
 
 from torch.utils.data import DataLoader, Dataset
 from ciagen.qm import TL, VirtualDataloader, id_transform
 from ciagen.qm.divergences import kl_divergence
-from ciagen.qm.calculator import KLCalculator
+from ciagen.qm.calculator import KLISCalculator
 
 
 class IS:
@@ -34,14 +33,15 @@ class IS:
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
         eps: float = 1e-16,
         softmaxed: bool = True,
+        weights: str = "DEFAULT",
     ):
         self._feature_extractor = (
-            (InceptionModelSoftmaxed() if softmaxed else InceptionModel())
+            InceptionModel(softmaxed=False, weights=weights)
             if feature_extractor is None
             else feature_extractor
         )
         self._eps = eps
-        self._kl_calculator = KLCalculator()
+        self._kl_calculator = KLISCalculator(force_probability=True)
 
     def update(
         self,
@@ -82,10 +82,7 @@ class IS:
         self,
     ):
 
-        res = self._kl_calculator.state()
-        print("==Inception Score==")
-        print(self._feature_extractor)
-        print("Inception Score: ", res)
+        res = self._kl_calculator.state(return_exp_expectation=True)
         res = res.real
         return float(res)
 
