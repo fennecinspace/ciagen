@@ -1,12 +1,14 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 from tqdm import tqdm
 
 import numpy as np
 import torch
+from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 
 
+from ciagen.qm.calculator import CovCalculator, MeanCalculator
 from ciagen.qm.ptd_distances.mahalanobis import mahalanobis_distance_calc
 from ciagen.feature_extractors.inception_extractor import (
     InceptionModel,
@@ -14,6 +16,7 @@ from ciagen.feature_extractors.inception_extractor import (
 )
 from ciagen.qm import id_transform
 from ciagen.utils.common import logger
+from ciagen.utils.data_loader import NaiveTensorDataset
 
 
 class MLD:
@@ -24,93 +27,79 @@ class MLD:
     def __init__(
         self,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
-        # I'm commenting this, Mahalanobis has only mahalanobis as distance (for now ...)
-        # distribution_distance: None | Callable[[Any, Any], torch.Tensor | float] = None,
+        weights: str = "DEFAULT",
+        softmaxed: bool = False,
     ):
-
-        self._feature_extractor = (
-            InceptionModel() if feature_extractor is None else feature_extractor
-        )
 
         self._using_inception = feature_extractor is None
-
-        if self._using_inception:
-            self._transform = inception_transform()
-        else:
-            self._transform = transform or id_transform()
-
-    def trasform_and_extract_features(
-        self,
-        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        transform: Callable[[Any], torch.Tensor] | None = None,
-        feature_extractor: Callable[[Any], torch.Tensor] | None = None,
-    ):
-
-        if feature_extractor is not None:
-            transform = id_transform() if transform is None else transform
-        else:
-            transform = self._transform
-
-        feature_extractor = feature_extractor or self._feature_extractor
-
-        if isinstance(feature_extractor, torch.nn.Module):
-            feature_extractor.eval()
-
-        def transform_images(samples):
-            all_ext = []
-            for sample in tqdm(samples):
-                ext = feature_extractor(transform(sample))
-
-                if isinstance(ext, list):
-                    all_ext.extend(ext)
-                else:
-                    all_ext.append(ext)
-
-            all_ext = torch.stack(all_ext)
-            return all_ext
-
-        with torch.no_grad():
-            real_transformed = transform_images(real_samples)
-            synthetic_transformed = transform_images(synthetic_samples)
-
-        return torch.squeeze(real_transformed), torch.squeeze(synthetic_transformed)
-
-    def get_mahal_distance(
-        self,
-        real_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        synthetic_samples: torch.Tensor | Image.Image | torch.utils.data.DataLoader,
-        feature_extractor: None | Callable[[Any], torch.Tensor] = None,
-        # same as the MLD class
-        # distribution_distance: (
-        #     None | Callable[[Any, Any], np.ndarray | torch.Tensor | float]
-        # ) = None,
-        transform: None | Callable[[Any], torch.Tensor] = None,
-        already_transformed: bool = False,
-    ):
-
-        if already_transformed:
-            real_samples, synthetic_samples = real_samples, synthetic_samples
-        else:
-            real_features, synthetic_features = self.trasform_and_extract_features(
-                real_samples=real_samples,
-                synthetic_samples=synthetic_samples,
-                transform=transform,
-                feature_extractor=feature_extractor,
-            )
-
-        real_distrib_mean = torch.mean(real_features, dim=0)
-        real_distrib_cov = torch.cov(real_features.T, correction=0)
-
-        ptd_mahal_distance = []
-        logger.info(
-            f"Calculating Mahalanobis distance for {len(synthetic_features)} synthetic images"
+        self._feature_extractor = (
+            InceptionModel(weights=weights, softmaxed=softmaxed)
+            if feature_extractor is None
+            else feature_extractor
         )
-        for i in tqdm(range(len(synthetic_features))):
-            mahal_dist = mahalanobis_distance_calc(
-                synthetic_features[i], real_distrib_mean, real_distrib_cov
-            )
-            ptd_mahal_distance.extend([mahal_dist])
 
-        return ptd_mahal_distance
+        self._mean_calculator = MeanCalculator()
+        self._cov_calculator = CovCalculator()
+
+    def update(self, samples: torch.Tensor):
+        with torch.no_grad():
+            features = self._feature_extractor(samples)
+            self._mean_calculator(features)
+            self._cov_calculator(features)
+
+    def score(
+        self,
+        real_samples: Union[torch.Tensor, Dataset, DataLoader],
+        synthetic_samples: Union[torch.Tensor, Dataset, DataLoader],
+        batch_size=32,
+    ):
+
+        self._mean_calculator.reset()
+        self._cov_calculator.reset()
+
+        if isinstance(real_samples, torch.Tensor):
+            real_dataset = NaiveTensorDataset(real_samples)
+            real_dataloader = DataLoader(real_dataset, batch_size=batch_size)
+        elif isinstance(real_samples, Dataset):
+            real_dataloader = DataLoader(real_samples, batch_size=batch_size)
+        elif isinstance(real_samples, DataLoader):
+            real_dataloader = real_samples
+        else:
+            raise ValueError(f"Data type not supported: {type(real_samples)}")
+
+        if isinstance(synthetic_samples, torch.Tensor):
+            synthetic_dataset = NaiveTensorDataset(synthetic_samples)
+            synthetic_dataloader = DataLoader(synthetic_dataset, batch_size=batch_size)
+        elif isinstance(synthetic_samples, Dataset):
+            synthetic_dataloader = DataLoader(synthetic_samples, batch_size=batch_size)
+        elif isinstance(synthetic_samples, DataLoader):
+            synthetic_dataloader = synthetic_samples
+        else:
+            raise ValueError(f"Data type not supported: {type(synthetic_samples)}")
+
+        # first compute mean and cov for real samples
+        for x in tqdm(real_dataloader):
+            self.update(x)
+
+        real_mean = self._mean_calculator.state()
+        real_cov = self._cov_calculator.state()
+
+        def score_batch(x):
+            self._feature_extractor.eval()
+            x_features = self._feature_extractor(x)
+            return mahalanobis_distance_calc(
+                x_features,
+                real_mean,
+                real_cov,
+                to_type="torch",
+                distance_squared=True,
+            )
+
+        results = []
+        for x in tqdm(synthetic_dataloader):
+            batch_result = score_batch(x)
+            results.append(batch_result)
+
+        synthetic_dataset_size = len(synthetic_dataloader.dataset)
+        results = torch.stack(results).reshape(synthetic_dataset_size)
+        return results

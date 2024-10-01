@@ -1,10 +1,6 @@
-from .auc_extractor import AUExtractor, test_au_extractor, au_transform
+from .auc_extractor import AUExtractor, au_transform
 from .vit_extractor import VitExtractor, vit_transform
-from .inception_extractor import (
-    InceptionFeatureExtractor,
-    test_inception_extractor,
-    inception_transform,
-)
+from .inception_extractor import InceptionFeatureExtractor, inception_transform
 
 AVAILABLE_FEATURE_EXTRACTORS = (
     "au",

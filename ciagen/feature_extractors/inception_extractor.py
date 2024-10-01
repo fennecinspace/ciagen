@@ -38,12 +38,29 @@ def inception_transform(to_tensor=False):
 
 
 class InceptionFeatureExtractor(FeatureExtractor):
-    def __init__(self, softmaxed=True, weights="DEFAULT"):
+    def __init__(self, softmaxed: bool = True, weights: str = "DEFAULT"):
         super().__init__()
-        self.inception_model = InceptionModel(weights=weights, softmaxed=softmaxed)
+
+        self.inception_model = inception_v3(weights=weights)
+        self.softmaxed = softmaxed
+
+        if self.softmaxed:
+            self.softmax = Softmax(dim=1)
 
     def forward(self, x):
-        return self.inception_model(x)
+        self.eval()
+
+        if len(x.size()) == 3:
+            x = torch.unsqueeze(x, 0)
+        x = self.inception_model(x)
+
+        if not isinstance(x, torch.Tensor):
+            x = x.logits
+
+        if self.softmaxed:
+            x = self.softmax(x)
+
+        return x
 
 
 class InceptionModel(torch.nn.Module):
@@ -64,7 +81,3 @@ class InceptionModel(torch.nn.Module):
             x = self.softmax(x)
 
         return x
-
-
-def test_inception_extractor():
-    pass

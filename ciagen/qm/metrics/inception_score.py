@@ -48,6 +48,7 @@ class IS:
         synthetic_samples: torch.Tensor | Image.Image | DataLoader | Dataset,
     ):
         with torch.no_grad():
+            self._feature_extractor.eval()
             probabilities = self._feature_extractor(synthetic_samples)
             self._kl_calculator(probabilities)
 

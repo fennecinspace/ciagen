@@ -14,32 +14,53 @@ def mahalanobis_distance_calc(
     inv_cov: TL | None = None,
     to_float: bool = False,
     to_type: str = "numpy",
+    distance_squared: bool = False,
 ) -> TL | float:
     """Implementation of the mahalanobis distance: https://en.wikipedia.org/wiki/Mahalanobis_distance"""
+
+    if to_type not in ["numpy", "torch"]:
+        raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")
+
     if cov is None and inv_cov is None:
         raise ValueError("Either cov or inv_cov must be provided")
 
-    x, mean = cast_to(x, to_type), cast_to(mean, to_type)
+    x, mean, cov = cast_to(x, to_type), cast_to(mean, to_type), cast_to(cov, to_type)
+
+    if to_type == "torch":
+        is_batch = len(x.size()) > 1
+    else:
+        is_batch = len(x.shape) > 1
 
     if inv_cov is None:
-        cov = to_numpy(cov)
         if to_type == "torch":
             inv_cov = torch.linalg.pinv(cov, hermitian=True)
-        elif to_type == "numpy":
-            inv_cov = np.linalg.pinv(cov, hermitian=True)
         else:
-            raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")
+            inv_cov = np.linalg.pinv(cov, hermitian=True)
     else:
         inv_cov = cast_to(inv_cov, to_type)
 
+    diff = x - mean
+    diff_T = diff.T if is_batch else diff
+
     if to_type == "torch":
-        res = torch.matmul(x - mean, inv_cov)
-        res = torch.matmul(res, x - mean)
-    elif to_type == "numpy":
-        res = np.matmul(x - mean, inv_cov)
-        res = np.matmul(res, x - mean)
+
+        res = torch.matmul(diff, inv_cov)
+        res = torch.matmul(res, diff_T)
+
+        if is_batch:
+            res = res.diag()
+
+        if not distance_squared:
+            res = torch.sqrt(res)
     else:
-        raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")
+        res = np.matmul(diff, inv_cov)
+        res = np.matmul(res, diff_T)
+
+        if is_batch:
+            res = res.diagonal()
+
+        if not distance_squared:
+            res = np.sqrt(res)
 
     if to_float:
         res = float(res)

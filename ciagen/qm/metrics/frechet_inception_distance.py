@@ -73,6 +73,7 @@ class FID:
 
     def update(self, samples: torch.Tensor, is_real: bool = True):
         with torch.no_grad():
+            self._feature_extractor.eval()
             features = self._feature_extractor(samples)
             if is_real:
                 self._real_mean_calculator(features)
@@ -132,6 +133,11 @@ class FID:
 
         synthetic_mean = self._synthetic_mean_calculator.state()
         synthetic_cov = self._synthetic_cov_calculator.state()
+
+        # recast to same type
+        real_cov = real_cov.to(real_mean.dtype)
+        synthetic_cov = synthetic_cov.to(real_mean.dtype)
+        synthetic_mean = synthetic_mean.to(real_mean.dtype)
 
         res = self._distribution_distance(
             umean=real_mean,
