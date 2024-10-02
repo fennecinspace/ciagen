@@ -7,14 +7,14 @@ See On Wasserstein Two Sample Testing and Related Families of Nonparametric Test
 Or: https://en.wikipedia.org/wiki/Wasserstein_metric
 """
 
-import scipy.linalg
-import torch
 import numpy as np
 import scipy
-
+import scipy.linalg
+import torch
 from scipy.linalg import sqrtm as matrix_sqrt
 
 from ciagen.qm import TL
+from ciagen.qm import cast_to
 
 
 def wasserstein_distance_multi_dimensional(u: TL, v: TL, as_expectance=True):
@@ -42,22 +42,31 @@ def wasserstein_distance_multi_dimensional(u: TL, v: TL, as_expectance=True):
         )
 
 
-def wasserstein_distance_gaussian_version(umean: TL, ucov: TL, vmean: TL, vcov: TL):
-    if isinstance(umean, torch.Tensor):
-        umean = umean.numpy()
-    if isinstance(ucov, torch.Tensor):
-        ucov = ucov.numpy()
-    if isinstance(vmean, torch.Tensor):
-        vmean = vmean.numpy()
-    if isinstance(vcov, torch.Tensor):
-        vcov = vcov.numpy()
+def wasserstein_distance_gaussian_version(
+    umean: TL, ucov: TL, vmean: TL, vcov: TL, to_type="numpy"
+):
+    umean, vmean = cast_to(umean, to_type), cast_to(vmean, to_type)
+    ucov, vcov = cast_to(ucov, to_type), cast_to(vcov, to_type)
 
-    norm_square = np.linalg.norm(umean - vmean, ord=2) ** 2
+    if to_type == "numpy":
+        norm_square = np.linalg.norm(umean - vmean, ord=2) ** 2
 
-    vvar_sqrt = matrix_sqrt(vcov)
-    big_matmul = np.matmul(vvar_sqrt, np.matmul(ucov, vvar_sqrt))
+        vvar_sqrt = matrix_sqrt(vcov)
+        big_matmul = np.matmul(vvar_sqrt, np.matmul(ucov, vvar_sqrt))
 
-    trace_part1 = np.trace(ucov + vcov)
-    trace_part2 = -2 * np.trace(matrix_sqrt(big_matmul))
+        trace_part1 = np.trace(ucov + vcov)
+        trace_part2 = -2 * np.trace(matrix_sqrt(big_matmul))
 
-    return np.sqrt(norm_square + trace_part1 + trace_part2)
+        res = np.sqrt(norm_square + trace_part1 + trace_part2)
+    elif to_type == "torch":
+        norm_square = torch.linalg.norm(umean - vmean, ord=2) ** 2
+
+        vvar_sqrt = torch.linalg.matrix_power(vcov, 0.5)
+        big_matmul = torch.matmul(vvar_sqrt, torch.matmul(ucov, vvar_sqrt))
+
+        trace_part1 = torch.trace(ucov + vcov)
+        trace_part2 = -2 * torch.trace(matrix_sqrt(big_matmul))
+
+        res = torch.sqrt(norm_square + trace_part1 + trace_part2)
+
+    return res

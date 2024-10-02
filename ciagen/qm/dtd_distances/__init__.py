@@ -19,6 +19,8 @@ Note that you can use them as is. But also some metrics implementing the them al
 - Frechet inception distance
 """
 
+from ciagen.qm import TL
+
 from .frechet_distance import frechet_distance_gaussian_version
 from .wasserstein_distance import (
     wasserstein_distance_gaussian_version,

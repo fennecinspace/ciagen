@@ -20,6 +20,8 @@ data:
     image_formats: ["png", "jpeg", "jpg"]
     limit_size_real: 2000
     limit_size_syn: 2000
+    batch_size: 4
+    datatype: "image"
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...
 ml:
@@ -90,7 +92,7 @@ model:
     use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
     sd: fennecinspace/sd-v15 # stable diffusion version
-    cn_use: controlnet_segmentation # control net to use from the list
+    cn_use: sd15_crucible_mediapipe_face # controlnet_segmentation # control net to use from the list
     cn:
         # YOU should list all the control nets that you would like to use here
         # add an extractor name to the end in order to define which extractor to use :
@@ -165,8 +167,8 @@ active:
 metrics:
     fe:
         - vit
-        # - inception
-        # - au
+        - inception
+        - au
     dtd:
         - fid
         - inception_score

@@ -37,7 +37,7 @@ class Generator:
         data = self.cfg["data"]
 
         # Paths and data related work
-        real_path = paths["real"]
+        _real_path = paths["real"]
         generated_path = paths["generated"]
         real_path_images = paths["real_images"]
         real_path_captions = paths["real_captions"]
@@ -50,6 +50,7 @@ class Generator:
             ]
         real_images.sort()
         real_path_images = real_images
+
         real_dataset_size = len(real_path_images)
 
         # Define the prompt
@@ -81,16 +82,16 @@ class Generator:
         ## !!! MUST ADD CHECKS FOR MODEL NAMES AND CONFIG CORRECTNESS HERE !!!
 
         model_data = self.cfg["model"]
-        model_to_use = model_data['cn_use']
+        model_to_use = model_data["cn_use"]
         model_to_use_conf = [model_to_use]
 
-        model_to_use_conf = get_model_config(model_to_use, model_data['cn'])
+        model_to_use_conf = get_model_config(model_to_use, model_data["cn"])
 
-        logger.info(f'Using the following config : {model_to_use_conf}')
+        logger.info(f"Using the following config : {model_to_use_conf}")
 
-        sd_model = model_to_use_conf['sd']
-        cn_model = model_to_use_conf['cn']
-        extractor_name = model_to_use_conf['extractor']
+        sd_model = model_to_use_conf["sd"]
+        cn_model = model_to_use_conf["cn"]
+        extractor_name = model_to_use_conf["extractor"]
 
         if "cn_extra_settings" in model_to_use_conf:
             cn_extra_settings = model_to_use_conf["cn_extra_settings"]

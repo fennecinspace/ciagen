@@ -21,7 +21,7 @@ import csv
 import yaml
 
 from ciagen.utils.common import (
-    list_images,
+    list_files,
     select_equal_classes,
     logger,
 )
@@ -141,11 +141,11 @@ class CreateMixedFERDataset:
         # TODO change total_captions to total_labels
         total_captions = real_train_labels + real_test_labels + real_val_labels
 
-        real_images = list_images(real_images_path, formats, train_nb)
-        val_images = list_images(val_images_path, formats, val_nb)
-        test_images = list_images(test_images_path, formats, test_nb)
+        real_images = list_files(real_images_path, formats, train_nb)
+        val_images = list_files(val_images_path, formats, val_nb)
+        test_images = list_files(test_images_path, formats, test_nb)
 
-        synth_images_full = list_images(synth_images_dir, formats)
+        synth_images_full = list_files(synth_images_dir, formats)
 
         # TODO synth images should be train_nb + val_nb + test_nb total images corresponding to real ones
 

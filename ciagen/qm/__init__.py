@@ -19,6 +19,13 @@ def to_numpy(x: TL):
         return x
 
 
+def to_tensor(x: TL):
+    if isinstance(x, np.ndarray):
+        return torch.from_numpy(x)
+    else:
+        return x
+
+
 class VirtualDataloader:
     """
     Creates a virtual dataloader from a dataset and an index
@@ -40,5 +47,16 @@ class VirtualDataloader:
     def as_tensor(self):
         return torch.stack([self.dataset[i] for i in self.index])
 
-    def as_list(self): # quick fix for reading data issues caused by tensor transforms between FID and IS
+    def as_list(
+        self,
+    ):  # quick fix for reading data issues caused by tensor transforms between FID and IS
         return self.dataset
+
+
+def cast_to(x: TL, to_type: str) -> TL:
+    if to_type == "numpy":
+        return to_numpy(x)
+    elif to_type == "torch":
+        return to_tensor(x)
+    else:
+        raise ValueError(f"Invalid to_type: {to_type}. Must be 'numpy' or 'torch'")

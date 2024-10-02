@@ -298,7 +298,9 @@ def create_files_list(image_files, txt_file_path):
         f.write("\n".join(image_files))
 
 
-def list_images(images_path: Path, formats: List[str], limit: int = None):
+def list_files(
+    images_path: Path, formats: List[str], limit: int = None, include: bool = True
+):
     images = []
     for format in formats:
         images += [*glob.glob(str(images_path.absolute()) + f"/*.{format}")]
@@ -458,8 +460,8 @@ def load_images_from_directory(
     if type(directory) == str:
         directory = Path(directory)
 
-    limit_size = limit_size or len(list_images(directory, formats))
-    images_paths = list_images(directory, formats)[:limit_size]
+    limit_size = limit_size or len(list_files(directory, formats))
+    images_paths = list_files(directory, formats)[:limit_size]
     images_paths.sort()
 
     if ptd:
