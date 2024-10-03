@@ -112,6 +112,7 @@ class PTD:
             current_metrics_values = {}
 
             for fe in current_fe:
+                torch.cuda.empty_cache()
                 if fe not in AVAILABLE_FEATURE_EXTRACTORS:
                     logger.exception(
                         f"There is no {fe} feature extractor available, feature extractors are {list(AVAILABLE_FEATURE_EXTRACTORS.keys())}"
@@ -146,6 +147,8 @@ class PTD:
                     )
                     specific_dict[full_syn_image_path] = float(scores[image_iter])
                     current_metrics_values[fe] = specific_dict
+
+            # we need to write to file each time, otherwise too much in memory => process killed => and all will be lost
 
             metrics_values[metric] = current_metrics_values
         metadata = OmegaConf.load(meta_data_file)

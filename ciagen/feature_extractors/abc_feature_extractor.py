@@ -8,4 +8,5 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class FeatureExtractor(ABC, torch.nn.Module):
-    pass
+    @abstractmethod
+    def name(self) -> str: ...

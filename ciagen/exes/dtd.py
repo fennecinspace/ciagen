@@ -84,13 +84,18 @@ class DTD:
         generated_path = paths["generated"]
         real_path_images = paths["real_images"]
 
+        # instance two dummy dataloaders
+        first_fe = list(transform_dict.keys())[0]
+        real_dummy_dataloader = call_dataloader(first_fe, is_real=True)
+        syn_dummy_dataloader = call_dataloader(first_fe, is_real=False)
+
         # real_labels_path = paths["real_labels"]
         # real_captions_path = paths["real_captions"]
 
         meta_data_file = Path(generated_path) / "metadata.yaml"
 
-        real_dataset_size = len(real_path_images)
-        synthetic_dataset_size = len(real_path_images)
+        real_dataset_size = len(real_dummy_dataloader.dataset)
+        synthetic_dataset_size = len(syn_dummy_dataloader.dataset)
 
         logger.info(f"Using {real_dataset_size} Real images from: {real_path_images}")
         logger.info(

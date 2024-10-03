@@ -37,7 +37,7 @@ def inception_transform(to_tensor=False):
         )
 
 
-class InceptionFeatureExtractor(FeatureExtractor):
+class InceptionFE(FeatureExtractor):
     def __init__(self, softmaxed: bool = True, weights: str = "DEFAULT"):
         super().__init__()
 
@@ -46,6 +46,9 @@ class InceptionFeatureExtractor(FeatureExtractor):
 
         if self.softmaxed:
             self.softmax = Softmax(dim=1)
+
+    def name(self):
+        return "InceptionFE"
 
     def forward(self, x):
         self.eval()
