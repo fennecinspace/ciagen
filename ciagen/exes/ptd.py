@@ -148,6 +148,7 @@ class PTD:
                     specific_dict[full_syn_image_path] = float(scores[image_iter])
                     current_metrics_values[fe] = specific_dict
 
+            # TODO: this, the metrics for ptd should offer a buffer to read from and then write to file:
             # we need to write to file each time, otherwise too much in memory => process killed => and all will be lost
 
             metrics_values[metric] = current_metrics_values
@@ -162,9 +163,6 @@ class PTD:
         if "ptd" not in metadata["results"]["metrics"]:
             metadata["results"]["metrics"]["ptd"] = {}
 
-        # Even if metric already in the metadata, re-running the file means a new computation
-        # if metric not in metadata["results"]["metrics"]["ptd"]:
-        #     metadata["results"]["metrics"]["ptd"][metric] = metrics_values
         metadata["results"]["metrics"]["ptd"] = metrics_values
 
         with open(meta_data_file, "w") as f:

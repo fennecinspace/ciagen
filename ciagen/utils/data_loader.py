@@ -167,6 +167,7 @@ def create_local_dataloader(
         limit_size=limit_size,
         include=True,
     )
+
     samples_list = [os.path.join(str(samples_path.absolute()), x) for x in samples_list]
 
     if labels_path is not None:
