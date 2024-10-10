@@ -18,9 +18,9 @@ data:
     # create data folder, and all other folders will be created automatically
     base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
-    limit_size_real: 1000
-    limit_size_syn: 1000
-    batch_size: 32
+    limit_size_real: 100
+    limit_size_syn: 100
+    batch_size: 10
     datatype: "image"
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...
