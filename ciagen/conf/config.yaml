@@ -26,9 +26,9 @@ data:
 # ratio between train and test, learning rate ...
 ml:
     # number of samples for training, validation, and test
-    val_nb: 2000
-    test_nb: 2000
-    train_nb: 4000
+    val_nb: 1000
+    test_nb: 1000
+    train_nb: 2000
 
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.25 # controls all aug percents parameters everywhere
@@ -38,7 +38,7 @@ ml:
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
     keep_training_size: true #Whether the data augmentation should increase the size of the dataset or not
 
-    epochs: 300
+    epochs: 10
     sampling: # IQA Sampling, check end of this yaml file for list of available metrics
         # Telling the trainer to use IQA metrics already calculated to sample on best images for training
         enable: false
@@ -167,8 +167,8 @@ active:
 metrics:
     fe:
         - vit
-        - inception
-        - au
+        # - inception
+        # - au
     dtd:
         - fid
         - inception_score

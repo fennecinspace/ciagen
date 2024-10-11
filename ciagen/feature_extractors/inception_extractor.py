@@ -38,10 +38,11 @@ def inception_transform(to_tensor=False):
 
 
 class InceptionFE(FeatureExtractor):
-    def __init__(self, softmaxed: bool = True, weights: str = "DEFAULT"):
+    def __init__(self, softmaxed: bool = True, weights: str = "DEFAULT", device="cpu"):
         super().__init__()
 
         self.inception_model = inception_v3(weights=weights)
+        self.inception_model = self.inception_model.to(device)
         self.softmaxed = softmaxed
 
         if self.softmaxed:

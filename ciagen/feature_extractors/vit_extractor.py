@@ -168,7 +168,9 @@ class InnerFeatureExtractor:
                 )
             # Preprocess images using ViT feature extractor
             inputs = self.image_processor(
-                images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
+                images=images.permute(0, 2, 3, 1),
+                return_tensors="pt",
+                # images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
             )  # Adjust dimensions
             inputs = {
                 key: val.to(self.device) for key, val in inputs.items()
