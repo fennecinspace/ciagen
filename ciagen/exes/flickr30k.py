@@ -28,7 +28,7 @@ from ciagen.utils.common import (
     bbox_min_max_to_center_dims,
     calculate_iou,
     contains_word,
-    logger,
+    ciagen_logger,
 )
 
 PERSON_WORDS = [
@@ -283,7 +283,7 @@ def download_flickr(
     labels_path: Path = data_path / labels_path
 
     dirs = data_path, image_path, annotations_path, caps_path, sentences_path
-    logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
+    ciagen_logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
     for d in dirs:
         d.mkdir(parents=True, exist_ok=True)
 
@@ -293,10 +293,12 @@ def download_flickr(
 
     # Only perform the work if necessary
     if not os.path.exists(path_to_data_zip):
-        logger.info(f"Downloading zip images from {data_url} to {path_to_data_zip}")
+        ciagen_logger.info(
+            f"Downloading zip images from {data_url} to {path_to_data_zip}"
+        )
         wget.download(data_url, out=str(path_to_data_zip))
     if not len(os.listdir(image_path)):
-        logger.info(f"Extracting zip images to {image_path}")
+        ciagen_logger.info(f"Extracting zip images to {image_path}")
         with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
             zip_ref.extractall(str(data_path))
 
@@ -519,8 +521,8 @@ class Flickr30kDataset:
 
         all_images = list(images_path.glob("*.jpg"))
 
-        logger.info(f"Extracting captions and boxes info from Initial Dataset")
-        
+        ciagen_logger.info(f"Extracting captions and boxes info from Initial Dataset")
+
         for img_path in tqdm(all_images, unit="img"):
             img_path = str(img_path.absolute())
             name = img_path.split(os.sep)[-1].split(".jpg")[0]
@@ -552,40 +554,38 @@ class Flickr30kDataset:
                 with open(caption_file, "w") as caption_file:
                     caption_file.write("\n".join(captions))
 
-
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        real_train_images_path = paths['real_images']
-        real_test_images_path = paths['test_images']
-        real_val_images_path = paths['val_images']
-        
-        real_train_labels_path = paths['real_labels']
-        real_test_labels_path = paths['test_labels']
-        real_val_labels_path = paths['val_labels']
+        real_train_images_path = paths["real_images"]
+        real_test_images_path = paths["test_images"]
+        real_val_images_path = paths["val_images"]
 
-        real_train_captions_path = paths['real_captions']
-        real_test_captions_path = paths['test_captions']
-        real_val_captions_path = paths['val_captions']
+        real_train_labels_path = paths["real_labels"]
+        real_test_labels_path = paths["test_labels"]
+        real_val_labels_path = paths["val_labels"]
 
-        logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
-        logger.info(f"Moving TEST to {str(real_test_images_path)}")
-        logger.info(f"Moving VAL to {str(real_val_images_path)}")
-        logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
+        real_train_captions_path = paths["real_captions"]
+        real_test_captions_path = paths["test_captions"]
+        real_val_captions_path = paths["val_captions"]
 
+        ciagen_logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
+        ciagen_logger.info(f"Moving TEST to {str(real_test_images_path)}")
+        ciagen_logger.info(f"Moving VAL to {str(real_val_images_path)}")
+        ciagen_logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         # move all files
         all_images = [
             label.replace(".txt", ".jpg") for label in os.listdir(labels_path)
         ]
-        
+
         length = (
             val_nb + test_nb + train_nb
             if (val_nb + test_nb + train_nb) < len(all_images)
             else all_images
         )
-        
+
         all_images = all_images[:length]
 
         counter = 0

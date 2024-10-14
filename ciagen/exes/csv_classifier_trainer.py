@@ -27,7 +27,7 @@ import torch.optim as optim
 import wandb
 from tqdm import tqdm
 
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
@@ -82,7 +82,7 @@ class CSVClassificationTrainer:
         epochs = self.cfg["ml"]["epochs"]
         df = pd.read_csv(metadata_file)
 
-        logger.info(
+        ciagen_logger.info(
             f"Training Classifier to {epochs} epochs using Dataset {metadata_file}"
         )
 
@@ -134,7 +134,7 @@ class CSVClassificationTrainer:
         entity = self.cfg["ml"]["wandb"]["entity"]
         project = self.cfg["ml"]["wandb"]["project"]
 
-        logger.info(f"Logging to wandb user/team {entity} project {project}")
+        ciagen_logger.info(f"Logging to wandb user/team {entity} project {project}")
 
         cn_use = self.cfg["model"]["cn_use"]
         aug_percent = self.cfg["ml"]["augmentation_percent"]
@@ -233,7 +233,7 @@ class CSVClassificationTrainer:
                 sync=True,
             )
 
-            logger.info(
+            ciagen_logger.info(
                 f"Epoch {epoch+1}/{epochs}, "
                 f"Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.4f}, "
                 f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}"
@@ -252,7 +252,7 @@ class CSVClassificationTrainer:
                     best_model_path,
                 )
 
-                logger.info(
+                ciagen_logger.info(
                     f"New best model saved with validation accuracy: {best_val_acc:.4f}"
                 )
 
@@ -281,4 +281,4 @@ class CSVClassificationTrainer:
 
         test_loss /= len(self.test_loader.dataset)
         test_acc = test_correct / test_total
-        logger.info(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}")
+        ciagen_logger.info(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}")

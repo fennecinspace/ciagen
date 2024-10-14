@@ -15,7 +15,7 @@ from PIL.Image import Image
 from tqdm import tqdm
 
 from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 
 
 def au_transform():
@@ -31,13 +31,17 @@ def au_transform():
 class AUFE(FeatureExtractor):
     def __init__(self, device="cpu", **kwargs):
         super().__init__(**kwargs)
-        self.detector = Detector(device=device)
+        self.device = device
+        self.detector = Detector(device=self.device)
+
+    @classmethod
+    def allows_for_gpu(cls) -> bool:
+        return False
 
     def name(self):
         return "AUFE"
 
     def forward(self, x, **kwargs):
-
         face_model_kwargs = kwargs.pop("face_model_kwargs", dict())
         landmark_model_kwargs = kwargs.pop("landmark_model_kwargs", dict())
         au_model_kwargs = kwargs.pop("au_model_kwargs", dict())

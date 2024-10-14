@@ -5,7 +5,7 @@ from diffusers import (
     UniPCMultistepScheduler,
 )
 
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 
 
 class SDCN:
@@ -18,7 +18,7 @@ class SDCN:
         cn_extra_settings={},
     ):
 
-        logger.info(
+        ciagen_logger.info(
             f"Initializing SDCN with {sd_model} and {control_model}, seed ={seed}, device={device}"
         )
 

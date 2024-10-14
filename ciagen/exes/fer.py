@@ -24,7 +24,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 
 EMOTION_MAPPING = {
     "Anger": "an angry",
@@ -52,12 +52,12 @@ def create_label_file_from_label_and_path(
     emotion = list(filter(lambda x: x[0] == image_name, list_of_name_label_pairs))
 
     if len(emotion) == 0:
-        logger.warning(f"No label found for {image_name}")
+        ciagen_logger.warning(f"No label found for {image_name}")
         return
     elif len(emotion) == 1:
         emotion = emotion[0][1]
     else:
-        logger.warning(
+        ciagen_logger.warning(
             f"More than one label found for {image_name}: {emotion}, using a random one."
         )
         emotion = emotion[0][random.randint(0, len(emotion) - 1)]
@@ -83,7 +83,7 @@ def download_fer_dataset(
 
     data_path = Path(data_path)
     dirs = (data_path,)
-    logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
+    ciagen_logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
     for d in dirs:
         try:
             d.mkdir(parents=True, exist_ok=True)
@@ -200,13 +200,13 @@ def prepare_fer_dataset(
 
     # for real images create the labels
     if "gen" in which_dataset:
-        logger.info(
+        ciagen_logger.info(
             f"Creating pre-generated directories: {str(images_download_path), str(images_desination_path)}"
         )
         for p in (images_download_path, images_desination_path):
             os.makedirs(p, exist_ok=True)
 
-        logger.info(
+        ciagen_logger.info(
             f"Moving pre-generated images from {str(images_download_path)} to {str(images_desination_path)}"
         )
         for img in tqdm(all_images, unit="img"):
@@ -216,7 +216,7 @@ def prepare_fer_dataset(
             if not os.path.exists(dest_img_path):
                 shutil.move(orig_img_path, dest_img_path)
 
-        logger.info(
+        ciagen_logger.info(
             f"Copying cheat metadata file from {str(metatdata_cheat_file)} to {str(metadata_dest_path)}"
         )
         shutil.copy(metatdata_cheat_file, metadata_dest_path)
@@ -254,10 +254,10 @@ def prepare_fer_dataset(
                 elif os.path.isdir(filepath):
                     shutil.rmtree(filepath)
 
-        logger.info(f"Moving train to {str(real_train_images_path)}")
-        logger.info(f"Moving test to {str(real_test_images_path)}")
-        logger.info(f"Moving val to {str(real_val_images_path)}")
-        logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
+        ciagen_logger.info(f"Moving train to {str(real_train_images_path)}")
+        ciagen_logger.info(f"Moving test to {str(real_test_images_path)}")
+        ciagen_logger.info(f"Moving val to {str(real_val_images_path)}")
+        ciagen_logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         total_length = (
             (val_nb + test_nb + train_nb)

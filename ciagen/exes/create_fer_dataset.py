@@ -23,7 +23,7 @@ import yaml
 from ciagen.utils.common import (
     list_files,
     select_equal_classes,
-    logger,
+    ciagen_logger,
 )
 
 
@@ -176,8 +176,8 @@ class CreateMixedFERDataset:
             nb_real_images = train_nb
         nb_synth_images = int(len(real_images) * augmentation_percent)
 
-        logger.info(f"Total captions: {len(total_captions)}")
-        logger.info(f"Synthetic images: {len(synth_images)}")
+        ciagen_logger.info(f"Total captions: {len(total_captions)}")
+        ciagen_logger.info(f"Synthetic images: {len(synth_images)}")
 
         if self.cfg["ml"]["with_filtering"]:
             # 1) Load metadata
@@ -217,15 +217,15 @@ class CreateMixedFERDataset:
             output_csv=data_csv_path,
         )
 
-        logger.info(
+        ciagen_logger.info(
             f"Training csv files created in : {paths['mixed_yamls_folder_path']}"
         )
-        logger.info(f"Using {train_nb} Real Images from : {real_images_path}")
-        logger.info(
+        ciagen_logger.info(f"Using {train_nb} Real Images from : {real_images_path}")
+        ciagen_logger.info(
             f"Using Synthetic Images from : {synth_images_dir}, a total of {len(synth_images)} images"
         )
-        logger.info(f"Using in total {len(train_images)} images for training")
-        logger.info(f"Using {val_nb} Validation Images from : {val_images_path}")
-        logger.info(f"Using {test_nb} Test Images from : {test_images_path}")
+        ciagen_logger.info(f"Using in total {len(train_images)} images for training")
+        ciagen_logger.info(f"Using {val_nb} Validation Images from : {val_images_path}")
+        ciagen_logger.info(f"Using {test_nb} Test Images from : {test_images_path}")
 
         return data_csv_path

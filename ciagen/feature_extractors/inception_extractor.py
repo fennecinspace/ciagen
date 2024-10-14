@@ -48,6 +48,10 @@ class InceptionFE(FeatureExtractor):
         if self.softmaxed:
             self.softmax = Softmax(dim=1)
 
+    @classmethod
+    def allows_for_gpu(cls) -> bool:
+        return True
+
     def name(self):
         return "InceptionFE"
 

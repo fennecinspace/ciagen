@@ -24,6 +24,14 @@ def instance_transform(feature_extractor_name: str, **kwargs):
         return au_transform()
 
 
+def available_feature_extractors():
+    return {
+        "au": AUFE,
+        "vit": VitFE,
+        "inception": InceptionFE,
+    }
+
+
 def instance_feature_extractor(feature_extractor_name: str, **kwargs):
     if feature_extractor_name not in AVAILABLE_FEATURE_EXTRACTORS:
         raise ValueError(

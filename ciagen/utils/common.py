@@ -37,7 +37,7 @@ from PIL import Image
 
 FORMAT = "%(asctime)s %(clientip)-16s %(user)-8s %(message)s"
 logging.basicConfig(format=FORMAT)
-logger = logging.getLogger()
+ciagen_logger = logging.getLogger()
 
 
 def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:

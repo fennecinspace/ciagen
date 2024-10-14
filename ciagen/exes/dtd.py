@@ -23,9 +23,11 @@ from ciagen.qm.metrics.frechet_inception_distance import FID
 from ciagen.qm.metrics.inception_score import IS
 from ciagen.feature_extractors import (
     AVAILABLE_FEATURE_EXTRACTORS,
+    available_feature_extractors,
     instance_feature_extractor,
     instance_transform,
 )
+from ciagen.utils.common import ciagen_logger
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
@@ -43,16 +45,19 @@ class DTD:
         self,
         metric_name: str,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
+        device: str = "cpu",
         **kwargs,
     ) -> Any:
         return self.available_metrics[metric_name](
-            feature_extractor=feature_extractor, **kwargs
+            feature_extractor=feature_extractor, device=device, **kwargs
         )
         pass
 
     def __call__(self, paths: Dict[str, str | Path]) -> None:
         data = self.cfg["data"]
         batch_size = self.cfg["data"]["batch_size"]
+
+        current_feature_extractors = available_feature_extractors()
 
         transform_dict = {
             fe: instance_transform(fe) for fe in self.cfg["metrics"]["fe"]
@@ -66,27 +71,49 @@ class DTD:
 
         # instance two dummy dataloaders to get some info on the data
         first_fe = list(transform_dict.keys())[0]
-        real_dummy_dataloader = call_dataloader2(paths, self.cfg, first_fe, transform_dict, is_real=True)
-        syn_dummy_dataloader = call_dataloader2(paths, self.cfg, first_fe, transform_dict, is_real=False)
-        
+        real_dummy_dataloader = call_dataloader2(
+            paths, self.cfg, first_fe, transform_dict, is_real=True
+        )
+        syn_dummy_dataloader = call_dataloader2(
+            paths, self.cfg, first_fe, transform_dict, is_real=False
+        )
+
         meta_data_file = Path(generated_path) / "metadata.yaml"
 
         real_dataset_size = len(real_dummy_dataloader.dataset)
         synthetic_dataset_size = len(syn_dummy_dataloader.dataset)
 
-        logger.info(f"Using {real_dataset_size} Real images from: {real_path_images}")
-        logger.info(
+        ciagen_logger.info(
+            f"Using {real_dataset_size} Real images from: {real_path_images}"
+        )
+        ciagen_logger.info(
             f"Using {synthetic_dataset_size} Synthetic images from: {generated_path}"
         )
-        logger.info(f"Will save to {meta_data_file}")
+        ciagen_logger.info(f"Will save to {meta_data_file}")
 
         metrics_values = {}
         current_metrics = self.cfg["metrics"]["dtd"]
         current_fe = transform_dict.keys()  # self.cfg["metrics"]["fe"]
 
+        if torch.cuda.is_available():
+            config_device = "cuda"
+        else:
+            config_device = "cpu"
+
+        if self.cfg["model"]["device"] == "cuda":
+            config_device = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            config_device = "cpu"
+
         for metric in current_metrics:
+            metric_device = (
+                config_device
+                if self.available_metrics[metric].allows_for_gpu()
+                else "cpu"
+            )
+
             if metric not in self.available_metrics:
-                logger.exception(
+                ciagen_logger.exception(
                     f"There is no {metric} metric available, metrics are {list(self.available_metrics.keys())}"
                 )
                 continue
@@ -94,24 +121,36 @@ class DTD:
             current_metric_values = {}
 
             for fe in current_fe:
-
                 if fe not in AVAILABLE_FEATURE_EXTRACTORS:
-                    logger.exception(
+                    ciagen_logger.exception(
                         f"There is no {fe} feature extractor available, feature extractors are {AVAILABLE_FEATURE_EXTRACTORS}"
                     )
                     continue
 
-                real_dataloader = call_dataloader2(paths, self.cfg, fe, transform_dict, is_real=True)
-                synthetic_dataloader = call_dataloader2(paths, self.cfg, fe, transform_dict, is_real=False)
+                fe_device = (
+                    metric_device
+                    if current_feature_extractors[fe].allows_for_gpu()
+                    else "cpu"
+                )
 
-                feature_extractor = instance_feature_extractor(fe)
+                real_dataloader = call_dataloader2(
+                    paths, self.cfg, fe, transform_dict, is_real=True
+                )
+                synthetic_dataloader = call_dataloader2(
+                    paths, self.cfg, fe, transform_dict, is_real=False
+                )
+
+                feature_extractor = instance_feature_extractor(fe, device=fe_device)
 
                 metric_calculator = self._instance_metric(
                     metric_name=metric,
                     feature_extractor=feature_extractor,
+                    device=fe_device,
                 )
 
-                logger.info(f"Running {metric} metric with {fe} as feature extractor")
+                ciagen_logger.info(
+                    f"Running {metric} metric with {fe} as feature extractor"
+                )
 
                 score = metric_calculator.score(
                     real_samples=real_dataloader,
@@ -120,7 +159,7 @@ class DTD:
                 )
 
                 current_metric_values[fe] = score
-                logger.info(f"{metric}[{fe}] = {score}")
+                ciagen_logger.info(f"{metric}[{fe}] = {score}")
 
             metrics_values[metric] = current_metric_values
 

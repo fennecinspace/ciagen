@@ -10,13 +10,14 @@ from PIL import Image
 
 from ciagen.exes.setup_data import force_device
 from ciagen.qm.calculator import CovCalculator, MeanCalculator
+from ciagen.qm.metrics.abc_metric import QualityMetric
 from ciagen.qm.ptd_distances.mahalanobis import mahalanobis_distance_calc
 from ciagen.feature_extractors.inception_extractor import (
     InceptionModel,
     inception_transform,
 )
 from ciagen.qm import id_transform
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 from ciagen.utils.data_loader import (
     NaiveTensorDataset,
     cast_to_dataloader,
@@ -24,7 +25,7 @@ from ciagen.utils.data_loader import (
 )
 
 
-class MLD:
+class MLD(QualityMetric):
     """
     Compute Mahalanobis distance for each generated image with the distribution of real images.
     """
@@ -52,6 +53,12 @@ class MLD:
         self._cov_calculator = self._cov_calculator.to(device)
         self._feature_extractor = self._feature_extractor.to(device)
 
+    def name(self):
+        return "MLD"
+
+    def allows_for_gpu(cls):
+        return True
+
     def update(self, samples: torch.Tensor):
         with torch.no_grad():
             samples = samples.to(self.device)
@@ -73,16 +80,22 @@ class MLD:
         self._cov_calculator.eval()
         self._feature_extractor.eval()
 
+        self._feature_extractor, self._mean_calculator, self._cov_calculator = (
+            force_device(device=self.device)(
+                self._feature_extractor, self._mean_calculator, self._cov_calculator
+            )
+        )
+
         real_dataloader = cast_to_dataloader(real_samples, batch_size=batch_size)
         synthetic_dataloader = cast_to_dataloader(
             synthetic_samples, batch_size=batch_size
         )
 
-        logger.info(
+        ciagen_logger.info(
             f"Computing Mahalanobis Distance using {self._feature_extractor.name()} as feature extractor"
         )
 
-        logger.info("Computing distribution from real samples")
+        ciagen_logger.info("Computing distribution from real samples")
         # first compute mean and cov for real samples
         for x in tqdm(real_dataloader):
             x = get_tensor_from_iterable(x)
@@ -91,11 +104,12 @@ class MLD:
         real_mean = self._mean_calculator.state()
         real_cov = self._cov_calculator.state()
 
+        real_mean, real_cov = real_mean.to(self.device), real_cov.to(self.device)
+
         def score_batch(x, rmean, rcov):
-            self._feature_extractor, x, rmean, rcov = force_device(device=self.device)(
-                self._feature_extractor, x, rmean, rcov
-            )
+            x = x.to(self.device)
             x_features = self._feature_extractor(x).to(self.device)
+
             return mahalanobis_distance_calc(
                 x_features,
                 rmean,
@@ -104,7 +118,7 @@ class MLD:
                 distance_squared=True,
             )
 
-        logger.info("Computing distance for synthetic samples")
+        ciagen_logger.info("Computing distance for synthetic samples")
 
         results = torch.zeros(len(synthetic_dataloader.dataset), device=self.device)
         for i, x in tqdm(enumerate(synthetic_dataloader)):

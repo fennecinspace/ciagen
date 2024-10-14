@@ -1,14 +1,14 @@
 # © - 2024 Université de Mons, Multitel, Université Libre de Bruxelles, Université Catholique de Louvain
 
-# CIA is free software. You can redistribute it and/or modify it 
-# under the terms of the GNU Affero General Public License 
-# as published by the Free Software Foundation, either version 3 
-# of the License, or any later version. This program is distributed 
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-# without even the implied warranty of MERCHANTABILITY or FITNESS 
-# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License 
-# for more details. You should have received a copy of the Lesser GNU 
-# General Public License along with this program.  
+# CIA is free software. You can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3
+# of the License, or any later version. This program is distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
+# for more details. You should have received a copy of the Lesser GNU
+# General Public License along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 
 import hydra
@@ -24,23 +24,24 @@ from pyiqa.models.inference_model import InferenceModel
 from tqdm import tqdm
 from typing import List, Optional, Tuple
 
-from common import logger, find_common_prefix, find_common_suffix
+from common import ciagen_logger, find_common_prefix, find_common_suffix
 
 
-def measure_several_images(metric: InferenceModel,
-                           image_paths: List[str],
-                           ref_image_paths: Optional[List[str]] = None
-                           ) -> Tuple[float, float]:
+def measure_several_images(
+    metric: InferenceModel,
+    image_paths: List[str],
+    ref_image_paths: Optional[List[str]] = None,
+) -> Tuple[float, float]:
     number_of_images = len(image_paths)
     scores = []
     avg_score = 0
 
-    for i, image_path in enumerate(tqdm(image_paths, unit='image')):
+    for i, image_path in enumerate(tqdm(image_paths, unit="image")):
         ref_image_path = ref_image_paths and ref_image_paths[i]
 
         score = metric(image_path, ref_image_path)
         score = score.item()  # This should be adapted if using cpu as device,
-                              # here because of cuda we get a 1-dim tensor
+        # here because of cuda we get a 1-dim tensor
 
         scores.append(score)
         avg_score += score
@@ -52,7 +53,7 @@ def measure_several_images(metric: InferenceModel,
 def is_generated_image(image_path: str) -> bool:
     # You should change the regex in this function to match whatever
     # naming convention you follow for you experience.
-    regex = '^[0-9]+_[0-9]+.(jpg|png)'
+    regex = "^[0-9]+_[0-9]+.(jpg|png)"
 
     image_wo_path = os.path.basename(image_path)
     return re.match(regex, image_wo_path)
@@ -61,53 +62,60 @@ def is_generated_image(image_path: str) -> bool:
 @hydra.main(version_base=None, config_path=f"..{os.sep}conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     # BASE PATHS, please used these when specifying paths
-    data_path = cfg['data']
+    data_path = cfg["data"]
     # keep track of what feature was used for generation too in the name
-    base_path = os.path.join(*data_path['base']) if isinstance(data_path['base'], list) else data_path['base']
-    GEN_DATA_PATH =  Path(base_path) / data_path['generated'] / cfg['model']['cn_use']
+    base_path = (
+        os.path.join(*data_path["base"])
+        if isinstance(data_path["base"], list)
+        else data_path["base"]
+    )
+    GEN_DATA_PATH = Path(base_path) / data_path["generated"] / cfg["model"]["cn_use"]
 
-    IQA_PATH = Path(base_path) / 'iqa'
+    IQA_PATH = Path(base_path) / "iqa"
     IQA_PATH.mkdir(parents=True, exist_ok=True)
     file_json_iqa = IQA_PATH / f"{cfg['model']['cn_use']}_iqa.json"
 
-    logger.info(f'Reading images from {GEN_DATA_PATH}')
+    ciagen_logger.info(f"Reading images from {GEN_DATA_PATH}")
 
     image_paths = [
         str(GEN_DATA_PATH / image_path)
-        for image_path in os.listdir(str(GEN_DATA_PATH)) if is_generated_image(image_path)
+        for image_path in os.listdir(str(GEN_DATA_PATH))
+        if is_generated_image(image_path)
     ]
     image_paths.sort()
 
     print(f"{GEN_DATA_PATH=} {base_path=}")
 
-   # We are hard-coding the No-Reference methods for the moment.
-   # See reasonment above.
-    METRIC_MODE = 'NR'
-    device = cfg['iqa']['device']
-    metrics = [metric.lower() for metric in cfg['iqa']['metrics']]
+    # We are hard-coding the No-Reference methods for the moment.
+    # See reasonment above.
+    METRIC_MODE = "NR"
+    device = cfg["iqa"]["device"]
+    metrics = [metric.lower() for metric in cfg["iqa"]["metrics"]]
 
     dict_of_metrics = {}
-    dict_of_metrics['image_paths'] = image_paths
-    dict_of_metrics['name'] = f"{cfg['model']['cn_use']}"
-    dict_of_metrics['best'] = {}
+    dict_of_metrics["image_paths"] = image_paths
+    dict_of_metrics["name"] = f"{cfg['model']['cn_use']}"
+    dict_of_metrics["best"] = {}
 
-    logger.info(f'Using a {METRIC_MODE} approach, metrics: {metrics} and device: {device}')
+    ciagen_logger.info(
+        f"Using a {METRIC_MODE} approach, metrics: {metrics} and device: {device}"
+    )
 
     for metric_name in metrics:
         iqa_model = create_metric(metric_name, device=device, metric_mode=METRIC_MODE)
         if iqa_model.lower_better:
-            dict_of_metrics['best'][metric_name] = "smaller"
+            dict_of_metrics["best"][metric_name] = "smaller"
         else:
-            dict_of_metrics['best'][metric_name] = "bigger"
+            dict_of_metrics["best"][metric_name] = "bigger"
         scores, _ = measure_several_images(iqa_model, image_paths)
         dict_of_metrics[metric_name] = scores
 
-    logger.info(f"Writing metrics score to file {file_json_iqa}")
+    ciagen_logger.info(f"Writing metrics score to file {file_json_iqa}")
 
     json_object = json.dumps(dict_of_metrics, indent=4)
     with open(file_json_iqa, "w") as outfile:
         outfile.write(json_object)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

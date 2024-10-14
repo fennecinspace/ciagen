@@ -7,11 +7,12 @@ import torch
 from ciagen.exes.setup_data import call_dataloader2
 from ciagen.feature_extractors import (
     AVAILABLE_FEATURE_EXTRACTORS,
+    available_feature_extractors,
     instance_feature_extractor,
     instance_transform,
 )
 from ciagen.qm.metrics.mahalanobis_distance import MLD
-from ciagen.utils.common import logger, load_images_from_directory
+from ciagen.utils.common import ciagen_logger, load_images_from_directory
 from ciagen.utils.data_loader import create_local_dataloader
 
 # Do not let torch decide on best algorithm (we know better!)
@@ -44,13 +45,10 @@ class PTD:
             fe: instance_transform(fe) for fe in self.cfg["metrics"]["fe"]
         }
 
+        current_feature_extractors = available_feature_extractors()
+
         # Paths and data related work
         generated_path = paths["generated"]
-        real_path_images = paths["real_images"]
-
-        # real_labels_path = paths["real_labels"]
-        # real_captions_path = paths["real_captions"]
-
         meta_data_file = Path(generated_path) / "metadata.yaml"
 
         def loading_images(directory, limit_size):
@@ -77,26 +75,36 @@ class PTD:
             generated_path, limit_size=self.cfg["data"]["limit_size_syn"]
         )
 
-        logger.info(
+        ciagen_logger.info(
             f"Using {len(real_dummy_dataloader.dataset)} Real images from: {paths['real_images']}"
         )
-        logger.info(
+        ciagen_logger.info(
             f"Using {len(syn_dummy_dataloader.dataset)} Synthetic images from: {paths['generated']}"
         )
-        logger.info(f"Will save to {meta_data_file}")
+        ciagen_logger.info(f"Will save to {meta_data_file}")
 
         metrics_values = {}
         current_metrics = self.cfg["metrics"]["ptd"]
         current_fe = transform_dict.keys()
 
         if torch.cuda.is_available():
-            device = "cuda"
+            config_device = "cuda"
         else:
-            device = "cpu"
+            config_device = "cpu"
+
+        if self.cfg["model"]["device"] == "cuda":
+            config_device = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            config_device = "cpu"
 
         for metric in current_metrics:
+            metric_device = (
+                config_device
+                if self.available_metrics[metric].allows_for_gpu
+                else "cpu"
+            )
             if metric not in self.available_metrics:
-                logger.exception(
+                ciagen_logger.exception(
                     f"There is no {metric} metric available, metrics are {list(self.available_metrics.keys())}"
                 )
                 continue
@@ -105,10 +113,16 @@ class PTD:
 
             for fe in current_fe:
                 if fe not in AVAILABLE_FEATURE_EXTRACTORS:
-                    logger.exception(
+                    ciagen_logger.exception(
                         f"There is no {fe} feature extractor available, feature extractors are {list(AVAILABLE_FEATURE_EXTRACTORS.keys())}"
                     )
                     continue
+
+                fe_device = (
+                    metric_device
+                    if current_feature_extractors[fe].allows_for_gpu()
+                    else "cpu"
+                )
 
                 real_dataloader = call_dataloader2(
                     paths, self.cfg, fe, transform_dict, is_real=True
@@ -117,15 +131,17 @@ class PTD:
                     paths, self.cfg, fe, transform_dict, is_real=False
                 )
 
-                feature_extractor = instance_feature_extractor(fe, device=device)
+                feature_extractor = instance_feature_extractor(fe, device=fe_device)
 
                 metric_calculator = self._instance_metric(
                     metric_name=metric,
                     feature_extractor=feature_extractor,
-                    device=device,
+                    device=fe_device,
                 )
 
-                logger.info(f"Running {metric} metric with {fe} as feature extractor")
+                ciagen_logger.info(
+                    f"Running {metric} metric with {fe} as feature extractor"
+                )
 
                 scores = metric_calculator.score(
                     real_samples=real_dataloader,
@@ -133,7 +149,7 @@ class PTD:
                     batch_size=batch_size,
                 )
 
-                logger.info(
+                ciagen_logger.info(
                     f"Done running {metric} metric with {fe} as feature extractor"
                 )
 

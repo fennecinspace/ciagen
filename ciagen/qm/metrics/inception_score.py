@@ -19,10 +19,11 @@ from torch.utils.data import DataLoader, Dataset
 from ciagen.qm import TL, VirtualDataloader, id_transform
 from ciagen.qm.divergences import kl_divergence
 from ciagen.qm.calculator import KLISCalculator
+from ciagen.qm.metrics.abc_metric import QualityMetric
 from ciagen.utils.data_loader import cast_to_dataloader, get_tensor_from_iterable
 
 
-class IS:
+class IS(QualityMetric):
     """
     Implementation of the Inception Score:
     Original paper: https://arxiv.org/abs/1606.03498
@@ -35,7 +36,9 @@ class IS:
         eps: float = 1e-16,
         softmaxed: bool = True,
         weights: str = "DEFAULT",
+        device: str = "cpu",
     ):
+        self.device = device
         self._feature_extractor = (
             InceptionModel(softmaxed=False, weights=weights)
             if feature_extractor is None
@@ -44,13 +47,22 @@ class IS:
         self._eps = eps
         self._kl_calculator = KLISCalculator(force_probability=True)
 
+    @classmethod
+    def allows_for_gpu(cls):
+        return True
+
+    def name(self) -> str:
+        return "IS"
+
     def update(
         self,
         synthetic_samples: torch.Tensor | Image.Image | DataLoader | Dataset,
     ):
         with torch.no_grad():
             self._feature_extractor.eval()
-            probabilities = self._feature_extractor(synthetic_samples)
+            probabilities = self._feature_extractor(
+                synthetic_samples.to(self.device)
+            ).to(self.device)
             self._kl_calculator(probabilities)
 
     def score(
@@ -60,6 +72,8 @@ class IS:
         batch_size=32,
     ):
         self._kl_calculator.reset()
+        self._kl_calculator.to(self.device)
+        self._kl_calculator.eval()
 
         synthetic_dataloader = cast_to_dataloader(
             synthetic_samples, batch_size=batch_size

@@ -7,7 +7,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
 
-class FeatureExtractor(ABC, torch.nn.Module):
+class QualityMetric(ABC):
     @classmethod
     @abstractmethod
     def allows_for_gpu(cls) -> bool: ...

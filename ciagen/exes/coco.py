@@ -23,7 +23,7 @@ from omegaconf import DictConfig
 from pycocotools.coco import COCO
 from tqdm import tqdm
 
-from ciagen.utils.common import logger
+from ciagen.utils.common import ciagen_logger
 
 
 def cocobox2yolo(img_path, coco_box):
@@ -58,7 +58,7 @@ def download_coco(
     caps_path: Path = data_path / Path(coco_caps)
 
     dirs = data_path, image_path, annotations_path, bbx_path, caps_path
-    logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
+    ciagen_logger.info(f"Attempting to create directories {[str(d) for d in dirs]}")
     for d in dirs:
         if isinstance(d, Path):
             d.mkdir(parents=True, exist_ok=True)
@@ -77,20 +77,22 @@ def download_coco(
 
     # Only perform the work if necessary
     if not os.path.exists(path_to_data_zip):
-        logger.info(f"Downloading zip images from {data_url} to {path_to_data_zip}")
+        ciagen_logger.info(
+            f"Downloading zip images from {data_url} to {path_to_data_zip}"
+        )
         wget.download(data_url, out=str(path_to_data_zip))
     if not len(os.listdir(image_path)):
-        logger.info(f"Extracting zip images to {image_path}")
+        ciagen_logger.info(f"Extracting zip images to {image_path}")
         with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
             zip_ref.extractall(str(data_path))
 
     if not os.path.exists(path_to_annotations_zip):
-        logger.info(
+        ciagen_logger.info(
             f"Downloading zip annotations from {annotations_url} to {path_to_annotations_zip}"
         )
         wget.download(annotations_url, out=str(path_to_annotations_zip))
     if not len(os.listdir(annotations_path)):
-        logger.info(f"Extracting zip annotations to {annotations_path}")
+        ciagen_logger.info(f"Extracting zip annotations to {annotations_path}")
         with zipfile.ZipFile(path_to_annotations_zip, "r") as zip_ref:
             zip_ref.extractall(str(data_path))
 
@@ -126,7 +128,7 @@ class COCODataset:
         catIds = coco.getCatIds(catNms=["person"])
         all_images = list(image_path.glob("*.jpg"))
 
-        logger.info(f"Writting captions and boxes info ...")
+        ciagen_logger.info(f"Writting captions and boxes info ...")
         for img_path in tqdm(all_images, unit="img"):
             img_path = str(img_path.absolute())
             img_id = int(img_path.split("/")[-1].split(".jpg")[0])
@@ -156,37 +158,36 @@ class COCODataset:
                 captions = [caps["caption"] for caps in caps_anns]
                 file.write("\n".join(captions))
 
-
         test_nb = self.cfg["ml"]["test_nb"]
         val_nb = self.cfg["ml"]["val_nb"]
         train_nb = self.cfg["ml"]["train_nb"]
 
-        real_train_images_path = paths['real_images']
-        real_test_images_path = paths['test_images']
-        real_val_images_path = paths['val_images']
-        
-        real_train_labels_path = paths['real_labels']
-        real_test_labels_path = paths['test_labels']
-        real_val_labels_path = paths['val_labels']
+        real_train_images_path = paths["real_images"]
+        real_test_images_path = paths["test_images"]
+        real_val_images_path = paths["val_images"]
 
-        real_train_captions_path = paths['real_captions']
-        real_test_captions_path = paths['test_captions']
-        real_val_captions_path = paths['val_captions']
+        real_train_labels_path = paths["real_labels"]
+        real_test_labels_path = paths["test_labels"]
+        real_val_labels_path = paths["val_labels"]
 
-        logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
-        logger.info(f"Moving TEST to {str(real_test_images_path)}")
-        logger.info(f"Moving VAL to {str(real_val_images_path)}")
-        logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
+        real_train_captions_path = paths["real_captions"]
+        real_test_captions_path = paths["test_captions"]
+        real_val_captions_path = paths["val_captions"]
+
+        ciagen_logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
+        ciagen_logger.info(f"Moving TEST to {str(real_test_images_path)}")
+        ciagen_logger.info(f"Moving VAL to {str(real_val_images_path)}")
+        ciagen_logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         # move all files
         all_images = os.listdir(image_path)
-        
+
         length = (
             val_nb + test_nb + train_nb
             if (val_nb + test_nb + train_nb) < len(all_images)
             else all_images
         )
-        
+
         all_images = all_images[:length]
 
         counter = 0
@@ -202,7 +203,6 @@ class COCODataset:
             image = image_path / img_file
             label = bbx_path / txt_file
             caption = caps_path / txt_file
-
 
             if (
                 os.path.isfile(image)
@@ -221,7 +221,6 @@ class COCODataset:
                     images_dir = real_train_images_path
                     labels_dir = real_train_labels_path
                     captions_dir = real_train_captions_path
-
 
                 shutil.copy(image, os.path.join(images_dir, img_file))
                 shutil.copy(label, os.path.join(labels_dir, txt_file))

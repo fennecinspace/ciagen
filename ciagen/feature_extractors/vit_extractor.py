@@ -62,6 +62,10 @@ class VitFE(FeatureExtractor):
             collate_fn=collate_fn,
         )
 
+    @classmethod
+    def allows_for_gpu(cls) -> bool:
+        return True
+
     def name(self):
         return "VitFE"
 
