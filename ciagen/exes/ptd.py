@@ -4,6 +4,7 @@ from omegaconf import DictConfig, OmegaConf
 
 import torch
 
+from ciagen.exes.setup_data import call_dataloader2
 from ciagen.feature_extractors import (
     AVAILABLE_FEATURE_EXTRACTORS,
     instance_feature_extractor,
@@ -28,10 +29,11 @@ class PTD:
         self,
         metric_name: str,
         feature_extractor: None | Callable[[Any], torch.Tensor] = None,
+        device: str = "cpu",
         **kwargs,
     ):
         return self.available_metrics[metric_name](
-            feature_extractor=feature_extractor, **kwargs
+            feature_extractor=feature_extractor, device=device, **kwargs
         )
 
     def __call__(self, paths: Dict[str, str | Path]) -> None:
@@ -41,28 +43,6 @@ class PTD:
         transform_dict = {
             fe: instance_transform(fe) for fe in self.cfg["metrics"]["fe"]
         }
-
-        def call_dataloader(fe, is_real):
-            if is_real:
-                samples_path = paths["real_images"]
-                labels_path = paths["real_labels"]
-                captions_path = paths["real_captions"]
-                limit_size = self.cfg["data"]["limit_size_real"]
-            else:
-                samples_path = paths["generated"]
-                labels_path = None
-                captions_path = None
-                limit_size = self.cfg["data"]["limit_size_syn"]
-            return create_local_dataloader(
-                samples_path=samples_path,
-                labels_path=labels_path,
-                captions_path=captions_path,
-                limit_size=limit_size,
-                datatype=self.cfg["data"]["datatype"],
-                transform=transform_dict[fe],
-                batch_size=batch_size,
-                sample_formats=data["image_formats"],
-            )
 
         # Paths and data related work
         generated_path = paths["generated"]
@@ -84,23 +64,35 @@ class PTD:
             )
 
         # Loading real images
-        real_dataset_size = len(real_path_images)
-        synthetic_dataset_size = len(generated_path)
+        first_fe = list(transform_dict.keys())[0]
+        real_dummy_dataloader = call_dataloader2(
+            paths, self.cfg, first_fe, transform_dict, is_real=True
+        )
+        syn_dummy_dataloader = call_dataloader2(
+            paths, self.cfg, first_fe, transform_dict, is_real=False
+        )
 
         # Loading synthetic images
         synthetic_images, synthetic_image_names = loading_images(
             generated_path, limit_size=self.cfg["data"]["limit_size_syn"]
         )
 
-        logger.info(f"Using {real_dataset_size} Real images from: {real_path_images}")
         logger.info(
-            f"Using {synthetic_dataset_size} Synthetic images from: {generated_path}"
+            f"Using {len(real_dummy_dataloader.dataset)} Real images from: {paths['real_images']}"
+        )
+        logger.info(
+            f"Using {len(syn_dummy_dataloader.dataset)} Synthetic images from: {paths['generated']}"
         )
         logger.info(f"Will save to {meta_data_file}")
 
         metrics_values = {}
         current_metrics = self.cfg["metrics"]["ptd"]
         current_fe = transform_dict.keys()
+
+        if torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = "cpu"
 
         for metric in current_metrics:
             if metric not in self.available_metrics:
@@ -118,12 +110,19 @@ class PTD:
                     )
                     continue
 
-                real_dataloader = call_dataloader(fe, is_real=True)
-                synthetic_dataloader = call_dataloader(fe, is_real=False)
-                feature_extractor = instance_feature_extractor(fe)
+                real_dataloader = call_dataloader2(
+                    paths, self.cfg, fe, transform_dict, is_real=True
+                )
+                synthetic_dataloader = call_dataloader2(
+                    paths, self.cfg, fe, transform_dict, is_real=False
+                )
+
+                feature_extractor = instance_feature_extractor(fe, device=device)
 
                 metric_calculator = self._instance_metric(
-                    metric_name=metric, feature_extractor=feature_extractor
+                    metric_name=metric,
+                    feature_extractor=feature_extractor,
+                    device=device,
                 )
 
                 logger.info(f"Running {metric} metric with {fe} as feature extractor")
@@ -145,7 +144,18 @@ class PTD:
                         / synthetic_image_names[image_iter]
                     )
                     specific_dict[full_syn_image_path] = float(scores[image_iter])
-                    current_metrics_values[fe] = specific_dict
+
+                current_metrics_values[fe] = specific_dict
+
+                # del everything before next iteration
+                del real_dataloader
+                del synthetic_dataloader
+                del feature_extractor
+                del metric_calculator
+                torch.cuda.empty_cache()
+
+            # TODO: this, the metrics for ptd should offer a buffer to read from and then write to file:
+            # we need to write to file each time, otherwise too much in memory => process killed => and all will be lost
 
             metrics_values[metric] = current_metrics_values
         metadata = OmegaConf.load(meta_data_file)
@@ -159,9 +169,6 @@ class PTD:
         if "ptd" not in metadata["results"]["metrics"]:
             metadata["results"]["metrics"]["ptd"] = {}
 
-        # Even if metric already in the metadata, re-running the file means a new computation
-        # if metric not in metadata["results"]["metrics"]["ptd"]:
-        #     metadata["results"]["metrics"]["ptd"][metric] = metrics_values
         metadata["results"]["metrics"]["ptd"] = metrics_values
 
         with open(meta_data_file, "w") as f:

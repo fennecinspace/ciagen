@@ -42,7 +42,7 @@ def vit_transform():
     )
 
 
-class VitExtractor(FeatureExtractor):
+class VitFE(FeatureExtractor):
     def __init__(
         self,
         model_name="google/vit-base-patch16-224-in21k",
@@ -61,6 +61,9 @@ class VitExtractor(FeatureExtractor):
             features_output=features_output,
             collate_fn=collate_fn,
         )
+
+    def name(self):
+        return "VitFE"
 
     def forward(self, x):
         return self._vit(x)
@@ -165,7 +168,9 @@ class InnerFeatureExtractor:
                 )
             # Preprocess images using ViT feature extractor
             inputs = self.image_processor(
-                images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
+                images=images.permute(0, 2, 3, 1),
+                return_tensors="pt",
+                # images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
             )  # Adjust dimensions
             inputs = {
                 key: val.to(self.device) for key, val in inputs.items()

@@ -12,3 +12,4 @@ The current list of metrics is:
 
 from .inception_score import IS
 from .frechet_inception_distance import FID
+from .mahalanobis_distance import MLD

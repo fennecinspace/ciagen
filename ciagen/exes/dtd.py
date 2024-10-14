@@ -17,15 +17,15 @@ from omegaconf import DictConfig, OmegaConf
 
 import torch
 
+from ciagen.exes.setup_data import call_dataloader2
+from ciagen.exes.setup_data import create_transform_dict
 from ciagen.qm.metrics.frechet_inception_distance import FID
 from ciagen.qm.metrics.inception_score import IS
-from ciagen.utils.common import logger, load_images_from_directory
 from ciagen.feature_extractors import (
     AVAILABLE_FEATURE_EXTRACTORS,
     instance_feature_extractor,
     instance_transform,
 )
-from ciagen.utils.data_loader import create_local_dataloader
 
 # Do not let torch decide on best algorithm (we know better!)
 torch.backends.cudnn.benchmark = False
@@ -58,39 +58,21 @@ class DTD:
             fe: instance_transform(fe) for fe in self.cfg["metrics"]["fe"]
         }
 
-        def call_dataloader(fe, is_real):
-            if is_real:
-                samples_path = paths["real_images"]
-                labels_path = paths["real_labels"]
-                captions_path = paths["real_captions"]
-                limit_size = self.cfg["data"]["limit_size_real"]
-            else:
-                samples_path = paths["generated"]
-                labels_path = None
-                captions_path = None
-                limit_size = self.cfg["data"]["limit_size_syn"]
-            return create_local_dataloader(
-                samples_path=samples_path,
-                labels_path=labels_path,
-                captions_path=captions_path,
-                limit_size=limit_size,
-                datatype=self.cfg["data"]["datatype"],
-                transform=transform_dict[fe],
-                batch_size=batch_size,
-                sample_formats=data["image_formats"],
-            )
+        transform_dict = create_transform_dict(self.cfg)
 
         # # Paths and data related work
         generated_path = paths["generated"]
         real_path_images = paths["real_images"]
 
-        # real_labels_path = paths["real_labels"]
-        # real_captions_path = paths["real_captions"]
-
+        # instance two dummy dataloaders to get some info on the data
+        first_fe = list(transform_dict.keys())[0]
+        real_dummy_dataloader = call_dataloader2(paths, self.cfg, first_fe, transform_dict, is_real=True)
+        syn_dummy_dataloader = call_dataloader2(paths, self.cfg, first_fe, transform_dict, is_real=False)
+        
         meta_data_file = Path(generated_path) / "metadata.yaml"
 
-        real_dataset_size = len(real_path_images)
-        synthetic_dataset_size = len(real_path_images)
+        real_dataset_size = len(real_dummy_dataloader.dataset)
+        synthetic_dataset_size = len(syn_dummy_dataloader.dataset)
 
         logger.info(f"Using {real_dataset_size} Real images from: {real_path_images}")
         logger.info(
@@ -119,8 +101,8 @@ class DTD:
                     )
                     continue
 
-                real_dataloader = call_dataloader(fe, is_real=True)
-                synthetic_dataloader = call_dataloader(fe, is_real=False)
+                real_dataloader = call_dataloader2(paths, self.cfg, fe, transform_dict, is_real=True)
+                synthetic_dataloader = call_dataloader2(paths, self.cfg, fe, transform_dict, is_real=False)
 
                 feature_extractor = instance_feature_extractor(fe)
 

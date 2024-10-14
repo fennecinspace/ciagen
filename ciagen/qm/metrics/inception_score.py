@@ -19,6 +19,7 @@ from torch.utils.data import DataLoader, Dataset
 from ciagen.qm import TL, VirtualDataloader, id_transform
 from ciagen.qm.divergences import kl_divergence
 from ciagen.qm.calculator import KLISCalculator
+from ciagen.utils.data_loader import cast_to_dataloader, get_tensor_from_iterable
 
 
 class IS:
@@ -60,24 +61,14 @@ class IS:
     ):
         self._kl_calculator.reset()
 
-        if isinstance(synthetic_samples, torch.Tensor):
-            self.update(synthetic_samples)
-            return self.instant_score()
-        if isinstance(synthetic_samples, Dataset):
-            dataloader = DataLoader(synthetic_samples, batch_size=batch_size)
+        synthetic_dataloader = cast_to_dataloader(
+            synthetic_samples, batch_size=batch_size
+        )
+        for sx in tqdm(synthetic_dataloader):
+            sx = get_tensor_from_iterable(sx)
+            self.update(sx)
 
-            for x in tqdm(dataloader):
-                self.update(x)
-
-            return self.instant_score()
-
-        if isinstance(synthetic_samples, DataLoader):
-            for x in tqdm(synthetic_samples):
-                self.update(x)
-
-            return self.instant_score()
-
-        raise ValueError(f"Data type not supported: {type(synthetic_samples)}")
+        return self.instant_score()
 
     def instant_score(
         self,

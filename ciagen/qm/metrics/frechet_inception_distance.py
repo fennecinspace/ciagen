@@ -17,6 +17,13 @@ from ciagen.qm.dtd_distances.wasserstein_distance import (
 )
 
 from torch.utils.data import Dataset, DataLoader
+from ciagen.utils.common import logger
+
+from ciagen.utils.data_loader import (
+    NaiveTensorDataset,
+    cast_to_dataloader,
+    get_tensor_from_iterable,
+)
 
 
 class FID:
@@ -74,6 +81,7 @@ class FID:
     def update(self, samples: torch.Tensor, is_real: bool = True):
         with torch.no_grad():
             self._feature_extractor.eval()
+
             features = self._feature_extractor(samples)
             if is_real:
                 self._real_mean_calculator(features)
@@ -95,36 +103,26 @@ class FID:
         self._synthetic_cov_calculator.reset()
         self._synthetic_mean_calculator.reset()
 
-        if isinstance(real_samples, torch.Tensor) and isinstance(
-            synthetic_samples, torch.Tensor
-        ):
-            self.update(real_samples, is_real=True)
-            self.update(synthetic_samples, is_real=False)
-
-            return self.instant_score()
-        if isinstance(real_samples, Dataset) and isinstance(synthetic_samples, Dataset):
-            real_dataloader = DataLoader(real_samples, batch_size=batch_size)
-            synthetic_dataloader = DataLoader(synthetic_samples, batch_size=batch_size)
-
-            for rx in tqdm(real_dataloader):
-                self.update(rx, is_real=True)
-            for sx in tqdm(synthetic_dataloader):
-                self.update(sx, is_real=False)
-
-            return self.instant_score()
-        if isinstance(real_samples, DataLoader) and isinstance(
-            synthetic_samples, DataLoader
-        ):
-            for rx in tqdm(real_samples):
-                self.update(rx, is_real=True)
-            for sx in tqdm(synthetic_samples):
-                self.update(sx, is_real=False)
-
-            return self.instant_score()
-
-        raise ValueError(
-            f"Data type not supported or not the same type: {type(real_samples)=}, {type(synthetic_samples)=}"
+        real_dataloader = cast_to_dataloader(real_samples, batch_size=batch_size)
+        synthetic_dataloader = cast_to_dataloader(
+            synthetic_samples, batch_size=batch_size
         )
+
+        logger.info(
+            f"Computing Frechet Inception Distance using {self._feature_extractor.name()} as feature extractor"
+        )
+
+        logger.info("Computing distribution from real samples")
+        for rx in tqdm(real_dataloader):
+            rx = get_tensor_from_iterable(rx)
+            self.update(rx, is_real=True)
+
+        logger.info("Computing distribution from synthetic samples")
+        for sx in tqdm(synthetic_dataloader):
+            sx = get_tensor_from_iterable(sx)
+            self.update(sx, is_real=False)
+
+        return self.instant_score()
 
     def instant_score(self):
 

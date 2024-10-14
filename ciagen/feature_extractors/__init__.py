@@ -1,6 +1,6 @@
-from .auc_extractor import AUExtractor, au_transform
-from .vit_extractor import VitExtractor, vit_transform
-from .inception_extractor import InceptionFeatureExtractor, inception_transform
+from .auc_extractor import AUFE, au_transform
+from .vit_extractor import VitFE, vit_transform
+from .inception_extractor import InceptionFE, inception_transform
 
 AVAILABLE_FEATURE_EXTRACTORS = (
     "au",
@@ -31,8 +31,8 @@ def instance_feature_extractor(feature_extractor_name: str, **kwargs):
         )
 
     if feature_extractor_name == "au":
-        return AUExtractor(**kwargs)
+        return AUFE(**kwargs)
     elif feature_extractor_name == "vit":
-        return VitExtractor(**kwargs)
+        return VitFE(**kwargs)
     elif feature_extractor_name == "inception":
-        return InceptionFeatureExtractor(**kwargs)
+        return InceptionFE(**kwargs)

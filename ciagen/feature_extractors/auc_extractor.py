@@ -28,10 +28,13 @@ def au_transform():
     )
 
 
-class AUExtractor(FeatureExtractor):
-    def __init__(self, **kwargs):
+class AUFE(FeatureExtractor):
+    def __init__(self, device="cpu", **kwargs):
         super().__init__(**kwargs)
-        self.detector = Detector()
+        self.detector = Detector(device=device)
+
+    def name(self):
+        return "AUFE"
 
     def forward(self, x, **kwargs):
 

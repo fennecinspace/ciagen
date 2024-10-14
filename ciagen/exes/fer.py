@@ -14,6 +14,7 @@
 import os
 import shutil
 import subprocess
+import random
 import zipfile
 from pathlib import Path
 from typing import AnyStr, Dict
@@ -53,11 +54,16 @@ def create_label_file_from_label_and_path(
     if len(emotion) == 0:
         logger.warning(f"No label found for {image_name}")
         return
-    if len(emotion) > 1:
-        logger.warning(f"More than one label found for {image_name}: {emotion}")
-        return
+    elif len(emotion) == 1:
+        emotion = emotion[0][1]
+    else:
+        logger.warning(
+            f"More than one label found for {image_name}: {emotion}, using a random one."
+        )
+        emotion = emotion[0][random.randint(0, len(emotion) - 1)]
+        # return
 
-    emotion = emotion[0][1]
+    # emotion = emotion[0][1]
 
     image_pure_name = image_name.split(".")[0]
     label_name = f"{image_pure_name}.txt"

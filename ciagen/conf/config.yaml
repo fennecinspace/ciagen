@@ -18,9 +18,9 @@ data:
     # create data folder, and all other folders will be created automatically
     base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
-    limit_size_real: 2000
-    limit_size_syn: 2000
-    batch_size: 4
+    limit_size_real: 100
+    limit_size_syn: 100
+    batch_size: 10
     datatype: "image"
 # For the future : put every parameter related to machine learning here: dataset size,
 # ratio between train and test, learning rate ...
@@ -38,7 +38,7 @@ ml:
     augmentation_percent_baseline: 0 # Ablation study augmentation => For paper only
     keep_training_size: true #Whether the data augmentation should increase the size of the dataset or not
 
-    epochs: 300
+    epochs: 10
     sampling: # IQA Sampling, check end of this yaml file for list of available metrics
         # Telling the trainer to use IQA metrics already calculated to sample on best images for training
         enable: false
@@ -167,8 +167,8 @@ active:
 metrics:
     fe:
         - vit
-        - inception
-        - au
+        # - inception
+        # - au
     dtd:
         - fid
         - inception_score
