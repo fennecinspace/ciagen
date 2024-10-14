@@ -9,18 +9,24 @@ from ciagen.utils.common import generate_all_paths
 def help_task(cgf: DictConfig) -> None:
     title = f'Modulable generative data generator. Using {", ".join(architectures)}.'
     sep = "=" * len(title)
-    help_message = f"""
-| {sep}
-| {title}
-|
-| Possible tasks:
-| [{", ".join(list(allowed_tasks.keys())[1:])}]
-|
-| For basic usage do `python run.py task=<task>`.
-| You can also modify the `config.yaml` file.
-| For more information, please go see the README.md file.
-| {sep}
-"""
+
+    lines = [
+        sep,
+        title,
+        "",
+        "Possible tasks:",
+        str([{", ".join(list(allowed_tasks.keys())[1:])}]),
+        "",
+        "For basic usage do `python run.py task=<task>`.",
+        "You can also modify the `config.yaml` file.",
+        "For more information, please go see the README.md file.",
+        sep,
+    ]
+    maximum_length = max(len(line) for line in lines)
+
+    new_lines = [f"| {line} {' ' * (maximum_length - len(line))}|\n" for line in lines]
+    help_message = "".join(new_lines)
+
     print(help_message)
     return
 
