@@ -16,10 +16,10 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "demo" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
+    base: "fer" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
-    limit_size_real: 200
-    limit_size_syn: 200
+    limit_size_real: 2000
+    limit_size_syn: 2000
     batch_size: 32
     datatype: "image"
 # For the future : put every parameter related to machine learning here: dataset size,
@@ -167,7 +167,7 @@ active:
 metrics:
     fe:
         - vit
-        - inception
+        # - inception
         - au
     dtd:
         - fid
@@ -175,5 +175,5 @@ metrics:
     ptd:
         - mld
 filtering:
-    type: "top-k" #One of "threshold", "top-k" or "top-p"
-    value: 4 #If type == "treshold": the threshold to keep the data point. If "top-k": the amount of data point to keep. If "top-p": the proportion of data point to keep (0<=p<=1)
+    type: "top-k" # One of "threshold", "top-k" or "top-p"
+    value: 1000 # If type == "treshold": the threshold to keep the data point. If "top-k": the amount of data point to keep. If "top-p": the proportion of data point to keep (0<=p<=1)

@@ -2,7 +2,7 @@
 # discussion.
 
 
-from typing import Any, Callable, Collection
+from typing import Any, Callable
 
 import numpy as np
 import torch
@@ -10,14 +10,10 @@ import torch.utils
 from PIL import Image
 from tqdm import tqdm
 
-from ciagen.feature_extractors.inception_extractor import (
-    InceptionModel,
-    inception_transform,
-)
+from ciagen.feature_extractors.inception_extractor import InceptionModel
 
 from torch.utils.data import DataLoader, Dataset
-from ciagen.qm import TL, VirtualDataloader, id_transform
-from ciagen.qm.divergences import kl_divergence
+from ciagen.qm import VirtualDataloader
 from ciagen.qm.calculator import KLISCalculator
 from ciagen.qm.metrics.abc_metric import QualityMetric
 from ciagen.utils.data_loader import cast_to_dataloader, get_tensor_from_iterable
@@ -40,7 +36,7 @@ class IS(QualityMetric):
     ):
         self.device = device
         self._feature_extractor = (
-            InceptionModel(softmaxed=False, weights=weights)
+            InceptionModel(softmaxed=softmaxed, weights=weights)
             if feature_extractor is None
             else feature_extractor
         )
@@ -67,7 +63,9 @@ class IS(QualityMetric):
 
     def score(
         self,
-        real_samples: torch.Tensor | Dataset | DataLoader,
+        real_samples: (
+            torch.Tensor | Dataset | DataLoader
+        ),  # this remains here, I'm hoping for a reformat after
         synthetic_samples: torch.Tensor | Dataset | DataLoader,
         batch_size=32,
     ):
@@ -84,13 +82,8 @@ class IS(QualityMetric):
 
         return self.instant_score()
 
-    def instant_score(
-        self,
-    ):
-
-        res = self._kl_calculator.state(return_exp_expectation=True)
-        res = res.real
-        return float(res)
+    def instant_score(self):
+        return float(self._kl_calculator.state(return_exp_expectation=True).real)
 
     def run_score(
         self,

@@ -1,16 +1,12 @@
 from typing import Any, Callable, Union
 
-import numpy as np
 import torch
-from PIL import Image
 from tqdm import tqdm
 
 from ciagen.exes.setup_data import force_device
 from ciagen.feature_extractors.inception_extractor import (
     InceptionModel,
-    inception_transform,
 )
-from ciagen.qm import id_transform
 from ciagen.qm.calculator import CovCalculator, MeanCalculator
 from ciagen.qm.dtd_distances import frechet_distance_gaussian_version
 from ciagen.qm.dtd_distances.wasserstein_distance import (
@@ -22,7 +18,6 @@ from ciagen.qm.metrics.abc_metric import QualityMetric
 from ciagen.utils.common import ciagen_logger
 
 from ciagen.utils.data_loader import (
-    NaiveTensorDataset,
     cast_to_dataloader,
     get_tensor_from_iterable,
 )
@@ -159,6 +154,13 @@ class FID(QualityMetric):
         real_mean, real_cov, synthetic_mean, synthetic_cov = force_device(self.device)(
             real_mean, real_cov, synthetic_mean, synthetic_cov
         )
+
+        # force same dtype
+        fixed_type = real_mean.dtype
+        real_mean = real_mean.type(fixed_type)
+        real_cov = real_cov.type(fixed_type)
+        synthetic_mean = synthetic_mean.type(fixed_type)
+        synthetic_cov = synthetic_cov.type(fixed_type)
 
         res = self._distribution_distance(
             umean=real_mean,

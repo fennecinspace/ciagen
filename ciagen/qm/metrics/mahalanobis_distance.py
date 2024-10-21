@@ -2,24 +2,16 @@ from typing import Any, Callable, Union
 
 from tqdm import tqdm
 
-import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-from PIL import Image
-
 
 from ciagen.exes.setup_data import force_device
 from ciagen.qm.calculator import CovCalculator, MeanCalculator
 from ciagen.qm.metrics.abc_metric import QualityMetric
 from ciagen.qm.ptd_distances.mahalanobis import mahalanobis_distance_calc
-from ciagen.feature_extractors.inception_extractor import (
-    InceptionModel,
-    inception_transform,
-)
-from ciagen.qm import id_transform
+from ciagen.feature_extractors.inception_extractor import InceptionModel
 from ciagen.utils.common import ciagen_logger
 from ciagen.utils.data_loader import (
-    NaiveTensorDataset,
     cast_to_dataloader,
     get_tensor_from_iterable,
 )
@@ -106,9 +98,14 @@ class MLD(QualityMetric):
 
         real_mean, real_cov = real_mean.to(self.device), real_cov.to(self.device)
 
+        fixed_type = real_mean.dtype
+        real_mean = real_mean.type(fixed_type)
+        real_cov = real_cov.type(fixed_type)
+
         def score_batch(x, rmean, rcov):
             x = x.to(self.device)
             x_features = self._feature_extractor(x).to(self.device)
+            x_features = x_features.type(fixed_type)
 
             return mahalanobis_distance_calc(
                 x_features,

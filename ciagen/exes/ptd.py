@@ -57,7 +57,6 @@ class PTD:
                 directory=directory,
                 formats=data["image_formats"],
                 ptd=True,
-                # to_tensors = True
                 limit_size=limit_size,
             )
 
@@ -87,17 +86,20 @@ class PTD:
         current_metrics = self.cfg["metrics"]["ptd"]
         current_fe = transform_dict.keys()
 
+        # default device available
         if torch.cuda.is_available():
             config_device = "cuda"
         else:
             config_device = "cpu"
 
+        # see if the config asks for a specific device a
         if self.cfg["model"]["device"] == "cuda":
             config_device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             config_device = "cpu"
 
         for metric in current_metrics:
+            # restraint device in function of the metric
             metric_device = (
                 config_device
                 if self.available_metrics[metric].allows_for_gpu
@@ -118,6 +120,7 @@ class PTD:
                     )
                     continue
 
+                # restrict device in function of the feature extractor
                 fe_device = (
                     metric_device
                     if current_feature_extractors[fe].allows_for_gpu()
