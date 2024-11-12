@@ -187,3 +187,5 @@ sdcn*
 sidework*
 runs*
 cia-lisbon-fer*
+.idea
+hugging_face_cache
