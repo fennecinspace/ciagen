@@ -68,7 +68,7 @@ def fer_task(cfg: DictConfig) -> None:
 
 
 def prepare_data_task(cfg: DictConfig) -> None:
-    from ciagen.exes import Flickr30kDataset, COCODataset, FERDataset
+    from ciagen.exes import Flickr30kDataset, COCODataset, FERDataset, MOCSDataset
 
     if cfg["data"]["base"] == "coco":
         downloader = COCODataset(cfg)
@@ -76,6 +76,8 @@ def prepare_data_task(cfg: DictConfig) -> None:
         downloader = Flickr30kDataset(cfg)
     elif cfg["data"]["base"] == "fer":
         downloader = FERDataset(cfg)
+    elif cfg["data"]["base"] == "mocs":
+        downloader = MOCSDataset(cfg)
     else:
         downloader: lambda paths: print(
             f'[ERROR]: Dataset {cfg["data"]["base"]} not predefined, please use "coco", "flickr30k", "fer" in the config file'
