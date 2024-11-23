@@ -67,6 +67,16 @@ def fer_task(cfg: DictConfig) -> None:
     return fer_downloader(paths)
 
 
+def auto_captioner_task(cfg: DictConfig) -> None:
+    from ciagen.exes import AutoCaptioner
+
+    auto_captioner = AutoCaptioner(cfg)
+    paths = generate_all_paths(cfg)
+
+    return auto_captioner(paths)
+
+
+
 def prepare_data_task(cfg: DictConfig) -> None:
     from ciagen.exes import Flickr30kDataset, COCODataset, FERDataset, MOCSDataset
 
@@ -184,6 +194,7 @@ architectures = ("StableDiffusion", "ControlNet")
 allowed_tasks = {
     "help": help_task,
     "prepare_data": prepare_data_task,
+    "auto_caption": auto_captioner_task,
     "gen": gen_task,
     "dtd": dtd_task,
     "ptd": ptd_task,

@@ -177,3 +177,22 @@ metrics:
 filtering:
     type: "top-k" # One of "threshold", "top-k" or "top-p"
     value: 1000 # If type == "treshold": the threshold to keep the data point. If "top-k": the amount of data point to keep. If "top-p": the proportion of data point to keep (0<=p<=1)
+
+
+# Auto Captioner
+auto_captioner:
+    service:
+        engine: openai # ollama or openai
+
+        # the model must be a vision model
+        # for ollama they can be found here :
+        # https://ollama.com/search?c=vision
+        # model: llama3.2-vision:11b-instruct-q4_K_M
+        model: gpt-4o-mini
+
+        # only needed for openai
+        api_key: YOUR-API-KEY
+
+    # if no custom paths are specified will caption active train/val/test folders
+    custom_images_path: null
+    custom_captions_path: null

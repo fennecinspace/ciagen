@@ -80,6 +80,17 @@ directory with labels and captions if needed in the following fashion:
 For the moment three datasets are already available to use: `coco, flickr30k, fer`. You
 can of course add a new script to prepare your own data. Please follow the same schema for your data.
 
+### `auto_caption`
+
+If you have a dataset without any captions, you can use LLM vision solutions to auto caption. We provide two methods
+
+1. server based : using openai (paid) (online)
+> for openai you must create an api key, and top up your account with a minimum of 5 dollars here : https://platform.openai.com/
+
+2. local execution : using ollama (free) (local)
+> for ollama you must install it here : https://ollama.com/ then you must pull whatever model you want to use (ex: ollama pull llama3.2-vision). Use only multimodal vision models which can be found here : https://ollama.com/search?c=vision
+
+
 ### `gen`
 
 The `gen` task will extract some condition from real data:
@@ -208,6 +219,12 @@ python run.py task=prepare_data data.base=flickr30k
 
 ```bash
 python run.py task=prepare_data data.base=fer
+```
+
+- MOCS (Moving Objects in Construction Sites) dataset:
+
+```bash
+python run.py task=prepare_data data.base=mocs
 ```
 
 
@@ -394,4 +411,3 @@ run the docker script:
 put the `nvidia` argument at the end so the script build the container with the nvidia runtime.
 
 Then using vscode and the dev container plugin connect to the container and code and run stuff from it as if it was your pc.
-

@@ -41,6 +41,10 @@ pandas==2.2.2
 # to remove since IQA is no longer used ?
 pyiqa==0.1.11
 
+# Autocaptioner
+openai==1.55.0
+ollama==0.3.3
+
 # EXAMPLES
 ipykernel==6.29.5
 ipywidgets==8.1.3

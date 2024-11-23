@@ -10,3 +10,4 @@ from .dtd import DTD
 from .ptd import PTD
 from .csv_classifier_trainer import CSVClassificationTrainer
 from .filtering import Filtering
+from .image_captioner import AutoCaptioner
