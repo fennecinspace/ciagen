@@ -57,13 +57,19 @@ def download_mocs(
         # "https://nextcloud.ig.umons.ac.be/s/RYRCjKFKc3HzMqr/download/image_info_test.json", # Don't use test images they are bad
     ]
 
+    captions_zips_links = [
+        "https://nextcloud.ig.umons.ac.be/s/gTymCSBKL6PWfRY/download/mocs-captions.zip",
+    ]
+
     all_images_path = Path(data_path) / "Images"
     all_bbox_path = Path(data_path) / "Bbox"
     all_segmentation_path = Path(data_path) / "Segmentation"
+    all_captions_path = Path(data_path) / "Captions"
 
     all_images_path.mkdir(parents=True, exist_ok=True)
     all_bbox_path.mkdir(parents=True, exist_ok=True)
     all_segmentation_path.mkdir(parents=True, exist_ok=True)
+    all_captions_path.mkdir(parents=True, exist_ok=True)
 
     image_folders = []
     # Downloading Images
@@ -99,6 +105,28 @@ def download_mocs(
                 f"Downloading zip images from {data_url} to {path_to_json}"
             )
             wget.download(data_url, out=str(path_to_json))
+
+
+    captions_folders = []
+    # Downloading Images
+    for data_url in captions_zips_links:
+        zip_name = data_url.split('/')[-1]
+        path_to_data_zip = Path(data_path) / zip_name
+
+        folder_name = zip_name.rstrip('.zip')
+        path_to_folder = Path(data_path) / folder_name
+        captions_folders += [path_to_folder]
+
+        # Only perform the work if necessary
+        if not os.path.exists(path_to_data_zip):
+            ciagen_logger.info(
+                f"Downloading zip images from {data_url} to {path_to_data_zip}"
+            )
+            wget.download(data_url, out=str(path_to_data_zip))
+
+            # unzip
+            with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
+                zip_ref.extractall(str(data_path))
 
 
     # Moving all images to a single folder
@@ -149,7 +177,7 @@ def download_mocs(
                     with open(all_segmentation_path / f'{file_name}.txt', 'w') as f:
                         f.write(annotation_file_content)
 
-    return all_images_path, all_bbox_path, all_segmentation_path
+    return all_images_path, all_bbox_path, all_segmentation_path, all_captions_path
 
 
 
@@ -182,7 +210,7 @@ class MOCSDataset:
         os.makedirs(real_path_dataset, exist_ok=True)
 
         # Download if necessary
-        image_path, bbox_labels_dir, segmentation_labels_dir = download_mocs(
+        image_path, bbox_labels_dir, segmentation_labels_dir, all_captions_path = download_mocs(
             real_path_dataset
         )
 
@@ -200,9 +228,9 @@ class MOCSDataset:
         real_test_labels_path = Path(paths["test_labels"])
         real_val_labels_path = Path(paths["val_labels"])
 
-        # real_train_captions_path = paths["real_captions"]
-        # real_test_captions_path = paths["test_captions"]
-        # real_val_captions_path = paths["val_captions"]
+        real_train_captions_path = Path(paths["real_captions"])
+        real_test_captions_path = Path(paths["test_captions"])
+        real_val_captions_path = Path(paths["val_captions"])
 
         ciagen_logger.info(f"Moving TRAIN to {str(real_train_images_path)}")
         ciagen_logger.info(f"Moving TEST to {str(real_test_images_path)}")
@@ -212,7 +240,13 @@ class MOCSDataset:
         # move all files
         all_images = os.listdir(image_path)
 
-        # print("=>", len(all_images))
+        # [WARNING / NOT BEST PRACTICE] FILTERING : getting only images that have captions
+        all_captions = os.listdir(all_captions_path.absolute())
+
+        all_captions = list( map(lambda x: x.split('.')[0], all_captions))
+
+        all_images = list(filter(lambda x: x.split('.')[0] in all_captions, all_images))
+
 
         length = (
             val_nb + test_nb + train_nb
@@ -234,6 +268,7 @@ class MOCSDataset:
 
             image = image_path / img_file
             label = origin_labels_dir / txt_file
+            caption = all_captions_path / txt_file
 
             if (
                 os.path.isfile(image)
@@ -242,14 +277,18 @@ class MOCSDataset:
                 if counter < val_nb:
                     images_dir = real_val_images_path
                     labels_dir = real_val_labels_path
+                    captions_dir = real_val_captions_path
                 elif counter < val_nb + test_nb:
                     images_dir = real_test_images_path
                     labels_dir = real_test_labels_path
+                    captions_dir = real_test_captions_path
                 else:
                     images_dir = real_train_images_path
                     labels_dir = real_train_labels_path
+                    captions_dir = real_train_captions_path
 
                 shutil.copy(image, os.path.join(images_dir, img_file))
                 shutil.copy(label, os.path.join(labels_dir, txt_file))
+                shutil.copy(caption, os.path.join(captions_dir, txt_file))
 
                 counter += 1
