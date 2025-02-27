@@ -26,156 +26,39 @@ from tqdm import tqdm
 from ciagen.utils.common import ciagen_logger
 
 
-def cocobox2yolo(img_path, coco_box):
-    I = cv2.imread(img_path)
-    image_height, image_width = I.shape[0:2]
-
-    [left, top, box_width, box_height] = coco_box
-    x_center = (left + box_width / 2) / image_width
-    y_center = (top + box_height / 2) / image_height
-
-    box_width /= image_width
-    box_height /= image_height
-    yolo_box = [x_center, y_center, box_width, box_height]
-
-    return yolo_box
-
 
 def download_mocs(
-    data_path: Path
+    data_path: Path,
+    size:str = 'extra_small',
 ):
-    # Only using train images and labels as whole dataset because they are already 19 000 samples
-    images_zips_links = [
-        "https://nextcloud.ig.umons.ac.be/s/AoyiR5CHPMEPFxZ/download/instances_train.zip",
-        # "https://nextcloud.ig.umons.ac.be/s/kyKmyi7PEwxHrqN/download/instances_val.zip",
-        # "https://nextcloud.ig.umons.ac.be/s/pgBBCy7x3HXAtFk/download/instances_test.zip", # Don't use test images they are bad
-    ]
+    dataset_links = {
+        'extra_small': 'https://nextcloud.ig.umons.ac.be/s/tfoeSBoDDE3mzHp/download/MOCS_extra_small.zip', # 1000
+        'small': 'https://nextcloud.ig.umons.ac.be/s/SWfyj4wAqCtRGYy/download/MOCS_small.zip', # 3500
+        'medium': '', # 7000
+        'large': '', # 10 000
+        'full': '', # +15 000
+    }
 
-    labels_links = [
-        "https://nextcloud.ig.umons.ac.be/s/Rrz7DaobKzJBXcm/download/instances_train.json",
-        # "https://nextcloud.ig.umons.ac.be/s/wmwbgjsE2egM6zk/download/instances_val.json",
-        # "https://nextcloud.ig.umons.ac.be/s/RYRCjKFKc3HzMqr/download/image_info_test.json", # Don't use test images they are bad
-    ]
-
-    captions_zips_links = [
-        "https://nextcloud.ig.umons.ac.be/s/gTymCSBKL6PWfRY/download/mocs-captions.zip",
-    ]
+    data_url = dataset_links[size]
 
     all_images_path = Path(data_path) / "Images"
-    all_bbox_path = Path(data_path) / "Bbox"
+    all_bbox_path = Path(data_path) / "Detection"
     all_segmentation_path = Path(data_path) / "Segmentation"
     all_captions_path = Path(data_path) / "Captions"
 
-    all_images_path.mkdir(parents=True, exist_ok=True)
-    all_bbox_path.mkdir(parents=True, exist_ok=True)
-    all_segmentation_path.mkdir(parents=True, exist_ok=True)
-    all_captions_path.mkdir(parents=True, exist_ok=True)
+    # Download Dataset
+    path_to_data_zip = Path(data_path) / f'MOCS_{size}.zip'
 
-    image_folders = []
-    # Downloading Images
-    for data_url in images_zips_links:
-        zip_name = data_url.split('/')[-1]
-        path_to_data_zip = Path(data_path) / zip_name
-
-        folder_name = zip_name.rstrip('.zip')
-        path_to_folder = Path(data_path) / folder_name
-        image_folders += [path_to_folder]
-
-        # Only perform the work if necessary
-        if not os.path.exists(path_to_data_zip):
-            ciagen_logger.info(
-                f"Downloading zip images from {data_url} to {path_to_data_zip}"
-            )
-            wget.download(data_url, out=str(path_to_data_zip))
-
-            # unzip
-            with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
-                zip_ref.extractall(str(data_path))
-
-    labels_jsons = []
-    # Downloading Labels
-    for data_url in labels_links:
-        json_file_name = data_url.split('/')[-1]
-        path_to_json = Path(data_path) / json_file_name
-        labels_jsons += [path_to_json]
-
-        # Only perform the work if necessary
-        if not os.path.exists(path_to_json):
-            ciagen_logger.info(
-                f"Downloading zip images from {data_url} to {path_to_json}"
-            )
-            wget.download(data_url, out=str(path_to_json))
-
-
-    captions_folders = []
-    # Downloading Images
-    for data_url in captions_zips_links:
-        zip_name = data_url.split('/')[-1]
-        path_to_data_zip = Path(data_path) / zip_name
-
-        folder_name = zip_name.rstrip('.zip')
-        path_to_folder = Path(data_path) / folder_name
-        captions_folders += [path_to_folder]
-
-        # Only perform the work if necessary
-        if not os.path.exists(path_to_data_zip):
-            ciagen_logger.info(
-                f"Downloading zip images from {data_url} to {path_to_data_zip}"
-            )
-            wget.download(data_url, out=str(path_to_data_zip))
-
-            # unzip
-            with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
-                zip_ref.extractall(str(data_path))
-
-
-    # Moving all images to a single folder
-    for folder in image_folders:
+    # Only perform the work if necessary
+    if not os.path.exists(path_to_data_zip):
         ciagen_logger.info(
-            f"Moving images from {folder} to {all_images_path}"
+            f"Downloading zip images from {data_url} to {path_to_data_zip}"
         )
-        for file_name in tqdm(os.listdir(folder)):
-            if file_name.endswith(".jpg"):
-                # Define full file paths
-                source_file = os.path.join(folder, file_name)
-                destination_file = os.path.join(all_images_path, file_name)
+        wget.download(data_url, out=str(path_to_data_zip))
 
-                # Move the file
-                shutil.move(source_file, destination_file)
-
-
-    nb_images = len(os.listdir(all_images_path))
-
-    if len(os.listdir(all_bbox_path)) < nb_images or len(os.listdir(all_segmentation_path)) < nb_images:
-        # Converting all json annotations to YOLO labels
-        for labels_json_path in labels_jsons:
-            ciagen_logger.info(
-                f"Converting JSON labels from {labels_json_path} to {all_bbox_path} and {all_segmentation_path}"
-            )
-            with open(labels_json_path, 'r') as file:
-                data = json.load(file)
-
-                for i in tqdm(range(len(data['images']))):
-                    annotation_file_content = ""
-                    bbox_annotation_file_content = ""
-
-                    file_name, ext = data['images'][i]['file_name'].split('.')
-                    image_id = data['images'][i]['id']
-
-                    for j in range(len(data['annotations'])):
-                        if data['annotations'][j]['image_id'] == image_id:
-                            segmentation = data['annotations'][j]['segmentation']
-                            bbox = data['annotations'][j]['bbox']
-                            category_id = data['annotations'][j]['category_id']
-
-                            annotation_file_content = annotation_file_content + f'{category_id} {" ".join(map(str, segmentation[0]))}' + '\n'
-                            bbox_annotation_file_content = bbox_annotation_file_content + f'{category_id} {" ".join(map(str, bbox))}'  + '\n'
-
-                    with open( all_bbox_path / f'{file_name}.txt', 'w') as f:
-                        f.write(bbox_annotation_file_content)
-
-                    with open(all_segmentation_path / f'{file_name}.txt', 'w') as f:
-                        f.write(annotation_file_content)
+        # unzip
+        with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
+            zip_ref.extractall(str(data_path))
 
     return all_images_path, all_bbox_path, all_segmentation_path, all_captions_path
 
