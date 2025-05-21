@@ -134,10 +134,17 @@ def get_model_config(name: str, l: List[Dict]) -> Optional[str]:
     return None
 
 
-def read_caption(caption_path: str) -> List[str]:
+def read_caption(caption_path: str, prompt_per_line: bool = False, extra_empty_caption: bool = False) -> List[str]:
     with open(caption_path, "r") as f:
-        lines = f.readlines()
-    lines = [line.strip() for line in lines]
+        if prompt_per_line:
+            lines = f.readlines()
+            lines = [line.strip() for line in lines]
+        else:
+            lines = f.read()
+            lines = [lines.strip().replace("\n", " ").replace(',','').replace('.','')]
+
+    if extra_empty_caption and '' not in lines:
+        lines += ['']
     return lines
 
 

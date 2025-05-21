@@ -16,7 +16,7 @@ task: help
 data:
     # data paths and formats configuration :
     # create data folder, and all other folders will be created automatically
-    base: "fer" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
+    base: "mocs" # "coco" or "flickr30k" or "fer_real" or "fer_gen_1_5" or "fer_gen_2_1"
     image_formats: ["png", "jpeg", "jpg"]
     limit_size_real: 2000
     limit_size_syn: 2000
@@ -26,9 +26,9 @@ data:
 # ratio between train and test, learning rate ...
 ml:
     # number of samples for training, validation, and test
-    val_nb: 2000
-    test_nb: 2000
-    train_nb: 4000
+    val_nb: 500
+    test_nb: 500
+    train_nb: 2500
 
     #TODO Suggestion to move the followwing parameters to data_augment instead of ml
     augmentation_percent: 0.25 # controls all aug percents parameters everywhere
@@ -57,11 +57,19 @@ ml:
             query_filter: false
 
 prompt:
-    # if use_captions is set to 1 in "model". A vocabulary will be used
+    use_captions: 1 # use captions that come with the dataset
+
+    # 0 if you want to use the whole caption file as a single prompt, 1 if you want to use each line as a prompt
+    caption_per_line: 0
+
+    # adding an extra empty caption allows you to generate a synthetic sample that isn't guided by any text
+    extra_empty_caption: 0
+
+    # if modify_captions is set to 1 in "model". A vocabulary will be used
     # to modify the original captions and generate newer captions
     # to create multiple diverse synthetic images from the same original image
+    modify_captions: 0
     template: vocabulary
-    modify_captions: 1
     generation_size: 10
 
     # POSITIVE PROMPTS: THIS section is used if use_captions is set to 0 in "model"
@@ -89,10 +97,9 @@ model:
         - fast: 5
         - medium: 10
         - slow: 20
-    use_captions: 0 # use captions that come with the dataset
     # use_labels: 0 # not used for now, will be used in future features
-    sd: fennecinspace/sd-v15 # stable diffusion version
-    cn_use: sd15_crucible_mediapipe_face # controlnet_segmentation # control net to use from the list
+    # sd: fennecinspace/sd-v15 # stable diffusion version
+    cn_use: controlnet_segmentation # controlnet_segmentation # control net to use from the list
     cn:
         # YOU should list all the control nets that you would like to use here
         # add an extractor name to the end in order to define which extractor to use :
@@ -154,7 +161,7 @@ model:
             sd: stabilityai/stable-diffusion-2-1-base
             cn: CrucibleAI/ControlNetMediaPipeFace
 
-    seed: 34567 # random seed for SDCN generation
+    seed: [34567] # random seed for SDCN generation
     device: cuda # cpu or cuda ?
 
 # ACTIVE LEARNING SAMPLING

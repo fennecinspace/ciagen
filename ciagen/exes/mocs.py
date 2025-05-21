@@ -29,7 +29,7 @@ from ciagen.utils.common import ciagen_logger
 
 def download_mocs(
     data_path: Path,
-    size:str = 'extra_small',
+    size:str = 'small',
 ):
     dataset_links = {
         'extra_small': 'https://nextcloud.ig.umons.ac.be/s/tfoeSBoDDE3mzHp/download/MOCS_extra_small.zip', # 1000
@@ -134,7 +134,7 @@ class MOCSDataset:
         length = (
             val_nb + test_nb + train_nb
             if (val_nb + test_nb + train_nb) < len(all_images)
-            else all_images
+            else len(all_images)
         )
 
         all_images = all_images[:length]

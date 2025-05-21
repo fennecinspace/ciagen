@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torchvision
 from torchvision.transforms import Compose, ToTensor, Resize, PILToTensor
-from feat import Detector
+#from feat import Detector
 from omegaconf import DictConfig
 from PIL.Image import Image
 from tqdm import tqdm

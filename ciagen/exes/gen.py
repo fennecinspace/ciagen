@@ -72,9 +72,8 @@ class Generator:
                 pb + " " + prompt["modifier"] + " " + prompt["quality"]
                 for pb in prompt["base"]
             ]
-            negative_prompt = ["".join(prompt["negative_simple"])] * len(
-                positive_prompt
-            )
+            negative_prompt = ["".join(prompt["negative_simple"])]
+            #* len( positive_prompt )
 
         # Specify the model and feature extractor. Be aware that ideally both extractor and
         # generator should be using the same feature.
@@ -98,7 +97,9 @@ class Generator:
         else:
             cn_extra_settings = {}
 
-        use_captions = bool(model_data["use_captions"])
+        use_captions = bool(prompt["use_captions"])
+        prompt_per_line = bool(prompt["caption_per_line"])
+        extra_empty_caption = bool(prompt["extra_empty_caption"])
         # use_labels = bool(model_data['use_labels'])
 
         if use_captions:
@@ -169,10 +170,9 @@ class Generator:
 
                 # Here we use captions if necessary and modify them if necessary.
                 if use_captions:
-                    positive_prompt = [p.lower() for p in read_caption(caption_path)]
-                    negative_prompt = ["".join(prompt["negative_simple"])] * len(
-                        positive_prompt
-                    )
+                    positive_prompt = [p.lower() for p in read_caption(caption_path, prompt_per_line = prompt_per_line, extra_empty_caption = extra_empty_caption)]
+                    negative_prompt = ["".join(prompt["negative_simple"])]
+                    #* len(positive_prompt)
 
                     if modify_captions:
 
@@ -194,13 +194,13 @@ class Generator:
 
                 # Generate with stable diffusion
                 # Clean a little the gpu memory between generations
-                output = generator.gen(feature, positive_prompt, negative_prompt)
+                output_images = generator.gen(feature, positive_prompt, negative_prompt)
                 ciagen_logger.info(
-                    f"Generated {len(output.images)} images from real sample."
+                    f"Generated {len(output_images)} images from real sample."
                 )
 
                 # save images
-                for j, img in enumerate(output.images):
+                for j, img in enumerate(output_images):
                     img.save(os.path.join(generated_path, f"{image_name}_{j + 1}.png"))
 
             except Exception as e:
