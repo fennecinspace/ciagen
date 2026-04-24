@@ -175,7 +175,6 @@ metrics:
     fe:
         - vit
         # - inception
-        - au
     dtd:
         - fid
         - inception_score
