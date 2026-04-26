@@ -4,12 +4,10 @@
 [![GitHub Stars](https://img.shields.io/github/stars/fennecinspace/ciagen?style=social)](https://github.com/fennecinspace/ciagen)
 [![License](https://img.shields.io/github/license/fennecinspace/ciagen)](LICENSE)
 [![Python](https://img.shields.io/pypi/v/ciagen)](https://pypi.org/project/ciagen/)
+[![Tests](https://img.shields.io/github/actions/workflow_status/multitel-ai/CIA/tests.yml?label=tests)](https://github.com/multitel-ai/CIA/actions)
 [![Docs](https://img.shields.io/readthedocs/ciagen)](https://ciagen.readthedocs.io/en/latest/)
 [![arXiv](https://img.shields.io/badge/arXiv-2411.16128-blue)](https://arxiv.org/abs/2411.16128)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/main/notebooks/CIA_Quickstart.ipynb)
-
-<!-- Add tests later -->
-<!--[![Tests](https://img.shields.io/github/actions/workflow_status/multitel-ai/CIA/tests.yml?label=tests)](https://github.com/multitel-ai/CIA/actions) -->
 
 **CIA** is a Python library for synthetic data augmentation using Stable Diffusion + ControlNet. Generate high-quality synthetic images from real seed images, evaluate their quality, and use them to improve downstream ML models.
 
