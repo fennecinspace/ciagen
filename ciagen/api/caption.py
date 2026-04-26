@@ -4,6 +4,29 @@ from typing import List, Optional
 from ciagen.captioning.auto_captioner import AutoCaptioner
 from ciagen.utils.io import logger
 
+VALID_ENGINES = frozenset({"openai", "ollama"})
+
+
+def _validate_caption(
+    images: Path,
+    captions_dir: Path,
+    engine: str,
+    api_key: Optional[str],
+) -> None:
+    if not images.is_dir():
+        raise NotADirectoryError(f"Images directory does not exist: {images}")
+
+    if engine not in VALID_ENGINES:
+        raise ValueError(
+            f"Invalid engine '{engine}'. Choose from: {', '.join(sorted(VALID_ENGINES))}"
+        )
+
+    if engine == "openai" and not api_key:
+        raise ValueError(
+            "api_key is required for OpenAI engine. "
+            "Set the OPENAI_API_KEY environment variable or pass api_key directly."
+        )
+
 
 def caption(
     images: str | Path,
@@ -23,6 +46,11 @@ def caption(
         api_key: API key (required for OpenAI).
         image_formats: Supported image formats.
     """
+    images = Path(images)
+    captions_dir = Path(captions_dir)
+
+    _validate_caption(images, captions_dir, engine, api_key)
+
     captioner = AutoCaptioner(
         engine=engine,
         model=model,

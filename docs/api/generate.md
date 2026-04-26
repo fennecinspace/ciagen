@@ -1,3 +1,9 @@
+---
+title: generate()
+description: Python API reference for ciagen.generate() : generate synthetic images from real images using Stable Diffusion + ControlNet.
+keywords: api, generate, python
+---
+
 # `generate()`
 
 Generate synthetic images from real images using Stable Diffusion + ControlNet.

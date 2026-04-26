@@ -1,3 +1,9 @@
+---
+title: Generation
+description: Generate synthetic images from real images using Stable Diffusion + ControlNet with condition extractors (canny, openpose, segmentation, mediapipe_face).
+keywords: generation, synthetic images, stable diffusion, controlnet, canny, openpose, segmentation
+---
+
 # Generation
 
 Generate synthetic images from real images using Stable Diffusion + ControlNet.
@@ -8,8 +14,8 @@ Each extractor transforms a real image into a control signal that guides generat
 
 | Extractor | Description | Requires |
 |-----------|-------------|----------|
-| `canny` | Canny edge detection | — |
-| `openpose` | Human pose estimation | — |
+| `canny` | Canny edge detection | : |
+| `openpose` | Human pose estimation | : |
 | `segmentation` | YOLOv8-seg instance segmentation | `ultralytics` |
 | `mediapipe_face` | Face mesh landmarks | `mediapipe` |
 
@@ -57,9 +63,9 @@ python run.py task=gen model.cn_use=lllyasviel_canny prompt.base='["a person wal
 
 Three prompt strategies:
 
-1. **Fixed prompt** — pass `prompt="a person in a park"`
-2. **Caption-based** — set `use_captions=True` to read per-image `.txt` caption files
-3. **Vocabulary-modified** — set `modify_captions=True` with a vocabulary template to generate prompt variations
+1. **Fixed prompt** : pass `prompt="a person in a park"`
+2. **Caption-based** : set `use_captions=True` to read per-image `.txt` caption files
+3. **Vocabulary-modified** : set `modify_captions=True` with a vocabulary template to generate prompt variations
 
 ## Output
 

@@ -1,3 +1,9 @@
+---
+title: Custom Metrics
+description: Add custom quality metrics to CIA. Subclass QualityMetric and register in evaluate.py.
+keywords: extending, metrics, custom, quality metric, FID, IS
+---
+
 # Custom Metrics
 
 Quality metrics compare real and synthetic image distributions or score individual images.

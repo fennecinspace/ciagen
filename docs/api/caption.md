@@ -1,3 +1,9 @@
+---
+title: caption()
+description: Python API reference for ciagen.caption() : auto-caption images using a vision-language model.
+keywords: api, caption, python, image captions
+---
+
 # `caption()`
 
 Generate captions for images using a vision-language model.

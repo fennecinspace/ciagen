@@ -16,7 +16,6 @@ from ciagen.utils.io import logger
 
 torch.backends.cudnn.benchmark = False
 
-
 AVAILABLE_DTD_METRICS = {
     "fid": FID,
     "inception_score": IS,
@@ -25,6 +24,53 @@ AVAILABLE_DTD_METRICS = {
 AVAILABLE_PTD_METRICS = {
     "mld": MLD,
 }
+
+VALID_FE = frozenset({"vit", "inception"})
+VALID_DEVICES = frozenset({"cuda", "cpu"})
+
+
+def _validate_evaluate(
+    real: Path,
+    generated: Path,
+    metrics: List[str],
+    feature_extractor: str,
+    batch_size: int,
+    limit_size_real: int,
+    limit_size_syn: int,
+    device: Optional[str],
+) -> None:
+    if not real.is_dir():
+        raise NotADirectoryError(f"Real images directory does not exist: {real}")
+    if not generated.is_dir():
+        raise NotADirectoryError(f"Generated images directory does not exist: {generated}")
+
+    if not metrics:
+        raise ValueError("metrics list cannot be empty")
+
+    fe_registry = available_feature_extractors()
+    if feature_extractor not in fe_registry:
+        raise ValueError(
+            f"Invalid feature_extractor '{feature_extractor}'. "
+            f"Choose from: {', '.join(sorted(fe_registry.keys()))}"
+        )
+
+    all_valid = set(AVAILABLE_DTD_METRICS) | set(AVAILABLE_PTD_METRICS)
+    unknown = set(metrics) - all_valid
+    if unknown:
+        raise ValueError(
+            f"Unknown metric(s): {', '.join(sorted(unknown))}. "
+            f"Choose from: {', '.join(sorted(all_valid))}"
+        )
+
+    if batch_size < 1:
+        raise ValueError(f"batch_size must be >= 1, got {batch_size}")
+    if limit_size_real < 1:
+        raise ValueError(f"limit_size_real must be >= 1, got {limit_size_real}")
+    if limit_size_syn < 1:
+        raise ValueError(f"limit_size_syn must be >= 1, got {limit_size_syn}")
+
+    if device is not None and device not in VALID_DEVICES:
+        raise ValueError(f"device must be 'cuda' or 'cpu', got '{device}'")
 
 
 def evaluate(
@@ -68,6 +114,11 @@ def evaluate(
 
     real = Path(real)
     generated = Path(generated)
+
+    _validate_evaluate(
+        real, generated, metrics, feature_extractor,
+        batch_size, limit_size_real, limit_size_syn, device,
+    )
 
     results = {}
 

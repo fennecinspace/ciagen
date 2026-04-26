@@ -1,3 +1,9 @@
+---
+title: Evaluation
+description: Compute quality metrics (FID, Inception Score, Mahalanobis distance) comparing real and synthetic image distributions.
+keywords: evaluation, quality metrics, FID, inception score, mahalanobis, distribution comparison
+---
+
 # Evaluation
 
 Compute quality metrics comparing real and generated image distributions.
@@ -10,8 +16,8 @@ Measure overall similarity between the real and synthetic distributions.
 
 | Metric | Description |
 |--------|-------------|
-| `fid` | Fréchet Inception Distance — lower is better |
-| `inception_score` | Inception Score — higher is better |
+| `fid` | Fréchet Inception Distance : lower is better |
+| `inception_score` | Inception Score : higher is better |
 
 ### Point-To-Distribution (PTD)
 
@@ -19,7 +25,7 @@ Score each individual synthetic image against the real distribution.
 
 | Metric | Description |
 |--------|-------------|
-| `mld` | Mahalanobis Distance — lower means more similar to real distribution |
+| `mld` | Mahalanobis Distance : lower means more similar to real distribution |
 
 ## Usage
 

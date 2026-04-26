@@ -1,18 +1,26 @@
-site_name: CIA Documentation
-site_description: Controllable Image Augmentation using Stable Diffusion + ControlNet
-repo_url: https://github.com/user/synthetic-augmentation
-repo_name: GitHub
+site_name: "CIA: Controllable Image Augmentation"
+site_description: >
+  Generate high-quality synthetic image data using Stable Diffusion + ControlNet.
+  A complete pipeline with built-in quality evaluation and filtering.
+site_url: https://multitel-ai.github.io/CIA
+repo_name: multitel-ai/CIA
+repo_url: https://github.com/multitel-ai/CIA
 
 theme:
   name: material
+  language: en
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: indigo
+      accent: blue
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: indigo
+      accent: blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -20,9 +28,11 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.expand
+    - navigation.instant
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.code.annotations
 
 markdown_extensions:
   - admonition
@@ -33,14 +43,23 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+  - attr_list
+  - md_in_html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/multitel-ai/CIA
+    - icon: simple/huggingface
+      link: https://huggingface.co/multitel-ai
 
 nav:
+  - Home: index.md
   - Getting Started:
-    - index.md
     - installation.md
     - quickstart.md
-  - User Guide:
     - pipeline.md
+  - User Guide:
     - generation.md
     - evaluation.md
     - filtering.md
@@ -48,7 +67,7 @@ nav:
     - cli.md
     - configuration.md
     - examples.md
-    - contributing.md
+    - results.md
   - API Reference:
     - api/generate.md
     - api/evaluate.md
@@ -58,6 +77,7 @@ nav:
     - extending/extractors.md
     - extending/metrics.md
     - extending/feature-extractors.md
+  - contributing.md
 
 plugins:
   - search

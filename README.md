@@ -1,6 +1,15 @@
 # CIA: Controllable Image Augmentation
 
-A Python library for synthetic data augmentation using [Stable Diffusion](https://huggingface.co/blog/stable_diffusion) + [ControlNet](https://huggingface.co/blog/train-your-controlnet). Generate high-quality synthetic images from real seed images, evaluate their quality, and use them to improve downstream ML models.
+<!-- Badges -->
+[![GitHub Stars](https://img.shields.io/github/stars/multitel-ai/CIA?style=social)](https://github.com/multitel-ai/CIA)
+[![License](https://img.shields.io/github/license/multitel-ai/CIA)](LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/ciagen)](https://pypi.org/project/ciagen/)
+[![Tests](https://img.shields.io/github/actions/workflow_status/multitel-ai/CIA/tests.yml?label=tests)](https://github.com/multitel-ai/CIA/actions)
+[![Docs](https://img.shields.io/readthedocs/ciagen/stable)](https://ciagen.readthedocs.io)
+[![arXiv](https://img.shields.io/badge/arXiv-2411.16128-red)](https://arxiv.org/abs/2411.16128)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-blue)](https://huggingface.co/multitel-ai)
+
+**CIA** is a Python library for synthetic data augmentation using Stable Diffusion + ControlNet. Generate high-quality synthetic images from real seed images, evaluate their quality, and use them to improve downstream ML models.
 
 ## Features
 

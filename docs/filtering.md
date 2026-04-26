@@ -1,3 +1,9 @@
+---
+title: Filtering
+description: Filter synthetic images by quality scores using top-k, top-p, or threshold methods.
+keywords: filtering, quality filtering, top-k, synthetic images
+---
+
 # Filtering
 
 Select the best synthetic images based on point-to-distribution quality scores.

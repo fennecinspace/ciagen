@@ -1,3 +1,9 @@
+---
+title: Configuration
+description: Configure CIA via Hydra YAML config. ControlNet models, extractors, metrics, prompts, and data paths.
+keywords: configuration, hydra, yaml, config, setup
+---
+
 # Configuration
 
 CIA uses [Hydra](https://hydra.cc/) for configuration management. The main config file is `ciagen/conf/config.yaml`.

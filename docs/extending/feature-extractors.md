@@ -1,3 +1,9 @@
+---
+title: Custom Feature Extractors
+description: Add custom feature extractors to CIA. Subclass FeatureExtractor and register in the feature_extractors module.
+keywords: extending, feature extractor, custom, ViT, Inception
+---
+
 # Custom Feature Extractors
 
 Feature extractors produce deep feature representations used by quality metrics. They wrap pretrained models.

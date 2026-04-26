@@ -1,3 +1,9 @@
+---
+title: filter_generated()
+description: Python API reference for ciagen.filter_generated() : filter synthetic images by point-to-distribution quality scores.
+keywords: api, filter, python, quality filtering
+---
+
 # `filter_generated()`
 
 Filter generated images based on point-to-distribution quality scores.
@@ -48,5 +54,5 @@ kept = filter_generated(
 
 ## Raises
 
-- `FileNotFoundError` — if no `metadata.yaml` exists in the generated directory and `ptd_scores` is None
-- `ValueError` — if `method` is not one of the valid options or `value` is out of range
+- `FileNotFoundError` : if no `metadata.yaml` exists in the generated directory and `ptd_scores` is None
+- `ValueError` : if `method` is not one of the valid options or `value` is out of range

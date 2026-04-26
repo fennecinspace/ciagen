@@ -3,7 +3,49 @@ from typing import Dict, Optional
 
 import yaml
 
+from ciagen.feature_extractors import available_feature_extractors
 from ciagen.utils.io import logger
+
+VALID_METHODS = frozenset({"threshold", "top-k", "top-p"})
+VALID_PTD_METRICS = frozenset({"mld"})
+
+
+def _validate_filter(
+    generated: Path,
+    method: str,
+    value: float,
+    metric: str,
+    feature_extractor: str,
+) -> None:
+    if not generated.is_dir():
+        raise NotADirectoryError(
+            f"Generated directory does not exist: {generated}"
+        )
+
+    if method not in VALID_METHODS:
+        raise ValueError(
+            f"Invalid method '{method}'. Choose from: {', '.join(sorted(VALID_METHODS))}"
+        )
+
+    if value < 0:
+        raise ValueError(f"value must be non-negative, got {value}")
+
+    fe_registry = available_feature_extractors()
+    if feature_extractor not in fe_registry:
+        raise ValueError(
+            f"Invalid feature_extractor '{feature_extractor}'. "
+            f"Choose from: {', '.join(sorted(fe_registry.keys()))}"
+        )
+
+    if metric not in VALID_PTD_METRICS:
+        raise ValueError(
+            f"Invalid metric '{metric}'. Choose from: {', '.join(sorted(VALID_PTD_METRICS))}"
+        )
+
+    if method == "top-p" and not 0 <= value <= 1:
+        raise ValueError(
+            f"top-p value must be between 0 and 1, got {value}"
+        )
 
 
 def filter_generated(
@@ -36,6 +78,8 @@ def filter_generated(
     generated = Path(generated)
     metadata_file = generated / "metadata.yaml"
 
+    _validate_filter(generated, method, value, metric, feature_extractor)
+
     if ptd_scores is None:
         if not metadata_file.exists():
             raise FileNotFoundError(
@@ -62,16 +106,10 @@ def filter_generated(
             if method == "threshold":
                 kept = [item for item in ptd if item[1] <= value]
             elif method == "top-p":
-                if not 0 <= value <= 1:
-                    raise ValueError("top-p value must be between 0 and 1")
                 ptd_sorted = sorted(ptd, key=lambda a: a[1])
                 kept = ptd_sorted[: int(len(ptd) * value)]
             elif method == "top-k":
                 k = int(value)
-                if not 0 <= k <= len(ptd):
-                    raise ValueError(
-                        f"top-k value must be between 0 and {len(ptd)}"
-                    )
                 ptd_sorted = sorted(ptd, key=lambda a: a[1])
                 kept = ptd_sorted[:k]
             else:

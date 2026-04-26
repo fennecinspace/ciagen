@@ -1,3 +1,9 @@
+---
+title: Captioning
+description: Auto-caption images using OpenAI GPT-4o-mini or Ollama LLaVA vision models.
+keywords: captioning, image captions, openai, ollama, gpt-4o-mini, llava
+---
+
 # Captioning
 
 Generate captions for images using a vision-language model.

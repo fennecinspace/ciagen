@@ -1,3 +1,9 @@
+---
+title: evaluate()
+description: Python API reference for ciagen.evaluate() : compute FID, Inception Score, and Mahalanobis distance for generated images.
+keywords: api, evaluate, python, fid, inception score
+---
+
 # `evaluate()`
 
 Evaluate the quality of generated images against real images.

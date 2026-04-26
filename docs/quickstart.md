@@ -1,3 +1,9 @@
+---
+title: Quick Start
+description: Get up and running with CIA in 5 minutes. Generate, evaluate, and filter synthetic images.
+keywords: quickstart, tutorial, example
+---
+
 # Quick Start
 
 ## 1. Generate synthetic images

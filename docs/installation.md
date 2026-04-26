@@ -1,3 +1,9 @@
+---
+title: Installation
+description: Install CIA and its dependencies. Python 3.10+, CUDA GPU recommended.
+keywords: install, pip, python, setup
+---
+
 # Installation
 
 ## Requirements

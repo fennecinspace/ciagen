@@ -7,11 +7,66 @@ from typing import Dict, List, Optional, Union
 import torch
 from diffusers.utils import load_image
 
-from ciagen.extractors import instantiate_extractor
+from ciagen.extractors import AVAILABLE_EXTRACTORS, instantiate_extractor
 from ciagen.generators import SDCN, NaivePromptGenerator
 from ciagen.utils.io import logger, read_caption
 
 torch.backends.cudnn.benchmark = False
+
+VALID_EXTRACTORS = frozenset(AVAILABLE_EXTRACTORS)
+VALID_DEVICES = frozenset({"cuda", "cpu"})
+
+
+def _validate_generate(
+    source: Path,
+    output: Path,
+    extractor: str,
+    sd_model: str,
+    cn_model: str,
+    num_per_image: int,
+    seed: Union[int, List[int]],
+    device: str,
+    quality: int,
+    guidance_scale: float,
+    use_captions: bool,
+    captions_dir: Optional[str],
+) -> None:
+    if not source.is_dir():
+        raise NotADirectoryError(f"Source directory does not exist: {source}")
+
+    if extractor not in VALID_EXTRACTORS:
+        raise ValueError(
+            f"Invalid extractor '{extractor}'. "
+            f"Choose from: {', '.join(sorted(VALID_EXTRACTORS))}"
+        )
+
+    if not sd_model or not isinstance(sd_model, str):
+        raise ValueError("sd_model must be a non-empty string")
+    if not cn_model or not isinstance(cn_model, str):
+        raise ValueError("cn_model must be a non-empty string")
+
+    if num_per_image < 1:
+        raise ValueError(f"num_per_image must be >= 1, got {num_per_image}")
+
+    if isinstance(seed, list):
+        if not seed:
+            raise ValueError("seed list cannot be empty")
+        if not all(isinstance(s, int) for s in seed):
+            raise TypeError("All seed values must be integers")
+
+    if device not in VALID_DEVICES:
+        raise ValueError(f"device must be 'cuda' or 'cpu', got '{device}'")
+
+    if quality < 1:
+        raise ValueError(f"quality (inference steps) must be >= 1, got {quality}")
+
+    if guidance_scale <= 0:
+        raise ValueError(f"guidance_scale must be > 0, got {guidance_scale}")
+
+    if use_captions and not captions_dir:
+        raise ValueError(
+            "captions_dir is required when use_captions=True"
+        )
 
 
 def generate(
@@ -70,13 +125,19 @@ def generate(
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
 
+    _validate_generate(
+        source, output, extractor, sd_model, cn_model,
+        num_per_image, seed, device, quality, guidance_scale,
+        use_captions, captions_dir,
+    )
+
     real_images = []
     for fmt in image_formats:
         real_images += glob.glob(str(source.absolute()) + f"/*.{fmt}")
     real_images.sort()
 
     if not real_images:
-        raise ValueError(f"No images found in {source}")
+        raise FileNotFoundError(f"No images found in {source}")
 
     if use_captions and captions_dir:
         captions = sorted(glob.glob(str(Path(captions_dir).absolute()) + "/*"))

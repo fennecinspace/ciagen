@@ -1,3 +1,9 @@
+---
+title: Pipeline Overview
+description: How the CIA pipeline works : from real images to augmented training data through generation, evaluation, and filtering.
+keywords: pipeline, workflow, steps
+---
+
 # Pipeline Overview
 
 The CIA pipeline follows a linear flow from real images to augmented training data. Each step can be run independently or as part of the full pipeline.
@@ -47,8 +53,8 @@ Extract a control condition from each real image using one of the available extr
 
 Compute quality metrics comparing the real and synthetic distributions.
 
-- **DTD** (Distribution-To-Distribution): FID, Inception Score — measure overall distribution similarity
-- **PTD** (Point-To-Distribution): Mahalanobis distance — scores each individual synthetic image
+- **DTD** (Distribution-To-Distribution): FID, Inception Score : measure overall distribution similarity
+- **PTD** (Point-To-Distribution): Mahalanobis distance : scores each individual synthetic image
 
 **Output:** Metric scores saved to `metadata.yaml` alongside generated images
 

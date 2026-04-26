@@ -1,3 +1,9 @@
+---
+title: Contributing
+description: How to contribute to CIA : dev setup, code style, testing, adding extractors and metrics.
+keywords: contributing, development, guide
+---
+
 # Contributing
 
 Thank you for your interest in contributing to CIA.

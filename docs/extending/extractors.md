@@ -1,3 +1,9 @@
+---
+title: Custom Extractors
+description: Add custom condition extractors to CIA. Subclass ExtractorABC and register in the extractors module.
+keywords: extending, extractors, custom, condition extractor
+---
+
 # Custom Extractors
 
 Condition extractors transform a real image into a control signal that guides ControlNet generation.

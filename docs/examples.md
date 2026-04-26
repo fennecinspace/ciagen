@@ -1,3 +1,9 @@
+---
+title: Examples
+description: Dataset preparation (COCO, Flickr30K, FER, MOCS), mixing real+synthetic data, and training YOLOv8 and InceptionV3.
+keywords: examples, dataset, coco, flickr30k, fer, mocs, yolo, training
+---
+
 # Examples
 
 The `examples/` directory contains ready-to-use scripts for dataset preparation, mixing, and training.

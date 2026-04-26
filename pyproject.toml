@@ -12,7 +12,15 @@ requires-python = ">=3.10"
 authors = [
     { name = "Universite de Mons, Multitel, ULB, UCL" },
 ]
-keywords = ["generative-ai", "stable-diffusion", "controlnet", "data-augmentation", "synthetic-data"]
+keywords = [
+    "generative-ai",
+    "stable-diffusion",
+    "controlnet",
+    "data-augmentation",
+    "synthetic-data",
+    "synthetic-images",
+    "image-generation",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
