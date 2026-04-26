@@ -20,9 +20,7 @@ class SDCN:
         if cn_extra_settings is None:
             cn_extra_settings = {}
 
-        logger.info(
-            f"Initializing SDCN with {sd_model} and {control_model}, seed ={seed}, device={device}"
-        )
+        logger.info(f"Initializing SDCN with {sd_model} and {control_model}, seed ={seed}, device={device}")
 
         self.seed = seed
         self.device = device
@@ -40,9 +38,7 @@ class SDCN:
 
         # The default config seems to work best for the moment, we would need to tweak a lot to know
         # what to use.
-        self.pipe.scheduler = UniPCMultistepScheduler.from_config(
-            self.pipe.scheduler.config
-        )
+        self.pipe.scheduler = UniPCMultistepScheduler.from_config(self.pipe.scheduler.config)
 
         # Docs of this scheduler: https://huggingface.co/docs/diffusers/main/en/api/schedulers/unipc
         # Example of scheduler with full parameters customization, does not seem to work fine...
@@ -76,7 +72,10 @@ class SDCN:
         # it will throw an error later in the pipeline about having or not instructions for half
         # floats if you try to use 'cuda'.
         self.pipe.enable_model_cpu_offload()
-        self.pipe.enable_xformers_memory_efficient_attention()
+        try:
+            self.pipe.enable_xformers_memory_efficient_attention()
+        except Exception:
+            pass
 
     def __str__(self):  # -> str:
         return f"SDCN({self.control_model})"
@@ -89,10 +88,7 @@ class SDCN:
         quality: str = 30,  # : str = 30,
         guidance_scale=7.0,  # : float = 7.0,
     ):
-        generator = [
-            torch.Generator(device=self.device).manual_seed(self.seed)
-            for _ in range(len(positive_prompts))
-        ]
+        generator = [torch.Generator(device=self.device).manual_seed(self.seed) for _ in range(len(positive_prompts))]
 
         output = self.pipe(
             positive_prompts,

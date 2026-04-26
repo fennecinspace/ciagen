@@ -51,8 +51,8 @@ def main():
     cap_parser = subparsers.add_parser("caption", help="Auto-caption images")
     cap_parser.add_argument("--images", required=True, help="Images directory")
     cap_parser.add_argument("--output", required=True, help="Output captions directory")
-    cap_parser.add_argument("--engine", default="openai", choices=["openai", "ollama"])
-    cap_parser.add_argument("--model", default="gpt-4o-mini", help="Vision model name")
+    cap_parser.add_argument("--engine", default="openrouter", choices=["openrouter", "openai", "ollama"])
+    cap_parser.add_argument("--model", default="google/gemini-2.0-flash-001", help="Vision model name")
     cap_parser.add_argument("--api-key", default=None)
 
     args = parser.parse_args()

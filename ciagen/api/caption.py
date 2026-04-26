@@ -4,7 +4,7 @@ from typing import List, Optional
 from ciagen.captioning.auto_captioner import AutoCaptioner
 from ciagen.utils.io import logger
 
-VALID_ENGINES = frozenset({"openai", "ollama"})
+VALID_ENGINES = frozenset({"openrouter", "openai", "ollama"})
 
 
 def _validate_caption(
@@ -19,18 +19,19 @@ def _validate_caption(
     if engine not in VALID_ENGINES:
         raise ValueError(f"Invalid engine '{engine}'. Choose from: {', '.join(sorted(VALID_ENGINES))}")
 
-    if engine == "openai" and not api_key:
+    if engine in ("openai", "openrouter") and not api_key:
         raise ValueError(
-            "api_key is required for OpenAI engine. "
-            "Set the OPENAI_API_KEY environment variable or pass api_key directly."
+            f"api_key is required for {engine} engine. "
+            "Get a free key at https://openrouter.ai/keys (for openrouter) "
+            "or https://platform.openai.com/api-keys (for openai)"
         )
 
 
 def caption(
     images: str | Path,
     captions_dir: str | Path,
-    engine: str = "openai",
-    model: str = "gpt-4o-mini",
+    engine: str = "openrouter",
+    model: str = "google/gemini-2.0-flash-001",
     api_key: Optional[str] = None,
     image_formats: Optional[List[str]] = None,
 ) -> None:
@@ -39,9 +40,9 @@ def caption(
     Args:
         images: Directory containing images to caption.
         captions_dir: Directory to save caption text files.
-        engine: Captioning engine ('openai' or 'ollama').
+        engine: Captioning engine ('openrouter', 'openai', or 'ollama').
         model: Vision model name.
-        api_key: API key (required for OpenAI).
+        api_key: API key (required for openrouter/openai).
         image_formats: Supported image formats.
     """
     images = Path(images)

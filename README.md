@@ -212,4 +212,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR
 
 This project is licensed under the [GNU Affero General Public License v3](LICENSE).
 
-Copyright (c) 2024 Universite de Mons, Multitel, Universite Libre de Bruxelles, Universite Catholique de Louvain.
+Copyright (c) 2026 Universite de Mons, Multitel, Universite Libre de Bruxelles, Universite Catholique de Louvain.

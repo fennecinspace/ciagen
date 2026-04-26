@@ -10,12 +10,12 @@ from ciagen.utils.io import logger
 
 
 class AutoCaptioner:
-    """Automatically generate captions for images using OpenAI or Ollama vision models."""
+    """Automatically generate captions for images using OpenAI, OpenRouter, or Ollama vision models."""
 
     def __init__(
         self,
-        engine: str = "openai",
-        model: str = "gpt-4o-mini",
+        engine: str = "openrouter",
+        model: str = "google/gemini-2.0-flash-001",
         api_key: Optional[str] = None,
         image_formats: Optional[List[str]] = None,
     ):
@@ -27,6 +27,11 @@ class AutoCaptioner:
             import openai
 
             openai.api_key = api_key
+        elif engine == "openrouter":
+            import openai
+
+            openai.api_key = api_key
+            openai.base_url = "https://openrouter.ai/api/v1"
 
     def __call__(self, paths: dict) -> None:
         """Caption images from Hydra paths dict (backward compat)."""
@@ -71,10 +76,10 @@ class AutoCaptioner:
                 try:
                     if self.engine == "ollama":
                         caption = self._ollama_caption(image_path)
-                    elif self.engine == "openai":
+                    elif self.engine in ("openai", "openrouter"):
                         caption = self._openai_caption(image_path)
                     else:
-                        raise ValueError(f"Invalid engine: {self.engine}. Use 'ollama' or 'openai'")
+                        raise ValueError(f"Invalid engine: {self.engine}. Use 'openai', 'openrouter', or 'ollama'")
 
                     logger.info(f"Caption for {image_path}: {caption}")
                     with open(caption_path, "w") as f:

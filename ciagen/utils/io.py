@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -30,13 +31,18 @@ def read_caption(
     prompt_per_line: bool = False,
     extra_empty_caption: bool = False,
 ) -> List[str]:
-    """Read a caption file and return prompts as a list of strings."""
+    """Read a caption file and return prompts as a list of strings.
+
+    Collapses multiline captions into single-line prompts suitable for
+    Stable Diffusion (which treats each line as a separate prompt).
+    """
     with open(caption_path, "r") as f:
         if prompt_per_line:
             lines = [line.strip() for line in f.readlines()]
         else:
             text = f.read()
-            lines = [text.strip().replace("\n", " ").replace(",", "").replace(".", "")]
+            # Collapse multiple newlines/whitespace into single space for SD compatibility
+            lines = [re.sub(r"\s+", " ", text.strip())]
 
     if extra_empty_caption and "" not in lines:
         lines += [""]

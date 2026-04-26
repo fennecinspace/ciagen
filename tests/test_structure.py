@@ -20,27 +20,43 @@ def test_import_extractors():
 
 
 def test_import_generators():
-    pass
+    from ciagen.generators import SDCN
+
+    assert SDCN is not None
 
 
 def test_import_metrics():
-    pass
+    from ciagen.metrics import fid, mahalanobis
+
+    assert fid is not None
+    assert mahalanobis is not None
 
 
 def test_import_feature_extractors():
-    pass
+    from ciagen.feature_extractors import InceptionFE, VitFE
+
+    assert VitFE is not None
+    assert InceptionFE is not None
 
 
 def test_import_data():
-    pass
+    from ciagen.data import create_local_dataloader, load_images_from_directory
+
+    assert load_images_from_directory is not None
+    assert create_local_dataloader is not None
 
 
 def test_import_utils():
-    pass
+    from ciagen.utils import list_files, read_caption
+
+    assert list_files is not None
+    assert read_caption is not None
 
 
 def test_import_distances():
-    pass
+    from ciagen.metrics.distances import frechet_distance_gaussian_version
+
+    assert frechet_distance_gaussian_version is not None
 
 
 def test_accumulators():
