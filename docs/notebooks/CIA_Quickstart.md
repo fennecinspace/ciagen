@@ -10,7 +10,7 @@ Try CIA directly in your browser — no installation required.
 
 ## Quick Start
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/main/notebooks/CIA_Quickstart.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/dev/notebooks/CIA_Quickstart.ipynb)
 
 A step-by-step notebook covering:
 
