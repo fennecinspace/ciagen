@@ -181,8 +181,7 @@ cython_debug/
 #.idea/
 
 data*
-!ciagen/data/
-datasets*
+# datasets*
 multirun*
 .vscode*
 wandb*
@@ -196,3 +195,4 @@ hugging_face_cache
 .sdcn
 .claude/
 .ruff_cache/
+!ciagen/data/
