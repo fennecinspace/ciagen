@@ -23,7 +23,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/main/notebooks/CIA_Quickstart.ipynb)
 
-Run CIA in your browser with Google Colab — no installation required. Open the [Quickstart notebook](notebooks/CIA_Quickstart.ipynb) to generate, evaluate, and filter synthetic images in under 15 minutes.
+Run CIA in your browser with Google Colab: no installation required. Open the [Quickstart notebook](notebooks/CIA_Quickstart.ipynb) to generate, evaluate, and filter synthetic images in under 15 minutes.
 
 ## Installation
 

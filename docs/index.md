@@ -19,7 +19,7 @@ description: Generate high-quality synthetic image data using Stable Diffusion +
 | **Controlled Generation** | Use edge maps, pose estimation, segmentation, or face meshes as control signals |
 | **Quality-Aware** | Evaluate with FID, Inception Score, and Mahalanobis distance |
 | **Smart Filtering** | Select best samples using PTD scores (top-k, top-p, threshold) |
-| **Multiple Interfaces** | Python API, CLI, or Hydra config — pick what fits your workflow |
+| **Multiple Interfaces** | Python API, CLI, or Hydra config, pick what fits your workflow |
 
 ## The Pipeline
 

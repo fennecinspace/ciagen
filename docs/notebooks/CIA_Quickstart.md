@@ -6,7 +6,7 @@ keywords: notebook, colab, tutorial
 
 # Notebooks
 
-Try CIA directly in your browser — no installation required.
+Try CIA directly in your browser: no installation required.
 
 ## Quick Start
 
@@ -14,10 +14,10 @@ Try CIA directly in your browser — no installation required.
 
 A step-by-step notebook covering:
 
-1. **Installation** — install CIA via pip
-2. **Generate** — create synthetic images from sample images
-3. **Evaluate** — compute quality metrics (FID, Mahalanobis distance)
-4. **Filter** — keep only the best generated images
+1. **Installation**: install CIA via pip
+2. **Generate**: create synthetic images from sample images
+3. **Evaluate**: compute quality metrics (FID, Mahalanobis distance)
+4. **Filter**: keep only the best generated images
 
 Open the notebook in Colab and run each cell to see CIA in action. You'll need a GPU runtime (Runtime → Change runtime type → T4 GPU recommended).
 
