@@ -4,7 +4,7 @@ from typing import List, Optional
 from ciagen.captioning.auto_captioner import AutoCaptioner
 from ciagen.utils.io import logger
 
-VALID_ENGINES = frozenset({"openrouter", "openai", "ollama"})
+VALID_ENGINES = frozenset({"openrouter", "ollama"})
 
 
 def _validate_caption(
@@ -19,12 +19,8 @@ def _validate_caption(
     if engine not in VALID_ENGINES:
         raise ValueError(f"Invalid engine '{engine}'. Choose from: {', '.join(sorted(VALID_ENGINES))}")
 
-    if engine in ("openai", "openrouter") and not api_key:
-        raise ValueError(
-            f"api_key is required for {engine} engine. "
-            "Get a free key at https://openrouter.ai/keys (for openrouter) "
-            "or https://platform.openai.com/api-keys (for openai)"
-        )
+    if engine == "openrouter" and not api_key:
+        raise ValueError(f"api_key is required for {engine} engine. Get a free key at https://openrouter.ai/keys")
 
 
 def caption(
@@ -40,9 +36,9 @@ def caption(
     Args:
         images: Directory containing images to caption.
         captions_dir: Directory to save caption text files.
-        engine: Captioning engine ('openrouter', 'openai', or 'ollama').
+        engine: Captioning engine ('openrouter' or 'ollama').
         model: Vision model name.
-        api_key: API key (required for openrouter/openai).
+        api_key: API key (required for openrouter).
         image_formats: Supported image formats.
     """
     images = Path(images)

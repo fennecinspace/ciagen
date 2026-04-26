@@ -10,7 +10,7 @@ from ciagen.utils.io import logger
 
 
 class AutoCaptioner:
-    """Automatically generate captions for images using OpenAI, OpenRouter, or Ollama vision models."""
+    """Automatically generate captions for images using OpenRouter or Ollama."""
 
     def __init__(
         self,
@@ -23,15 +23,13 @@ class AutoCaptioner:
         self.model = model
         self.image_formats = image_formats or ["png", "jpg", "jpeg"]
 
-        if engine == "openai":
-            import openai
-
-            openai.api_key = api_key
-        elif engine == "openrouter":
-            import openai
-
-            openai.api_key = api_key
-            openai.base_url = "https://openrouter.ai/api/v1"
+        if engine == "openrouter":
+            self.api_key = api_key
+        elif engine == "ollama":
+            try:
+                import ollama  # noqa: F401
+            except ImportError:
+                raise ImportError("ollama package required for captioning. Install with: pip install ollama")
 
     def __call__(self, paths: dict) -> None:
         """Caption images from Hydra paths dict (backward compat)."""
@@ -76,20 +74,33 @@ class AutoCaptioner:
                 try:
                     if self.engine == "ollama":
                         caption = self._ollama_caption(image_path)
-                    elif self.engine in ("openai", "openrouter"):
-                        caption = self._openai_caption(image_path)
+                    elif self.engine == "openrouter":
+                        caption = self._openrouter_caption(image_path)
                     else:
-                        raise ValueError(f"Invalid engine: {self.engine}. Use 'openai', 'openrouter', or 'ollama'")
+                        raise ValueError(f"Invalid engine: {self.engine}. Use 'openrouter' or 'ollama'")
 
                     logger.info(f"Caption for {image_path}: {caption}")
                     with open(caption_path, "w") as f:
                         f.write(caption)
                 except Exception as e:
+                    import traceback
+
                     logger.error(f"Error captioning {image_path}: {e}")
+                    logger.error(f"Traceback: {traceback.format_exc()}")
 
     def _image_to_base64(self, image_path: str) -> str:
         with open(image_path, "rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
+            data = f.read()
+
+        # Detect image format from magic bytes
+        if data[:4] == b"\x89PNG":
+            mime_type = "image/png"
+        elif data[:2] == b"\xff\xd8":
+            mime_type = "image/jpeg"
+        else:
+            mime_type = "image/jpeg"  # default
+
+        return base64.b64encode(data).decode("utf-8"), mime_type
 
     def _ollama_caption(self, image_path: str) -> str:
         import ollama
@@ -115,14 +126,21 @@ class AutoCaptioner:
         )
         return response["message"]["content"]
 
-    def _openai_caption(self, image_path: str) -> str:
-        import openai
+    def _openrouter_caption(self, image_path: str) -> str:
+        """Call OpenRouter API directly using requests."""
+        import requests
 
-        image_base64 = self._image_to_base64(image_path)
-        response = openai.chat.completions.create(
-            model=self.model,
-            max_tokens=100,
-            messages=[
+        image_base64, mime_type = self._image_to_base64(image_path)
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/fennecinspace/ciagen",
+            "X-Title": "CIAGEN",
+        }
+        payload = {
+            "model": self.model,
+            "max_tokens": 100,
+            "messages": [
                 {
                     "role": "user",
                     "content": [
@@ -130,25 +148,35 @@ class AutoCaptioner:
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_base64}",
+                                "url": f"data:{mime_type};base64,{image_base64}",
                             },
                         },
                     ],
                 },
-                {
-                    "role": "system",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": (
-                                "Don't say stuff like 'This Image contains' or 'This image Depicts', "
-                                "just get directly into the description of the content of the image. "
-                                "Don't repeat the prompt, and don't talk like you're an assistant, "
-                                "simply give a description of what's in the image."
-                            ),
-                        },
-                    ],
-                },
             ],
+        }
+
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60,
         )
-        return str(response.choices[0].message.content)
+
+        # Debug: print response status and first 500 chars
+        print(f"OpenRouter status: {response.status_code}")
+        print(f"Response text (first 500): {response.text[:500]}")
+
+        if response.status_code != 200:
+            raise ValueError(f"OpenRouter API error {response.status_code}: {response.text[:200]}")
+
+        data = response.json()
+
+        # Verify it's a dict, not a string
+        if isinstance(data, str):
+            raise ValueError(f"Response is a string, not JSON: {data[:200]}")
+
+        if "choices" not in data or not data["choices"]:
+            raise ValueError(f"No choices in response: {data}")
+
+        return data["choices"][0]["message"]["content"]

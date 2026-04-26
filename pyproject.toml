@@ -48,11 +48,11 @@ dependencies = [
     "scipy>=1.10",
     "tqdm",
     "pyyaml",
+    "openai>=1.0",
 ]
 
 [project.optional-dependencies]
 captioning = [
-    "openai>=1.0",
     "ollama>=0.1",
 ]
 training = [
