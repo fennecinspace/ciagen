@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/pypi/v/ciagen)](https://pypi.org/project/ciagen/)
 [![Docs](https://img.shields.io/readthedocs/ciagen)](https://ciagen.readthedocs.io/en/latest/)
 [![arXiv](https://img.shields.io/badge/arXiv-2411.16128-blue)](https://arxiv.org/abs/2411.16128)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/main/notebooks/CIA_Quickstart.ipynb)
 
 <!-- Add tests later -->
 <!--[![Tests](https://img.shields.io/github/actions/workflow_status/multitel-ai/CIA/tests.yml?label=tests)](https://github.com/multitel-ai/CIA/actions) -->
@@ -19,6 +20,12 @@
 - **Quality-based filtering** -- keep only the best synthetic images via top-k, top-p, or threshold filtering
 - **Auto-captioning** -- generate image captions using OpenAI or Ollama vision models
 - **Multiple interfaces** -- Python API, CLI, and Hydra config
+
+## Try it now
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fennecinspace/ciagen/blob/main/notebooks/CIA_Quickstart.ipynb)
+
+Run CIA in your browser with Google Colab — no installation required. Open the [Quickstart notebook](notebooks/CIA_Quickstart.ipynb) to generate, evaluate, and filter synthetic images in under 15 minutes.
 
 ## Installation
 

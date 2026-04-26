@@ -59,6 +59,7 @@ nav:
     - installation.md
     - quickstart.md
     - pipeline.md
+    - notebooks/CIA_Quickstart.md
   - User Guide:
     - generation.md
     - evaluation.md
