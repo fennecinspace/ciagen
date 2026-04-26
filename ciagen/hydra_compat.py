@@ -56,11 +56,7 @@ def run_gen(cfg: DictConfig) -> Dict:
 def run_dtd(cfg: DictConfig) -> Dict:
     paths = generate_all_paths(cfg)
     model_data = cfg["model"]
-    config_device = (
-        "cuda"
-        if model_data["device"] == "cuda"
-        else "cpu"
-    )
+    config_device = "cuda" if model_data["device"] == "cuda" else "cpu"
 
     fe_name = cfg["metrics"]["fe"][0]
     results = evaluate(
@@ -89,11 +85,7 @@ def run_dtd(cfg: DictConfig) -> Dict:
 def run_ptd(cfg: DictConfig) -> Dict:
     paths = generate_all_paths(cfg)
     model_data = cfg["model"]
-    config_device = (
-        "cuda"
-        if model_data["device"] == "cuda"
-        else "cpu"
-    )
+    config_device = "cuda" if model_data["device"] == "cuda" else "cpu"
 
     fe_name = cfg["metrics"]["fe"][0]
     results = evaluate(

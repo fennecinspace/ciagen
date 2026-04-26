@@ -32,9 +32,7 @@ ETHNICITY_MAPPING = {
 }
 
 
-def create_label_file_from_label_and_path(
-    labels_desination_path, image_name, list_of_name_label_pairs
-):
+def create_label_file_from_label_and_path(labels_desination_path, image_name, list_of_name_label_pairs):
     emotion = list(filter(lambda x: x[0] == image_name, list_of_name_label_pairs))
 
     if len(emotion) == 0:
@@ -43,9 +41,7 @@ def create_label_file_from_label_and_path(
     elif len(emotion) == 1:
         emotion = emotion[0][1]
     else:
-        ciagen_logger.warning(
-            f"More than one label found for {image_name}: {emotion}, using a random one."
-        )
+        ciagen_logger.warning(f"More than one label found for {image_name}: {emotion}, using a random one.")
         emotion = emotion[0][random.randint(0, len(emotion) - 1)]
 
     image_pure_name = image_name.split(".")[0]
@@ -71,9 +67,7 @@ def download_fer_dataset(
         try:
             d.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            raise OSError(
-                f"Could not create data folders ({d} throws an error). E: {e}"
-            )
+            raise OSError(f"Could not create data folders ({d} throws an error). E: {e}")
 
     path_to_data_zip = data_path / data_zip_name
 
@@ -118,25 +112,15 @@ def prepare_fer_dataset(
     if which_dataset == "fer_real":
         dataset_name = "face-dataset-real"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "real")
-        images_download_path = os.path.join(
-            real_path_fer_download_which, "Real", "Real"
-        )
+        images_download_path = os.path.join(real_path_fer_download_which, "Real", "Real")
         split_file = os.path.join(real_path_fer_download_which, "combined_real.csv")
-        images_desination_path: Path = Path(
-            os.path.join(real_path_fer, "train", "images")
-        )
-        labels_desination_path: Path = Path(
-            os.path.join(real_path_fer, "train", "labels")
-        )
+        images_desination_path: Path = Path(os.path.join(real_path_fer, "train", "images"))
+        labels_desination_path: Path = Path(os.path.join(real_path_fer, "train", "labels"))
     elif which_dataset == "fer_gen_1_5":
         dataset_name = "face-dataset-gen1-5"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "sd15")
-        images_download_path = os.path.join(
-            real_path_fer_download_which, "Generated_1.5", "Generated_1.5"
-        )
-        split_file = os.path.join(
-            real_path_fer_download_which, "combined_generated.csv"
-        )
+        images_download_path = os.path.join(real_path_fer_download_which, "Generated_1.5", "Generated_1.5")
+        split_file = os.path.join(real_path_fer_download_which, "combined_generated.csv")
         images_desination_path: Path = Path(
             os.path.join(
                 os.path.dirname(os.path.dirname(paths["generated"])),
@@ -144,19 +128,13 @@ def prepare_fer_dataset(
                 "sd15_crucible_mediapipe_face",
             )
         )
-        metatdata_cheat_file = os.path.join(
-            os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml"
-        )
+        metatdata_cheat_file = os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd15.yaml")
         metadata_dest_path = os.path.join(images_desination_path, "metadata.yaml")
     elif which_dataset == "fer_gen_2_1":
         dataset_name = "face-dataset-gen2-1"
         real_path_fer_download_which = os.path.join(real_path_fer_download, "sd21")
-        images_download_path = os.path.join(
-            real_path_fer_download_which, "Generated_2.1", "Generated_2.1"
-        )
-        split_file = os.path.join(
-            real_path_fer_download_which, "combined_generated.csv"
-        )
+        images_download_path = os.path.join(real_path_fer_download_which, "Generated_2.1", "Generated_2.1")
+        split_file = os.path.join(real_path_fer_download_which, "combined_generated.csv")
         images_desination_path: Path = Path(
             os.path.join(
                 os.path.dirname(os.path.dirname(paths["generated"])),
@@ -164,19 +142,13 @@ def prepare_fer_dataset(
                 "sd21_crucible_mediapipe_face",
             )
         )
-        metatdata_cheat_file = os.path.join(
-            os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml"
-        )
+        metatdata_cheat_file = os.path.join(os.getcwd(), "ciagen", "conf", "metadata-sd21.yaml")
         metadata_dest_path = os.path.join(images_desination_path, "metadata.yaml")
 
     download_fer_dataset(real_path_fer_download_which, dataset_name)
     labels = load_csv_file(split_file)
 
-    all_images = list(
-        x
-        for x in os.listdir(images_download_path)
-        if ("jpg" in x or "png" in x or "jpeg" in x)
-    )
+    all_images = list(x for x in os.listdir(images_download_path) if ("jpg" in x or "png" in x or "jpeg" in x))
 
     if "gen" in which_dataset:
         ciagen_logger.info(
@@ -195,9 +167,7 @@ def prepare_fer_dataset(
             if not os.path.exists(dest_img_path):
                 shutil.move(orig_img_path, dest_img_path)
 
-        ciagen_logger.info(
-            f"Copying cheat metadata file from {str(metatdata_cheat_file)} to {str(metadata_dest_path)}"
-        )
+        ciagen_logger.info(f"Copying cheat metadata file from {str(metatdata_cheat_file)} to {str(metadata_dest_path)}")
         shutil.copy(metatdata_cheat_file, metadata_dest_path)
 
     else:
@@ -236,9 +206,7 @@ def prepare_fer_dataset(
         ciagen_logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
         total_length = (
-            (val_nb + test_nb + train_nb)
-            if (val_nb + test_nb + train_nb) < len(all_images)
-            else len(all_images)
+            (val_nb + test_nb + train_nb) if (val_nb + test_nb + train_nb) < len(all_images) else len(all_images)
         )
 
         all_images = all_images[:total_length]

@@ -21,12 +21,7 @@ def draw_landmarks_on_image(
     for face_landmarks in face_landmarks_list:
         face_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         face_landmarks_proto.landmark.extend(
-            [
-                landmark_pb2.NormalizedLandmark(
-                    x=landmark.x, y=landmark.y, z=landmark.z
-                )
-                for landmark in face_landmarks
-            ]
+            [landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in face_landmarks]
         )
 
         solutions.drawing_utils.draw_landmarks(
@@ -56,6 +51,7 @@ def draw_landmarks_on_image(
 
 def plot_face_blendshapes_bar_graph(face_blendshapes):
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 

@@ -35,10 +35,7 @@ def _validate_generate(
         raise NotADirectoryError(f"Source directory does not exist: {source}")
 
     if extractor not in VALID_EXTRACTORS:
-        raise ValueError(
-            f"Invalid extractor '{extractor}'. "
-            f"Choose from: {', '.join(sorted(VALID_EXTRACTORS))}"
-        )
+        raise ValueError(f"Invalid extractor '{extractor}'. Choose from: {', '.join(sorted(VALID_EXTRACTORS))}")
 
     if not sd_model or not isinstance(sd_model, str):
         raise ValueError("sd_model must be a non-empty string")
@@ -64,9 +61,7 @@ def _validate_generate(
         raise ValueError(f"guidance_scale must be > 0, got {guidance_scale}")
 
     if use_captions and not captions_dir:
-        raise ValueError(
-            "captions_dir is required when use_captions=True"
-        )
+        raise ValueError("captions_dir is required when use_captions=True")
 
 
 def generate(
@@ -126,9 +121,18 @@ def generate(
     output.mkdir(parents=True, exist_ok=True)
 
     _validate_generate(
-        source, output, extractor, sd_model, cn_model,
-        num_per_image, seed, device, quality, guidance_scale,
-        use_captions, captions_dir,
+        source,
+        output,
+        extractor,
+        sd_model,
+        cn_model,
+        num_per_image,
+        seed,
+        device,
+        quality,
+        guidance_scale,
+        use_captions,
+        captions_dir,
     )
 
     real_images = []
@@ -142,9 +146,7 @@ def generate(
     if use_captions and captions_dir:
         captions = sorted(glob.glob(str(Path(captions_dir).absolute()) + "/*"))
         if len(captions) != len(real_images):
-            raise ValueError(
-                f"Caption count ({len(captions)}) doesn't match image count ({len(real_images)})"
-            )
+            raise ValueError(f"Caption count ({len(captions)}) doesn't match image count ({len(real_images)})")
     else:
         captions = [None] * len(real_images)
 
@@ -180,14 +182,9 @@ def generate(
             condition = ext.extract(image)
 
             if use_captions and captions[idx]:
-                positive_prompts = [
-                    p.lower() for p in read_caption(captions[idx])
-                ]
+                positive_prompts = [p.lower() for p in read_caption(captions[idx])]
                 if modify_captions and prompt_generator:
-                    positive_prompts = [
-                        _modify_prompt(prompt_generator, p, generation_size)
-                        for p in positive_prompts
-                    ]
+                    positive_prompts = [_modify_prompt(prompt_generator, p, generation_size) for p in positive_prompts]
             elif prompt:
                 positive_prompts = [prompt] if isinstance(prompt, str) else prompt
             else:
@@ -197,11 +194,14 @@ def generate(
             neg_prompts = [neg]
 
             output_images = generator.gen(
-                condition, positive_prompts, neg_prompts,
-                quality=quality, guidance_scale=guidance_scale,
+                condition,
+                positive_prompts,
+                neg_prompts,
+                quality=quality,
+                guidance_scale=guidance_scale,
             )
 
-            for j, img in enumerate(output_images.images if hasattr(output_images, 'images') else output_images):
+            for j, img in enumerate(output_images.images if hasattr(output_images, "images") else output_images):
                 img.save(os.path.join(output, f"{image_name}_{j + 1}.png"))
                 generated_count += 1
 

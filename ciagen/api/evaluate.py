@@ -50,16 +50,14 @@ def _validate_evaluate(
     fe_registry = available_feature_extractors()
     if feature_extractor not in fe_registry:
         raise ValueError(
-            f"Invalid feature_extractor '{feature_extractor}'. "
-            f"Choose from: {', '.join(sorted(fe_registry.keys()))}"
+            f"Invalid feature_extractor '{feature_extractor}'. Choose from: {', '.join(sorted(fe_registry.keys()))}"
         )
 
     all_valid = set(AVAILABLE_DTD_METRICS) | set(AVAILABLE_PTD_METRICS)
     unknown = set(metrics) - all_valid
     if unknown:
         raise ValueError(
-            f"Unknown metric(s): {', '.join(sorted(unknown))}. "
-            f"Choose from: {', '.join(sorted(all_valid))}"
+            f"Unknown metric(s): {', '.join(sorted(unknown))}. Choose from: {', '.join(sorted(all_valid))}"
         )
 
     if batch_size < 1:
@@ -116,8 +114,14 @@ def evaluate(
     generated = Path(generated)
 
     _validate_evaluate(
-        real, generated, metrics, feature_extractor,
-        batch_size, limit_size_real, limit_size_syn, device,
+        real,
+        generated,
+        metrics,
+        feature_extractor,
+        batch_size,
+        limit_size_real,
+        limit_size_syn,
+        device,
     )
 
     results = {}

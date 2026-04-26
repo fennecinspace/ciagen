@@ -28,9 +28,7 @@ class IS(QualityMetric):
     ):
         self.device = device
         self._feature_extractor = (
-            InceptionModel(softmaxed=softmaxed, weights=weights)
-            if feature_extractor is None
-            else feature_extractor
+            InceptionModel(softmaxed=softmaxed, weights=weights) if feature_extractor is None else feature_extractor
         )
         self._eps = eps
         self._kl_calculator = KLISCalculator(force_probability=True)
@@ -45,9 +43,7 @@ class IS(QualityMetric):
     def update(self, synthetic_samples: torch.Tensor):
         with torch.no_grad():
             self._feature_extractor.eval()
-            probabilities = self._feature_extractor(
-                synthetic_samples.to(self.device)
-            ).to(self.device)
+            probabilities = self._feature_extractor(synthetic_samples.to(self.device)).to(self.device)
             self._kl_calculator(probabilities)
 
     def score(
@@ -85,12 +81,8 @@ class IS(QualityMetric):
         accum = 0
 
         for i in tqdm(range(times)):
-            index = np.random.choice(
-                len(synthetic_samples), sampling_size, replace=False
-            )
-            _virtual_samples = VirtualDataloader(
-                dataset=synthetic_samples, index=index
-            )
+            index = np.random.choice(len(synthetic_samples), sampling_size, replace=False)
+            _virtual_samples = VirtualDataloader(dataset=synthetic_samples, index=index)
 
             accum += self.instant_score()
 

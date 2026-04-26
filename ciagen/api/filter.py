@@ -18,14 +18,10 @@ def _validate_filter(
     feature_extractor: str,
 ) -> None:
     if not generated.is_dir():
-        raise NotADirectoryError(
-            f"Generated directory does not exist: {generated}"
-        )
+        raise NotADirectoryError(f"Generated directory does not exist: {generated}")
 
     if method not in VALID_METHODS:
-        raise ValueError(
-            f"Invalid method '{method}'. Choose from: {', '.join(sorted(VALID_METHODS))}"
-        )
+        raise ValueError(f"Invalid method '{method}'. Choose from: {', '.join(sorted(VALID_METHODS))}")
 
     if value < 0:
         raise ValueError(f"value must be non-negative, got {value}")
@@ -33,19 +29,14 @@ def _validate_filter(
     fe_registry = available_feature_extractors()
     if feature_extractor not in fe_registry:
         raise ValueError(
-            f"Invalid feature_extractor '{feature_extractor}'. "
-            f"Choose from: {', '.join(sorted(fe_registry.keys()))}"
+            f"Invalid feature_extractor '{feature_extractor}'. Choose from: {', '.join(sorted(fe_registry.keys()))}"
         )
 
     if metric not in VALID_PTD_METRICS:
-        raise ValueError(
-            f"Invalid metric '{metric}'. Choose from: {', '.join(sorted(VALID_PTD_METRICS))}"
-        )
+        raise ValueError(f"Invalid metric '{metric}'. Choose from: {', '.join(sorted(VALID_PTD_METRICS))}")
 
     if method == "top-p" and not 0 <= value <= 1:
-        raise ValueError(
-            f"top-p value must be between 0 and 1, got {value}"
-        )
+        raise ValueError(f"top-p value must be between 0 and 1, got {value}")
 
 
 def filter_generated(
@@ -82,10 +73,7 @@ def filter_generated(
 
     if ptd_scores is None:
         if not metadata_file.exists():
-            raise FileNotFoundError(
-                f"No metadata.yaml found in {generated}. "
-                "Run evaluate() with ptd metrics first."
-            )
+            raise FileNotFoundError(f"No metadata.yaml found in {generated}. Run evaluate() with ptd metrics first.")
         with open(metadata_file, "r") as f:
             metadata_dict = yaml.safe_load(f)
         ptd_scores = metadata_dict["results"]["metrics"]["ptd"]
@@ -113,18 +101,13 @@ def filter_generated(
                 ptd_sorted = sorted(ptd, key=lambda a: a[1])
                 kept = ptd_sorted[:k]
             else:
-                raise ValueError(
-                    f"Unknown filtering method: {method}. "
-                    "Use 'threshold', 'top-k', or 'top-p'"
-                )
+                raise ValueError(f"Unknown filtering method: {method}. Use 'threshold', 'top-k', or 'top-p'")
 
             kept = sorted(kept, reverse=True, key=lambda a: a[1])
             kept_images_by_fe[fe] = {path: score for path, score in kept}
 
         kept_images[metric_name] = kept_images_by_fe
 
-    logger.info(
-        f"Filtering ({method}={value}): kept {sum(len(v) for v in kept_images_by_fe.values())} images"
-    )
+    logger.info(f"Filtering ({method}={value}): kept {sum(len(v) for v in kept_images_by_fe.values())} images")
 
     return kept_images

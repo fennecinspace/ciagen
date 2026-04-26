@@ -13,14 +13,14 @@ from ciagen.utils.io import logger as ciagen_logger
 
 def download_mocs(
     data_path: Path,
-    size: str = 'small',
+    size: str = "small",
 ):
     dataset_links = {
-        'extra_small': 'https://nextcloud.ig.umons.ac.be/s/tfoeSBoDDE3mzHp/download/MOCS_extra_small.zip',
-        'small': 'https://nextcloud.ig.umons.ac.be/s/SWfyj4wAqCtRGYy/download/MOCS_small.zip',
-        'medium': '',
-        'large': '',
-        'full': '',
+        "extra_small": "https://nextcloud.ig.umons.ac.be/s/tfoeSBoDDE3mzHp/download/MOCS_extra_small.zip",
+        "small": "https://nextcloud.ig.umons.ac.be/s/SWfyj4wAqCtRGYy/download/MOCS_small.zip",
+        "medium": "",
+        "large": "",
+        "full": "",
     }
 
     data_url = dataset_links[size]
@@ -30,12 +30,10 @@ def download_mocs(
     all_segmentation_path = Path(data_path) / "Segmentation"
     all_captions_path = Path(data_path) / "Captions"
 
-    path_to_data_zip = Path(data_path) / f'MOCS_{size}.zip'
+    path_to_data_zip = Path(data_path) / f"MOCS_{size}.zip"
 
     if not os.path.exists(path_to_data_zip):
-        ciagen_logger.info(
-            f"Downloading zip images from {data_url} to {path_to_data_zip}"
-        )
+        ciagen_logger.info(f"Downloading zip images from {data_url} to {path_to_data_zip}")
         wget.download(data_url, out=str(path_to_data_zip))
 
         with zipfile.ZipFile(path_to_data_zip, "r") as zip_ref:
@@ -50,9 +48,7 @@ def prepare_mocs(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
 
     os.makedirs(real_path_dataset, exist_ok=True)
 
-    image_path, bbox_labels_dir, segmentation_labels_dir, all_captions_path = download_mocs(
-        real_path_dataset
-    )
+    image_path, bbox_labels_dir, segmentation_labels_dir, all_captions_path = download_mocs(real_path_dataset)
 
     origin_labels_dir = bbox_labels_dir
 
@@ -81,21 +77,16 @@ def prepare_mocs(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
 
     all_captions = os.listdir(all_captions_path.absolute())
 
-    all_captions = list(map(lambda x: x.split('.')[0], all_captions))
+    all_captions = list(map(lambda x: x.split(".")[0], all_captions))
 
-    all_images = list(filter(lambda x: x.split('.')[0] in all_captions, all_images))
+    all_images = list(filter(lambda x: x.split(".")[0] in all_captions, all_images))
 
-    length = (
-        val_nb + test_nb + train_nb
-        if (val_nb + test_nb + train_nb) < len(all_images)
-        else len(all_images)
-    )
+    length = val_nb + test_nb + train_nb if (val_nb + test_nb + train_nb) < len(all_images) else len(all_images)
 
     all_images = all_images[:length]
 
     counter = 0
     for file_name in tqdm(all_images, unit="img"):
-
         if counter > val_nb + test_nb + train_nb:
             break
 
@@ -107,10 +98,7 @@ def prepare_mocs(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         label = origin_labels_dir / txt_file
         caption = all_captions_path / txt_file
 
-        if (
-            os.path.isfile(image)
-            and os.path.isfile(label)
-        ):
+        if os.path.isfile(image) and os.path.isfile(label):
             if counter < val_nb:
                 images_dir = real_val_images_path
                 labels_dir = real_val_labels_path

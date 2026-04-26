@@ -211,15 +211,11 @@ def filter_redundant_yolo_annotations(annotations, threshold=0.9):
     parsed_annotations = []
     for annotation in annotations:
         class_id, x_center, y_center, width, height = annotation.split()
-        parsed_annotations += [
-            [float(x_center), float(y_center), float(width), float(height)]
-        ]
+        parsed_annotations += [[float(x_center), float(y_center), float(width), float(height)]]
 
     filtered_boxes = filter_redundant_boxes(parsed_annotations, threshold)
 
-    filtered_annotations = [
-        f"0 {box[0]} {box[1]} {box[2]} {box[3]}" for box in filtered_boxes
-    ]
+    filtered_annotations = [f"0 {box[0]} {box[1]} {box[2]} {box[3]}" for box in filtered_boxes]
 
     return filtered_annotations
 
@@ -251,9 +247,7 @@ def download_flickr(
     data_url = "http://cloud.deepilia.com/s/F83NCnFzRTJDmeY/download/flickr30k.zip"
 
     if not os.path.exists(path_to_data_zip):
-        ciagen_logger.info(
-            f"Downloading zip images from {data_url} to {path_to_data_zip}"
-        )
+        ciagen_logger.info(f"Downloading zip images from {data_url} to {path_to_data_zip}")
         wget.download(data_url, out=str(path_to_data_zip))
     if not len(os.listdir(image_path)):
         ciagen_logger.info(f"Extracting zip images to {image_path}")
@@ -305,9 +299,7 @@ def get_sentence_data(fn):
                     words.append(token)
 
         sentence_data = {"sentence": " ".join(words), "phrases": []}
-        for index, phrase, p_id, p_type in zip(
-            first_word, phrases, phrase_id, phrase_type
-        ):
+        for index, phrase, p_id, p_type in zip(first_word, phrases, phrase_id, phrase_type):
             sentence_data["phrases"].append(
                 {
                     "first_word_index": index,
@@ -421,9 +413,7 @@ def prepare_flickr30k(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
 
     os.makedirs(real_path_flickr, exist_ok=True)
 
-    images_path, annotations_path, sentences_path, caps_path, labels_path = (
-        download_flickr(real_path_flickr)
-    )
+    images_path, annotations_path, sentences_path, caps_path, labels_path = download_flickr(real_path_flickr)
 
     all_images = list(images_path.glob("*.jpg"))
 
@@ -442,9 +432,7 @@ def prepare_flickr30k(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         label_file = labels_path / txt_file
         caption_file = caps_path / txt_file
 
-        yolo_labels, captions = create_region_desc(
-            sentence_file, annotation_file, name, str(image_file)
-        )
+        yolo_labels, captions = create_region_desc(sentence_file, annotation_file, name, str(image_file))
 
         if yolo_labels:
             with open(label_file, "w") as label_file:
@@ -474,15 +462,9 @@ def prepare_flickr30k(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
     ciagen_logger.info(f"Moving VAL to {str(real_val_images_path)}")
     ciagen_logger.info(f"Using values test: {test_nb} and validation: {val_nb}")
 
-    all_images = [
-        label.replace(".txt", ".jpg") for label in os.listdir(labels_path)
-    ]
+    all_images = [label.replace(".txt", ".jpg") for label in os.listdir(labels_path)]
 
-    length = (
-        val_nb + test_nb + train_nb
-        if (val_nb + test_nb + train_nb) < len(all_images)
-        else all_images
-    )
+    length = val_nb + test_nb + train_nb if (val_nb + test_nb + train_nb) < len(all_images) else all_images
 
     all_images = all_images[:length]
 
@@ -499,11 +481,7 @@ def prepare_flickr30k(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         label = labels_path / txt_file
         caption = caps_path / txt_file
 
-        if (
-            os.path.isfile(image)
-            and os.path.isfile(label)
-            and os.path.isfile(caption)
-        ):
+        if os.path.isfile(image) and os.path.isfile(label) and os.path.isfile(caption):
             if counter < val_nb:
                 images_dir = real_val_images_path
                 labels_dir = real_val_labels_path

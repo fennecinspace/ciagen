@@ -17,9 +17,7 @@ def _validate_caption(
         raise NotADirectoryError(f"Images directory does not exist: {images}")
 
     if engine not in VALID_ENGINES:
-        raise ValueError(
-            f"Invalid engine '{engine}'. Choose from: {', '.join(sorted(VALID_ENGINES))}"
-        )
+        raise ValueError(f"Invalid engine '{engine}'. Choose from: {', '.join(sorted(VALID_ENGINES))}")
 
     if engine == "openai" and not api_key:
         raise ValueError(

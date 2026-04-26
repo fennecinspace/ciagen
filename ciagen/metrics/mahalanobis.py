@@ -23,9 +23,7 @@ class MLD(QualityMetric):
         softmaxed: bool = False,
     ):
         self._feature_extractor = (
-            InceptionModel(weights=weights, softmaxed=softmaxed)
-            if feature_extractor is None
-            else feature_extractor
+            InceptionModel(weights=weights, softmaxed=softmaxed) if feature_extractor is None else feature_extractor
         )
         self.device = device
 
@@ -63,18 +61,14 @@ class MLD(QualityMetric):
         self._cov_calculator.eval()
         self._feature_extractor.eval()
 
-        self._feature_extractor, self._mean_calculator, self._cov_calculator = (
-            force_device(device=self.device)(
-                self._feature_extractor, self._mean_calculator, self._cov_calculator
-            )
+        self._feature_extractor, self._mean_calculator, self._cov_calculator = force_device(device=self.device)(
+            self._feature_extractor, self._mean_calculator, self._cov_calculator
         )
 
         real_dataloader = cast_to_dataloader(real_samples, batch_size=batch_size)
         synthetic_dataloader = cast_to_dataloader(synthetic_samples, batch_size=batch_size)
 
-        logger.info(
-            f"Computing Mahalanobis Distance using {self._feature_extractor.name()} as feature extractor"
-        )
+        logger.info(f"Computing Mahalanobis Distance using {self._feature_extractor.name()} as feature extractor")
 
         logger.info("Computing distribution from real samples")
         for x in tqdm(real_dataloader):
@@ -91,17 +85,13 @@ class MLD(QualityMetric):
         def score_batch(x, rmean, rcov):
             x = x.to(self.device)
             x_features = self._feature_extractor(x).to(self.device).type(fixed_type)
-            return mahalanobis_distance_calc(
-                x_features, rmean, rcov, to_type="torch", distance_squared=True
-            )
+            return mahalanobis_distance_calc(x_features, rmean, rcov, to_type="torch", distance_squared=True)
 
         logger.info("Computing distance for synthetic samples")
         results = torch.zeros(len(synthetic_dataloader.dataset), device=self.device)
         for i, x in tqdm(enumerate(synthetic_dataloader)):
             torch.cuda.empty_cache()
             x = get_tensor_from_iterable(x)
-            results[i * batch_size : (i + 1) * batch_size] = score_batch(
-                x, real_mean, real_cov
-            )
+            results[i * batch_size : (i + 1) * batch_size] = score_batch(x, real_mean, real_cov)
 
         return results

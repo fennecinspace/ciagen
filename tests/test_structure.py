@@ -3,6 +3,7 @@
 
 def test_import_ciagen():
     import ciagen
+
     assert hasattr(ciagen, "generate")
     assert hasattr(ciagen, "evaluate")
     assert hasattr(ciagen, "filter_generated")
@@ -13,6 +14,7 @@ def test_import_extractors():
     from ciagen.extractors import (
         AVAILABLE_EXTRACTORS,
     )
+
     assert "canny" in AVAILABLE_EXTRACTORS
     assert "openpose" in AVAILABLE_EXTRACTORS
 

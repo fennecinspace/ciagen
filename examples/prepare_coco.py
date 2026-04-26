@@ -55,17 +55,11 @@ def download_coco(
     path_to_data_zip = data_path / data_zip_name
     path_to_annotations_zip = data_path / annotations_zip_name
 
-    data_url = (
-        "https://cloud.deepilia.com/s/BQcq8nQxFjizdFz/download/Coco_1FullPerson.zip"
-    )
-    annotations_url = (
-        "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
-    )
+    data_url = "https://cloud.deepilia.com/s/BQcq8nQxFjizdFz/download/Coco_1FullPerson.zip"
+    annotations_url = "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
 
     if not os.path.exists(path_to_data_zip):
-        ciagen_logger.info(
-            f"Downloading zip images from {data_url} to {path_to_data_zip}"
-        )
+        ciagen_logger.info(f"Downloading zip images from {data_url} to {path_to_data_zip}")
         wget.download(data_url, out=str(path_to_data_zip))
     if not len(os.listdir(image_path)):
         ciagen_logger.info(f"Extracting zip images to {image_path}")
@@ -73,9 +67,7 @@ def download_coco(
             zip_ref.extractall(str(data_path))
 
     if not os.path.exists(path_to_annotations_zip):
-        ciagen_logger.info(
-            f"Downloading zip annotations from {annotations_url} to {path_to_annotations_zip}"
-        )
+        ciagen_logger.info(f"Downloading zip annotations from {annotations_url} to {path_to_annotations_zip}")
         wget.download(annotations_url, out=str(path_to_annotations_zip))
     if not len(os.listdir(annotations_path)):
         ciagen_logger.info(f"Extracting zip annotations to {annotations_path}")
@@ -91,9 +83,7 @@ def prepare_coco(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
 
     os.makedirs(real_path_dataset, exist_ok=True)
 
-    image_path, annotations_path, bbx_path, caps_path = download_coco(
-        real_path_dataset
-    )
+    image_path, annotations_path, bbx_path, caps_path = download_coco(real_path_dataset)
 
     coco_version = "train2017"
 
@@ -113,20 +103,14 @@ def prepare_coco(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         img_path = str(img_path.absolute())
         img_id = int(img_path.split("/")[-1].split(".jpg")[0])
 
-        Keypoints_annIds = coco_keypoints.getAnnIds(
-            imgIds=img_id, catIds=catIds, iscrowd=None
-        )
+        Keypoints_annIds = coco_keypoints.getAnnIds(imgIds=img_id, catIds=catIds, iscrowd=None)
         Keypoints_anns = coco_keypoints.loadAnns(Keypoints_annIds)
 
         caps_annIds = coco_captions.getAnnIds(imgIds=img_id)
         caps_anns = coco_captions.loadAnns(caps_annIds)
 
-        bbox_text_path = img_path.replace(".jpg", ".txt").replace(
-            "Coco_1FullPerson", "Coco_1FullPerson_bbx"
-        )
-        captions_text_path = img_path.replace(".jpg", ".txt").replace(
-            "Coco_1FullPerson", "Coco_1FullPerson_caps"
-        )
+        bbox_text_path = img_path.replace(".jpg", ".txt").replace("Coco_1FullPerson", "Coco_1FullPerson_bbx")
+        captions_text_path = img_path.replace(".jpg", ".txt").replace("Coco_1FullPerson", "Coco_1FullPerson_caps")
 
         with open(bbox_text_path, "w") as file:
             coco_box = Keypoints_anns[0]["bbox"]
@@ -161,17 +145,12 @@ def prepare_coco(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
 
     all_images = os.listdir(image_path)
 
-    length = (
-        val_nb + test_nb + train_nb
-        if (val_nb + test_nb + train_nb) < len(all_images)
-        else all_images
-    )
+    length = val_nb + test_nb + train_nb if (val_nb + test_nb + train_nb) < len(all_images) else all_images
 
     all_images = all_images[:length]
 
     counter = 0
     for file_name in tqdm(all_images, unit="img"):
-
         if counter > val_nb + test_nb + train_nb:
             break
 
@@ -183,11 +162,7 @@ def prepare_coco(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         label = bbx_path / txt_file
         caption = caps_path / txt_file
 
-        if (
-            os.path.isfile(image)
-            and os.path.isfile(label)
-            and os.path.isfile(caption)
-        ):
+        if os.path.isfile(image) and os.path.isfile(label) and os.path.isfile(caption):
             if counter < val_nb:
                 images_dir = real_val_images_path
                 labels_dir = real_val_labels_path

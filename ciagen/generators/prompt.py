@@ -20,11 +20,7 @@ class NaivePromptGenerator:
         # if possible and return it
         for vocabulary_class in self.vocabulary:
             if token in self.vocabulary[vocabulary_class]:
-                other_tokens = list(
-                    filter(
-                        lambda word: token != word, self.vocabulary[vocabulary_class]
-                    )
-                )
+                other_tokens = list(filter(lambda word: token != word, self.vocabulary[vocabulary_class]))
                 if other_tokens:
                     return random.choice(other_tokens)
         return token
@@ -98,26 +94,18 @@ class NaivePromptGenerator:
                 .replace("opt_age", random.choice(self.vocabulary["age"]))
                 .replace("opt_size", random.choice(self.vocabulary["size"]))
                 .replace("opt_height", random.choice(self.vocabulary["height"]))
-                .replace(
-                    "opt_clothes_top", random.choice(self.vocabulary["clothes_top"])
-                )
+                .replace("opt_clothes_top", random.choice(self.vocabulary["clothes_top"]))
                 .replace(
                     "opt_clothes_bottom",
                     random.choice(self.vocabulary["clothes_bottom"]),
                 )
-                .replace(
-                    "opt_accessories", random.choice(self.vocabulary["accessories"])
-                )
+                .replace("opt_accessories", random.choice(self.vocabulary["accessories"]))
                 .replace("opt_ground", random.choice(self.vocabulary["ground"]))
                 .replace("opt_background", random.choice(self.vocabulary["background"]))
             ]
 
             for c in range(color_count + 1):
-                new_phrase = [
-                    new_phrase[0].replace(
-                        f"opt_color{c}", random.choice(self.vocabulary["color"])
-                    )
-                ]
+                new_phrase = [new_phrase[0].replace(f"opt_color{c}", random.choice(self.vocabulary["color"]))]
 
             if new_phrase[0] not in phrases:
                 phrases.extend(new_phrase)

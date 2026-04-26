@@ -19,19 +19,13 @@ def wasserstein_distance_multi_dimensional(u: TL, v: TL, as_expectance: bool = T
 
     if len(u.shape) == 2 and len(v.shape) == 2:
         if len(u) != len(v):
-            raise ValueError(
-                f"Both `u` and `v` must have the same length. Got {len(u)=} and {len(v)=}."
-            )
-        res = np.array(
-            [scipy.stats.wasserstein_distance(u[i], v[i]) for i in range(len(u))]
-        )
+            raise ValueError(f"Both `u` and `v` must have the same length. Got {len(u)=} and {len(v)=}.")
+        res = np.array([scipy.stats.wasserstein_distance(u[i], v[i]) for i in range(len(u))])
         if as_expectance:
             res = np.mean(res)
         return res
 
-    raise ValueError(
-        f"Both `u` and `v` must be 1D or 2D arrays. Got {u.shape=} and {v.shape=}."
-    )
+    raise ValueError(f"Both `u` and `v` must be 1D or 2D arrays. Got {u.shape=} and {v.shape=}.")
 
 
 def wasserstein_distance_gaussian_version(

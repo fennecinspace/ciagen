@@ -25,6 +25,7 @@ class AutoCaptioner:
 
         if engine == "openai":
             import openai
+
             openai.api_key = api_key
 
     def __call__(self, paths: dict) -> None:
@@ -64,9 +65,7 @@ class AutoCaptioner:
             images += glob.glob(str(images_path.absolute()) + f"/*.{fmt}")
 
         for image_path in tqdm(images, desc="Captioning images"):
-            caption_path = os.path.join(
-                captions_path, image_path.split("/")[-1].split(".")[0] + ".txt"
-            )
+            caption_path = os.path.join(captions_path, image_path.split("/")[-1].split(".")[0] + ".txt")
 
             if not os.path.exists(caption_path):
                 try:

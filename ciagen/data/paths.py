@@ -14,9 +14,7 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
     """
     real_root = os.path.join("data", "real")
     real_dataset = os.path.join("data", "real", cfg["data"]["base"])
-    generated_dataset = os.path.join(
-        "data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"]
-    )
+    generated_dataset = os.path.join("data", "generated", cfg["data"]["base"], cfg["model"]["cn_use"])
 
     mixed_yamls_folder_path = os.path.join(
         "data",
@@ -59,17 +57,11 @@ def generate_all_paths(cfg: DictConfig) -> Dict[str, str | Path]:
 
     if cfg["task"] not in ["coco", "flickr30k"]:
         if not os.path.exists(real_train_images_path):
-            raise ValueError(
-                f"One of the real dataset paths does not exist: {real_train_images_path}"
-            )
+            raise ValueError(f"One of the real dataset paths does not exist: {real_train_images_path}")
         if not os.path.exists(real_test_images_path):
-            raise ValueError(
-                f"One of the real dataset paths does not exist: {real_test_images_path}"
-            )
+            raise ValueError(f"One of the real dataset paths does not exist: {real_test_images_path}")
         if not os.path.exists(real_val_images_path):
-            raise ValueError(
-                f"One of the real dataset paths does not exist: {real_val_images_path}"
-            )
+            raise ValueError(f"One of the real dataset paths does not exist: {real_val_images_path}")
 
     os.makedirs(generated_dataset, exist_ok=True)
 

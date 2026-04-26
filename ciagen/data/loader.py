@@ -248,6 +248,8 @@ def create_dataloader(
 
 def force_device(device: str):
     """Return a function that moves all its arguments to the given device."""
+
     def to_device(*args):
         return tuple(x.to(device) for x in args)
+
     return to_device

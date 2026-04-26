@@ -11,13 +11,7 @@ from ciagen.extractors.abc_extractor import ExtractorABC
 class Canny(ExtractorABC):
     name = "Canny"
 
-    def __init__(
-        self,
-        auto_threshold: bool = False,
-        low_threshold: int = 100,
-        high_threshold: int = 200,
-        **kwargs
-    ):
+    def __init__(self, auto_threshold: bool = False, low_threshold: int = 100, high_threshold: int = 200, **kwargs):
         self.auto_threshold = auto_threshold
         self.low_threshold = low_threshold
         self.high_threshold = high_threshold

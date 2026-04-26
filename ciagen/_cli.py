@@ -16,7 +16,8 @@ def main():
     gen_parser.add_argument("--source", required=True, help="Source images directory")
     gen_parser.add_argument("--output", required=True, help="Output directory")
     gen_parser.add_argument(
-        "--extractor", required=True,
+        "--extractor",
+        required=True,
         choices=["canny", "openpose", "segmentation", "mediapipe_face"],
     )
     gen_parser.add_argument("--sd-model", required=True, help="Stable Diffusion model ID")
@@ -62,6 +63,7 @@ def main():
 
     if args.command == "generate":
         from ciagen.api.generate import generate
+
         result = generate(
             source=args.source,
             output=args.output,
@@ -80,6 +82,7 @@ def main():
 
     elif args.command == "evaluate":
         from ciagen.api.evaluate import evaluate
+
         scores = evaluate(
             real=args.real,
             generated=args.generated,
@@ -94,6 +97,7 @@ def main():
 
     elif args.command == "filter":
         from ciagen.api.filter import filter_generated
+
         kept = filter_generated(
             generated=args.generated,
             method=args.method,
@@ -107,6 +111,7 @@ def main():
 
     elif args.command == "caption":
         from ciagen.api.caption import caption
+
         caption(
             images=args.images,
             captions_dir=args.output,

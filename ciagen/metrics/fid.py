@@ -30,9 +30,7 @@ class FID(QualityMetric):
     ):
         self.device = device
         self._feature_extractor = (
-            InceptionModel(weights=weights, softmaxed=softmaxed)
-            if feature_extractor is None
-            else feature_extractor
+            InceptionModel(weights=weights, softmaxed=softmaxed) if feature_extractor is None else feature_extractor
         )
 
         self._distribution_distance = (
@@ -101,9 +99,7 @@ class FID(QualityMetric):
         real_dataloader = cast_to_dataloader(real_samples, batch_size=batch_size)
         synthetic_dataloader = cast_to_dataloader(synthetic_samples, batch_size=batch_size)
 
-        logger.info(
-            f"Computing FID using {self._feature_extractor.name()} as feature extractor"
-        )
+        logger.info(f"Computing FID using {self._feature_extractor.name()} as feature extractor")
 
         logger.info("Computing distribution from real samples")
         for rx in tqdm(real_dataloader):

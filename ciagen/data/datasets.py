@@ -1,9 +1,7 @@
 import csv
 import random
 from pathlib import Path
-from typing import Dict, List, Optional
-
-from ciagen.utils.io import list_files
+from typing import Dict, List
 
 
 def select_equal_classes(
@@ -37,9 +35,7 @@ def select_equal_classes(
 
     remaining_images = nb_synth_images - len(selected_images)
     if remaining_images > 0:
-        available_classes = [
-            cls for cls in class_to_images if len(class_to_images[cls]) > images_per_class
-        ]
+        available_classes = [cls for cls in class_to_images if len(class_to_images[cls]) > images_per_class]
         for _ in range(remaining_images):
             class_name = random.choice(available_classes)
             selected_images.append(class_to_images[class_name].pop())

@@ -27,21 +27,25 @@ def help_task(cfg: DictConfig) -> None:
 
 def gen_task(cfg: DictConfig) -> None:
     from ciagen.hydra_compat import run_gen
+
     run_gen(cfg)
 
 
 def dtd_task(cfg: DictConfig) -> None:
     from ciagen.hydra_compat import run_dtd
+
     run_dtd(cfg)
 
 
 def ptd_task(cfg: DictConfig) -> None:
     from ciagen.hydra_compat import run_ptd
+
     run_ptd(cfg)
 
 
 def filtering_task(cfg: DictConfig) -> None:
     from ciagen.hydra_compat import run_filtering
+
     run_filtering(cfg)
 
 
@@ -68,15 +72,19 @@ def prepare_data_task(cfg: DictConfig) -> None:
 
     if dataset == "coco":
         from examples.prepare_coco import prepare_coco
+
         prepare_coco(cfg, paths)
     elif dataset == "flickr30k":
         from examples.prepare_flickr30k import prepare_flickr30k
+
         prepare_flickr30k(cfg, paths)
     elif dataset in ("fer_real", "fer_gen_1_5", "fer_gen_2_1"):
         from examples.prepare_fer import prepare_fer
+
         prepare_fer(cfg, paths)
     elif dataset == "mocs":
         from examples.prepare_mocs import prepare_mocs
+
         prepare_mocs(cfg, paths)
     else:
         print(f"[ERROR] Unknown dataset: {dataset}")
@@ -89,9 +97,11 @@ def mix_dataset(cfg: DictConfig) -> None:
     paths = generate_all_paths(cfg)
     if dataset in ("coco", "flickr30k"):
         from examples.mix_yolo_dataset import mix_yolo
+
         mix_yolo(cfg, paths)
     elif dataset == "fer":
         from examples.mix_fer_dataset import mix_fer
+
         mix_fer(cfg, paths)
     else:
         raise ValueError(f"Unknown dataset: {dataset}")
@@ -104,9 +114,11 @@ def train(cfg: DictConfig) -> None:
     paths = generate_all_paths(cfg)
     if dataset in ("coco", "flickr30k"):
         from examples.train_yolo import train_yolo
+
         train_yolo(cfg, paths)
     elif dataset == "fer":
         from examples.train_classifier import train_classifier
+
         train_classifier(cfg, paths)
     else:
         raise ValueError(f"Unknown dataset: {dataset}")

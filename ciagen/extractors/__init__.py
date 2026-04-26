@@ -27,17 +27,13 @@ def extract_model_from_name(raw_name: str) -> str:
     elif "segmentation" in raw_name:
         return "segmentation"
     else:
-        raise ValueError(
-            f"Unknown model: {raw_name}. Available extractors: {AVAILABLE_EXTRACTORS}"
-        )
+        raise ValueError(f"Unknown model: {raw_name}. Available extractors: {AVAILABLE_EXTRACTORS}")
 
 
 def instantiate_extractor(control_model: str, **kwargs):
     """Factory function to create an extractor instance by name."""
     if control_model not in AVAILABLE_EXTRACTORS:
-        raise ValueError(
-            f"Unknown control model: {control_model}. Available: {AVAILABLE_EXTRACTORS}"
-        )
+        raise ValueError(f"Unknown control model: {control_model}. Available: {AVAILABLE_EXTRACTORS}")
 
     extractors = {
         "openpose": OpenPose,

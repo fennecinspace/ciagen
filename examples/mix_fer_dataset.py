@@ -58,23 +58,17 @@ def create_csv_file_path(
         writer.writerow(["Filename", "Emotion", "Dataset"])
 
         for image in train_images:
-            base_name = os.path.splitext(os.path.basename(image))[0].split("_")[
-                0
-            ]
+            base_name = os.path.splitext(os.path.basename(image))[0].split("_")[0]
             emotion = train_name_to_label.get(base_name, "Unknown")
             writer.writerow([image, emotion, "train"])
 
         for image in val_images:
-            base_name = os.path.splitext(os.path.basename(image))[
-                0
-            ]
+            base_name = os.path.splitext(os.path.basename(image))[0]
             emotion = val_name_to_label.get(base_name, "Unknown")
             writer.writerow([image, emotion, "val"])
 
         for image in test_images:
-            base_name = os.path.splitext(os.path.basename(image))[
-                0
-            ]
+            base_name = os.path.splitext(os.path.basename(image))[0]
             emotion = test_name_to_label.get(base_name, "Unknown")
             writer.writerow([image, emotion, "test"])
 
@@ -153,15 +147,11 @@ def mix_fer(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         with open(metadata_file, "r") as f:
             metadata_dict = yaml.safe_load(f)
 
-        filtered_images = metadata_dict["results"]["filtering"][filtering_metric][
-            preferred_fe
-        ]
+        filtered_images = metadata_dict["results"]["filtering"][filtering_metric][preferred_fe]
 
         synth_images = list(filtered_images.keys())
 
-    synth_images = select_equal_classes(
-        total_captions, synth_images, nb_synth_images
-    )
+    synth_images = select_equal_classes(total_captions, synth_images, nb_synth_images)
 
     train_images = real_images + synth_images
 
@@ -175,13 +165,9 @@ def mix_fer(cfg: DictConfig, paths: Dict[str, str | Path]) -> None:
         output_csv=data_csv_path,
     )
 
-    ciagen_logger.info(
-        f"Training csv files created in : {paths['mixed_yamls_folder_path']}"
-    )
+    ciagen_logger.info(f"Training csv files created in : {paths['mixed_yamls_folder_path']}")
     ciagen_logger.info(f"Using {train_nb} Real Images from : {real_images_path}")
-    ciagen_logger.info(
-        f"Using Synthetic Images from : {synth_images_dir}, a total of {len(synth_images)} images"
-    )
+    ciagen_logger.info(f"Using Synthetic Images from : {synth_images_dir}, a total of {len(synth_images)} images")
     ciagen_logger.info(f"Using in total {len(train_images)} images for training")
     ciagen_logger.info(f"Using {val_nb} Validation Images from : {val_images_path}")
     ciagen_logger.info(f"Using {test_nb} Test Images from : {test_images_path}")

@@ -9,9 +9,7 @@ AVAILABLE_FEATURE_EXTRACTORS = (
 
 def instance_transform(feature_extractor_name: str, **kwargs):
     if feature_extractor_name not in AVAILABLE_FEATURE_EXTRACTORS:
-        raise ValueError(
-            f"Unknown feature extractor: {feature_extractor_name}. Please verify your configuration file."
-        )
+        raise ValueError(f"Unknown feature extractor: {feature_extractor_name}. Please verify your configuration file.")
 
     if feature_extractor_name == "vit":
         return vit_transform()
@@ -28,9 +26,7 @@ def available_feature_extractors():
 
 def instance_feature_extractor(feature_extractor_name: str, **kwargs):
     if feature_extractor_name not in AVAILABLE_FEATURE_EXTRACTORS:
-        raise ValueError(
-            f"Unknown feature extractor: {feature_extractor_name}. Please verify your configuration file."
-        )
+        raise ValueError(f"Unknown feature extractor: {feature_extractor_name}. Please verify your configuration file.")
 
     if feature_extractor_name == "vit":
         return VitFE(**kwargs)

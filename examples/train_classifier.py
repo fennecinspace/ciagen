@@ -32,10 +32,7 @@ class CSVDataframeDataset(Dataset):
         self.labels_column_index = labels_column_index
         self.dataframe = dataframe
         self.transform = transform
-        self.label_dict = {
-            label: idx
-            for idx, label in enumerate(self.dataframe[labels_column_title].unique())
-        }
+        self.label_dict = {label: idx for idx, label in enumerate(self.dataframe[labels_column_title].unique())}
 
     def __len__(self):
         return len(self.dataframe)
@@ -57,16 +54,12 @@ def train_classifier(
     train_dataset_csv_filename: str = "train_dataset.csv",
     labels_column_title: str = "Emotion",
 ) -> None:
-    metadata_file = (
-        Path(paths["mixed_yamls_folder_path"]) / train_dataset_csv_filename
-    )
+    metadata_file = Path(paths["mixed_yamls_folder_path"]) / train_dataset_csv_filename
 
     epochs = cfg["ml"]["epochs"]
     df = pd.read_csv(metadata_file)
 
-    ciagen_logger.info(
-        f"Training Classifier to {epochs} epochs using Dataset {metadata_file}"
-    )
+    ciagen_logger.info(f"Training Classifier to {epochs} epochs using Dataset {metadata_file}")
 
     train_df = df[df["Dataset"] == "train"]
     val_df = df[df["Dataset"] == "val"]
@@ -76,21 +69,13 @@ def train_classifier(
         [
             transforms.Resize((299, 299)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
-            ),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ]
     )
 
-    train_dataset = CSVDataframeDataset(
-        train_df, transform=transform, labels_column_title=labels_column_title
-    )
-    val_dataset = CSVDataframeDataset(
-        val_df, transform=transform, labels_column_title=labels_column_title
-    )
-    test_dataset = CSVDataframeDataset(
-        test_df, transform=transform, labels_column_title=labels_column_title
-    )
+    train_dataset = CSVDataframeDataset(train_df, transform=transform, labels_column_title=labels_column_title)
+    val_dataset = CSVDataframeDataset(val_df, transform=transform, labels_column_title=labels_column_title)
+    test_dataset = CSVDataframeDataset(test_df, transform=transform, labels_column_title=labels_column_title)
 
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
@@ -98,9 +83,7 @@ def train_classifier(
 
     model = models.inception_v3(weights="DEFAULT")
     num_classes = len(train_dataset.label_dict)
-    model.fc = nn.Linear(
-        model.fc.in_features, num_classes
-    )
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -166,9 +149,7 @@ def _train_model(
         correct = 0
         total = 0
 
-        train_loader_tqdm = tqdm(
-            train_loader, desc=f"Epoch {epoch + 1}/{epochs} [Training]"
-        )
+        train_loader_tqdm = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs} [Training]")
         for images, labels in train_loader_tqdm:
             images, labels = images.to(device), labels.to(device)
 
@@ -186,9 +167,7 @@ def _train_model(
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            train_loader_tqdm.set_postfix(
-                loss=loss.item(), accuracy=correct / total
-            )
+            train_loader_tqdm.set_postfix(loss=loss.item(), accuracy=correct / total)
 
         epoch_loss = running_loss / len(train_loader.dataset)
         epoch_acc = correct / total
@@ -225,7 +204,7 @@ def _train_model(
         )
 
         ciagen_logger.info(
-            f"Epoch {epoch+1}/{epochs}, "
+            f"Epoch {epoch + 1}/{epochs}, "
             f"Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.4f}, "
             f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}"
         )
@@ -243,9 +222,7 @@ def _train_model(
                 best_model_path,
             )
 
-            ciagen_logger.info(
-                f"New best model saved with validation accuracy: {best_val_acc:.4f}"
-            )
+            ciagen_logger.info(f"New best model saved with validation accuracy: {best_val_acc:.4f}")
 
     wb_artifact = wandb.Artifact(type="model", name=f"run_{wb.id}_model")
     wb_artifact.add_file(best_model_path)

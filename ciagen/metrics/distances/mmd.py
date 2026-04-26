@@ -27,25 +27,13 @@ def mmd_unbiased_estimator(
     xy_normalized = 2 / (m * n)
 
     if to_type == "numpy":
-        kxx = x_normalized * np.sum(
-            [kernel(x[i], x[j]) for i in range(m - 1) for j in range(i + 1, m)]
-        )
-        kyy = y_normalized * np.sum(
-            [kernel(y[i], y[j]) for i in range(n - 1) for j in range(i + 1, n)]
-        )
-        kxy = xy_normalized * np.sum(
-            [kernel(x[i], y[j]) for i in range(m) for j in range(n)]
-        )
+        kxx = x_normalized * np.sum([kernel(x[i], x[j]) for i in range(m - 1) for j in range(i + 1, m)])
+        kyy = y_normalized * np.sum([kernel(y[i], y[j]) for i in range(n - 1) for j in range(i + 1, n)])
+        kxy = xy_normalized * np.sum([kernel(x[i], y[j]) for i in range(m) for j in range(n)])
     elif to_type == "torch":
-        kxx = x_normalized * torch.sum(
-            [kernel(x[i], x[j]) for i in range(m - 1) for j in range(i + 1, m)]
-        )
-        kyy = y_normalized * torch.sum(
-            [kernel(y[i], y[j]) for i in range(n - 1) for j in range(i + 1, n)]
-        )
-        kxy = xy_normalized * torch.sum(
-            [kernel(x[i], y[j]) for i in range(m) for j in range(n)]
-        )
+        kxx = x_normalized * torch.sum([kernel(x[i], x[j]) for i in range(m - 1) for j in range(i + 1, m)])
+        kyy = y_normalized * torch.sum([kernel(y[i], y[j]) for i in range(n - 1) for j in range(i + 1, n)])
+        kxy = xy_normalized * torch.sum([kernel(x[i], y[j]) for i in range(m) for j in range(n)])
     else:
         raise ValueError(f"Invalid to_type: {to_type}")
 

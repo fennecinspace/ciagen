@@ -150,9 +150,7 @@ class KLISCalculator(torch.nn.Module):
         self._total_probability_accumulator = None
 
     def _verify_integrity(self) -> bool:
-        return (
-            self._samples_computed is None and self._conditional_probability_accumulator is None
-        ) or (
+        return (self._samples_computed is None and self._conditional_probability_accumulator is None) or (
             self._samples_computed is not None and self._conditional_probability_accumulator is not None
         )
 
@@ -190,8 +188,7 @@ class KLISCalculator(torch.nn.Module):
         total_probability_log = torch.log(total_probability + self._eps)
 
         kl_difference = (
-            self._conditional_probability_accumulator
-            - self._total_probability_accumulator * total_probability_log
+            self._conditional_probability_accumulator - self._total_probability_accumulator * total_probability_log
         )
 
         if return_exp_expectation:

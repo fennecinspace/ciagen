@@ -7,15 +7,11 @@ from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 
 def _default_collate(batch):
-    data = [
-        item[0] for item in batch
-    ]  # item[0] contains the data, item[1] would contain the label
+    data = [item[0] for item in batch]  # item[0] contains the data, item[1] would contain the label
     return torch.stack(data)
 
 
-def _instance_vit_extractor(
-    model_name, batch_size, num_workers, features_output, collate_fn, device
-):
+def _instance_vit_extractor(model_name, batch_size, num_workers, features_output, collate_fn, device):
     return (
         InnerFeatureExtractor(
             model_name=model_name,
@@ -111,9 +107,7 @@ class WrappedViTModel(torch.nn.Module):
         self.attention_maps = []
         self.attn_gradients = []
 
-        outputs = self.vit_model.forward(
-            pixel_values=pixel_values, output_attentions=True
-        )
+        outputs = self.vit_model.forward(pixel_values=pixel_values, output_attentions=True)
 
         # return outputs.pooler_output
         return outputs
@@ -171,23 +165,17 @@ class InnerFeatureExtractor:
                 return_tensors="pt",
                 # images=images.permute(0, 2, 3, 1).numpy(), return_tensors="pt"
             )  # Adjust dimensions
-            inputs = {
-                key: val.to(self.device) for key, val in inputs.items()
-            }  # Move inputs to GPU
+            inputs = {key: val.to(self.device) for key, val in inputs.items()}  # Move inputs to GPU
             # Forward pass through the model
             outputs = self.model(**inputs)
             if self.features_output == "last_hidden":
                 # Extract features (last hidden state)
-                feature_batch = (
-                    outputs.last_hidden_state.detach().cpu().to(dtype=torch.float32)
-                )
+                feature_batch = outputs.last_hidden_state.detach().cpu().to(dtype=torch.float32)
             if self.features_output == "pooler":
                 # Extract features (pooler output)
                 # pooler output is the first token passed trough a FC layer + activation:
                 # https://github.com/huggingface/transformers/blob/main/src/transformers/models/vit/modeling_vit.py#L610
-                feature_batch = (
-                    outputs.pooler_output.detach().cpu().to(dtype=torch.float32)
-                )
+                feature_batch = outputs.pooler_output.detach().cpu().to(dtype=torch.float32)
 
             features.append(feature_batch)
         return torch.cat(features)
