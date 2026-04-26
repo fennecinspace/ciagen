@@ -181,6 +181,7 @@ cython_debug/
 #.idea/
 
 data*
+!ciagen/data/
 datasets*
 multirun*
 .vscode*
