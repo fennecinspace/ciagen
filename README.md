@@ -3,7 +3,7 @@
 <!-- Badges -->
 [![GitHub Stars](https://img.shields.io/github/stars/fennecinspace/ciagen?style=social)](https://github.com/fennecinspace/ciagen)
 [![License](https://img.shields.io/github/license/fennecinspace/ciagen)](LICENSE)
-[![Python](https://img.shields.io/pypi/v/ciagen)](https://pypi.org/project/ciagen/)
+[![Python](https://img.shields.io/pypi/v/ciagen.svg)](https://pypi.org/project/ciagen/)
 [![Tests](https://github.com/fennecinspace/ciagen/actions/workflows/tests.yml/badge.svg)](https://github.com/fennecinspace/ciagen/actions)
 [![Docs](https://img.shields.io/readthedocs/ciagen)](https://ciagen.readthedocs.io/en/latest/)
 [![arXiv](https://img.shields.io/badge/arXiv-2411.16128-blue)](https://arxiv.org/abs/2411.16128)
