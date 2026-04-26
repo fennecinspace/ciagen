@@ -23,16 +23,24 @@
 ## Installation
 
 ```bash
-pip install -e .
+pip install ciagen
 ```
 
 With optional dependencies:
 
 ```bash
-pip install -e ".[captioning]"    # OpenAI/Ollama auto-captioning
-pip install -e ".[training]"      # YOLO/classifier training
-pip install -e ".[datasets]"      # COCO, Flickr30K, FER, MOCS datasets
-pip install -e ".[all]"           # Everything
+pip install ciagen[captioning]    # OpenAI/Ollama auto-captioning
+pip install ciagen[training]     # YOLO/classifier training
+pip install ciagen[datasets]      # COCO, Flickr30K, FER, MOCS datasets
+pip install ciagen[all]           # Everything
+```
+
+### Development
+
+```bash
+git clone https://github.com/fennecinspace/ciagen.git
+cd ciagen
+pip install -e ".[all]"
 ```
 
 ### Docker

@@ -14,17 +14,25 @@ keywords: install, pip, python, setup
 ## Install
 
 ```bash
-pip install -e .
+pip install ciagen
 ```
 
 ### Optional dependencies
 
 ```bash
-pip install -e ".[captioning]"    # OpenAI / Ollama captioning
-pip install -e ".[training]"      # YOLOv8, W&B, training utilities
-pip install -e ".[datasets]"      # COCO, Flickr30K, FER, MOCS download scripts
-pip install -e ".[all]"           # Everything
-pip install -e ".[dev]"           # pytest, ruff
+pip install ciagen[captioning]    # OpenAI / Ollama captioning
+pip install ciagen[training]     # YOLOv8, W&B, training utilities
+pip install ciagen[datasets]      # COCO, Flickr30K, FER, MOCS download scripts
+pip install ciagen[all]           # Everything
+pip install ciagen[dev]           # pytest, ruff
+```
+
+## Development
+
+```bash
+git clone https://github.com/fennecinspace/ciagen.git
+cd ciagen
+pip install -e ".[all,dev]"
 ```
 
 ## Verify
@@ -40,6 +48,8 @@ print(ciagen.__all__)
 To build and preview the docs locally:
 
 ```bash
+git clone https://github.com/fennecinspace/ciagen.git
+cd ciagen
 pip install -e ".[docs]"
 mkdocs serve
 ```
