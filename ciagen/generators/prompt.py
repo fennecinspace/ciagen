@@ -64,7 +64,7 @@ class NaivePromptGenerator:
         """
 
         counter = 0
-        for phrase in self.phrase_templates:
+        for phrase in self.prompt_templates:
             phrase_counter = 1
             phrase_list = phrase.split()
             for phrase_word in phrase_list:
@@ -122,4 +122,4 @@ class NaivePromptGenerator:
             if new_phrase[0] not in phrases:
                 phrases.extend(new_phrase)
 
-            return phrases
+        return phrases

@@ -89,6 +89,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# MkDocs documentation
+site/
+
 # PyBuilder
 .pybuilder/
 target/
@@ -190,3 +193,5 @@ cia-lisbon-fer*
 .idea
 hugging_face_cache
 .sdcn
+.claude/
+.ruff_cache/

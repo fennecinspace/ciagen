@@ -1,32 +1,18 @@
-import os
-import sys
+"""
+CIA (Controllable Image Augmentation) Framework.
 
-PACKAGE_NAME = "ciagen"
-ULTRALYTICS_PATH = os.path.join(os.path.join(os.getcwd(), PACKAGE_NAME), "ultralytics")
+A data generation framework using Stable Diffusion + ControlNet to perform
+synthetic data augmentation for downstream ML tasks.
+"""
 
-REAL_DATAPATH = os.path.join(os.getcwd(), "data", "real")
-GEN_DATAPATH = os.path.join(os.getcwd(), "data", "generated")
+from ciagen.api.caption import caption
+from ciagen.api.evaluate import evaluate
+from ciagen.api.filter import filter_generated
+from ciagen.api.generate import generate
 
-
-def add_ultralytics_path() -> bool:
-    try:
-        sys.path.append(ULTRALYTICS_PATH)
-    except OSError as e:
-        raise OSError(f"Could not add ultralytics path. E: {e}")
-    return True
-
-
-def create_data_folder() -> bool:
-    try:
-        os.makedirs(REAL_DATAPATH, exist_ok=True)
-        os.makedirs(GEN_DATAPATH, exist_ok=True)
-    except OSError as e:
-        raise OSError(f"Could not create data folders. E: {e}")
-    return True
-
-
-# Initialize datafolders
-create_data_folder()
-
-# Add external libraries's paths
-add_ultralytics_path()
+__all__ = [
+    "generate",
+    "evaluate",
+    "filter_generated",
+    "caption",
+]

@@ -1,0 +1,63 @@
+site_name: CIA Documentation
+site_description: Controllable Image Augmentation using Stable Diffusion + ControlNet
+repo_url: https://github.com/user/synthetic-augmentation
+repo_name: GitHub
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Getting Started:
+    - index.md
+    - installation.md
+    - quickstart.md
+  - User Guide:
+    - pipeline.md
+    - generation.md
+    - evaluation.md
+    - filtering.md
+    - captioning.md
+    - cli.md
+    - configuration.md
+    - examples.md
+    - contributing.md
+  - API Reference:
+    - api/generate.md
+    - api/evaluate.md
+    - api/filter.md
+    - api/caption.md
+  - Extending:
+    - extending/extractors.md
+    - extending/metrics.md
+    - extending/feature-extractors.md
+
+plugins:
+  - search

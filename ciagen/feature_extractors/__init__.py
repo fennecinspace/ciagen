@@ -1,5 +1,5 @@
-from .vit_extractor import VitFE, vit_transform
 from .inception_extractor import InceptionFE, inception_transform
+from .vit_extractor import VitFE, vit_transform
 
 AVAILABLE_FEATURE_EXTRACTORS = (
     "vit",

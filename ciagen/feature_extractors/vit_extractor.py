@@ -1,13 +1,8 @@
 import torch
-from transformers import ViTModel
-from transformers import AutoImageProcessor
-from tqdm import tqdm
-
-from transformers import ViTModel, ViTForImageClassification
+from torchvision.transforms import Compose, Resize, ToTensor
+from transformers import AutoImageProcessor, ViTForImageClassification, ViTModel
 from transformers.models.vit.modeling_vit import ViTSelfAttention
-import torch
 
-from torchvision.transforms import Resize, Compose, ToTensor
 from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 

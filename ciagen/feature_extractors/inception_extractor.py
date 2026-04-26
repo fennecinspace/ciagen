@@ -1,18 +1,14 @@
-from typing import List
 
-import numpy as np
 import torch
 import torch.utils
 import torchvision.transforms as transforms
-from PIL import Image
 from torch.nn import Softmax
 from torchvision.models import inception_v3
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
+from torchvision.transforms import Compose
 
 from ciagen.feature_extractors.abc_feature_extractor import FeatureExtractor
 
 
-# TODO: maybe we need to add to tensor here
 def inception_transform(to_tensor=False):
     if to_tensor:
         return transforms.Compose(
@@ -83,7 +79,7 @@ class InceptionModel(torch.nn.Module):
     def forward(self, x):
         if len(x.size()) == 3:
             x = torch.unsqueeze(x, 0)
-        x = self.inceptionv3(x).logits  # TODO: verify this !!!
+        x = self.inceptionv3(x).logits
 
         if self.softmaxed:
             x = self.softmax(x)

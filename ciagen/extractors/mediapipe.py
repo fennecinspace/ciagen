@@ -8,7 +8,7 @@ class MediaPipeFace(ExtractorABC):
     name = "MediaPipeFace"
 
     def __init__(self, **kwargs):
-        pass
+        super().__init__(**kwargs)
 
     def extract(self, image: Image) -> Image:
 

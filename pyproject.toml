@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ciagen"
+version = "1.0.0"
+description = "Controllable Image Augmentation framework using Stable Diffusion + ControlNet"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.10"
+authors = [
+    { name = "Universite de Mons, Multitel, ULB, UCL" },
+]
+keywords = ["generative-ai", "stable-diffusion", "controlnet", "data-augmentation", "synthetic-data"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "diffusers>=0.30",
+    "transformers>=4.30",
+    "controlnet_aux>=0.0.6",
+    "compel>=2.0",
+    "omegaconf>=2.3",
+    "hydra-core>=1.3",
+    "numpy>=1.24",
+    "pillow>=9.0",
+    "opencv-python>=4.5",
+    "scipy>=1.10",
+    "tqdm",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+captioning = [
+    "openai>=1.0",
+    "ollama>=0.1",
+]
+training = [
+    "ultralytics>=8.0",
+    "wandb>=0.15",
+    "pyiqa>=0.1",
+]
+datasets = [
+    "pycocotools",
+    "kaggle>=1.5",
+    "pandas>=2.0",
+    "datasets>=2.0",
+]
+examples = [
+    "matplotlib>=3.5",
+    "seaborn",
+    "jupyter",
+    "ipykernel",
+]
+all = [
+    "ciagen[captioning,training,datasets,examples]",
+]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1",
+]
+docs = [
+    "mkdocs-material>=9.0",
+    "mkdocstrings[python]>=0.20",
+    "pymdown-extensions>=10.0",
+]
+
+[project.scripts]
+ciagen = "ciagen._cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ciagen*"]
+exclude = ["ciagen.conf*"]
+
+[tool.setuptools.package-data]
+ciagen = ["conf/*.yaml", "ressources/**/*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
