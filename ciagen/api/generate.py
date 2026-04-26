@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union
 
 import torch
 from diffusers.utils import load_image
+from PIL import Image
 
 from ciagen.extractors import AVAILABLE_EXTRACTORS, instantiate_extractor
 from ciagen.generators import SDCN, NaivePromptGenerator
@@ -82,6 +83,8 @@ def generate(
     modify_captions: bool = False,
     vocabulary_template: Optional[str] = None,
     generation_size: int = 10,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
     cn_extra_settings: Optional[Dict] = None,
     image_formats: Optional[List[str]] = None,
 ) -> Dict:
@@ -105,6 +108,8 @@ def generate(
         modify_captions: Whether to modify captions using vocabulary substitution.
         vocabulary_template: Name of vocabulary config for prompt modification.
         generation_size: Number of prompt variations to generate.
+        height: Output image height (width auto-calculated to preserve aspect ratio).
+        width: Output image width (height auto-calculated to preserve aspect ratio).
         cn_extra_settings: Extra settings for ControlNet model loading.
         image_formats: Supported image formats for source images.
 
@@ -143,6 +148,29 @@ def generate(
     if not real_images:
         raise FileNotFoundError(f"No images found in {source}")
 
+    if height is not None and width is not None:
+        logger.warning(
+            f"Both height ({height}) and width ({width}) specified. "
+            "Using width and auto-calculating height to preserve aspect ratio."
+        )
+        height = None
+
+    gen_height = 512
+    gen_width = 512
+    if height is not None or width is not None:
+        sample_image = Image.open(real_images[0])
+        orig_w, orig_h = sample_image.size
+        aspect_ratio = orig_w / orig_h
+
+        if height is not None and width is None:
+            gen_height = height
+            gen_width = int(height * aspect_ratio)
+        elif width is not None and height is None:
+            gen_width = width
+            gen_height = int(width / aspect_ratio)
+
+        logger.info(f"Using resolution: {gen_height}x{gen_width}")
+
     if use_captions and captions_dir:
         captions = sorted(glob.glob(str(Path(captions_dir).absolute()) + "/*"))
         if len(captions) != len(real_images):
@@ -162,6 +190,8 @@ def generate(
         control_model=cn_model,
         seed=seed,
         device=device,
+        height=gen_height,
+        width=gen_width,
         cn_extra_settings=cn_extra_settings,
     )
     ext = instantiate_extractor(extractor)

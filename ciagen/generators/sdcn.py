@@ -15,16 +15,23 @@ class SDCN:
         control_model: str,
         seed: int,
         device: str = "cpu",
+        height: int = 512,
+        width: int = 512,
         cn_extra_settings: dict | None = None,
     ):
         if cn_extra_settings is None:
             cn_extra_settings = {}
 
-        logger.info(f"Initializing SDCN with {sd_model} and {control_model}, seed ={seed}, device={device}")
+        logger.info(
+            f"Initializing SDCN with {sd_model} and {control_model}, "
+            f"seed={seed}, device={device}, size={height}x{width}"
+        )
 
         self.seed = seed
         self.device = device
         self.control_model = control_model
+        self.height = height
+        self.width = width
 
         self.controlnet = ControlNetModel.from_pretrained(
             self.control_model, torch_dtype=torch.float16, **cn_extra_settings
@@ -97,6 +104,8 @@ class SDCN:
             generator=generator,
             num_inference_steps=quality,
             guidance_scale=guidance_scale,
+            height=self.height,
+            width=self.width,
         )
 
         return output
