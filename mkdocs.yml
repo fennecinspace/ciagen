@@ -2,9 +2,9 @@ site_name: "CIA: Controllable Image Augmentation"
 site_description: >
   Generate high-quality synthetic image data using Stable Diffusion + ControlNet.
   A complete pipeline with built-in quality evaluation and filtering.
-site_url: https://multitel-ai.github.io/CIA
-repo_name: multitel-ai/CIA
-repo_url: https://github.com/multitel-ai/CIA
+site_url: https://fennecinspace.github.io/ciagen
+repo_name: fennecinspace/ciagen
+repo_url: https://github.com/fennecinspace/ciagen
 
 theme:
   name: material
@@ -49,9 +49,9 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/multitel-ai/CIA
+      link: https://github.com/fennecinspace/ciagen
     - icon: simple/huggingface
-      link: https://huggingface.co/multitel-ai
+      link: https://huggingface.co/fennecinspace
 
 nav:
   - Home: index.md
